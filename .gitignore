@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Environment files (SECRETS - NEVER COMMIT!)
+.env
+.env.local
+.env.*.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# SQL setup files (not needed for production)
+*.sql
+
+# Documentation that shouldn't be in production
+SITE_MASTER_SETUP.md
+
+# Lock files (optional - some prefer to keep these)
+# package-lock.json
+# yarn.lock
+
+# Test files
+*.test.js
+*.spec.js
+coverage/
+
+# Temp files
+*.tmp
+*.temp
+.cache/
