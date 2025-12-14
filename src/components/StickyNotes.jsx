@@ -24,33 +24,38 @@ const StickyNotes = () => {
     const [error, setError] = useState(null);
     const [editingId, setEditingId] = useState(null);
     const { toast } = useToast();
-    const { profile } = useAuth();
+    const { user } = useAuth(); // Get user directly from hook
 
     useEffect(() => {
-        fetchNotes();
-    }, []);
+        if (user) {
+            fetchNotes();
+        } else {
+            setNotes([]);
+            setIsLoading(false);
+        }
+    }, [user]);
 
     const fetchNotes = async () => {
         try {
             setIsLoading(true);
             setError(null);
 
+            if (!user?.id) return;
+
+            // Only fetch notes belonging to the current user
             const { data, error: fetchError } = await supabase
                 .from('sticky_notes')
                 .select('*')
+                .eq('created_by', user.id) // Secure: Only view own notes
                 .order('is_pinned', { ascending: false })
                 .order('updated_at', { ascending: false });
 
-            if (fetchError) {
-                console.error('Supabase error:', fetchError);
-                throw fetchError;
-            }
+            if (fetchError) throw fetchError;
 
             setNotes(data || []);
         } catch (err) {
             console.error('Error fetching notes:', err);
-            setError(err.message || 'Failed to load notes. Please check if the table exists.');
-            setNotes([]);
+            setError('Failed to load notes: ' + err.message);
         } finally {
             setIsLoading(false);
         }
@@ -58,21 +63,18 @@ const StickyNotes = () => {
 
     const createNote = async () => {
         try {
-            // Get current session
-            const { data: sessionData } = await supabase.auth.getSession();
-            const userId = sessionData?.session?.user?.id;
+            if (!user?.id) {
+                toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in.' });
+                return;
+            }
 
             const newNote = {
                 title: 'New Note',
                 content: '',
                 color_index: Math.floor(Math.random() * NOTE_COLORS.length),
                 is_pinned: false,
+                created_by: user.id // Assign to current user
             };
-
-            // Only add created_by if user is authenticated
-            if (userId) {
-                newNote.created_by = userId;
-            }
 
             const { data, error } = await supabase
                 .from('sticky_notes')
@@ -80,52 +82,58 @@ const StickyNotes = () => {
                 .select()
                 .single();
 
-            if (error) {
-                console.error('Insert error:', error);
-                throw error;
-            }
+            if (error) throw error;
 
             setNotes(prev => [data, ...prev]);
             setEditingId(data.id);
             toast({ title: 'Note created', description: 'Start typing your note!' });
         } catch (error) {
             console.error('Error creating note:', error);
-            toast({ variant: 'destructive', title: 'Error', description: `Failed to create note: ${error.message}` });
+            toast({ variant: 'destructive', title: 'Error', description: error.message });
         }
     };
 
     const updateNote = async (id, updates) => {
         try {
-            const { error } = await supabase
-                .from('sticky_notes')
-                .update({ ...updates, updated_at: new Date().toISOString() })
-                .eq('id', id);
+            if (!user?.id) return;
 
-            if (error) throw error;
-
+            // Optimistic update
             setNotes(prev => prev.map(note =>
                 note.id === id ? { ...note, ...updates } : note
             ));
+
+            const { error } = await supabase
+                .from('sticky_notes')
+                .update({ ...updates, updated_at: new Date().toISOString() })
+                .eq('id', id)
+                .eq('created_by', user.id); // Secure: Ensure ownership
+
+            if (error) throw error;
         } catch (error) {
             console.error('Error updating note:', error);
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to update note.' });
+            fetchNotes(); // Revert on error
         }
     };
 
     const deleteNote = async (id) => {
         try {
+            // Optimistic delete
+            setNotes(prev => prev.filter(note => note.id !== id));
+
             const { error } = await supabase
                 .from('sticky_notes')
                 .delete()
-                .eq('id', id);
+                .eq('id', id)
+                .eq('created_by', user.id); // Secure: Ensure ownership
 
             if (error) throw error;
 
-            setNotes(prev => prev.filter(note => note.id !== id));
             toast({ title: 'Note deleted' });
         } catch (error) {
             console.error('Error deleting note:', error);
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete note.' });
+            fetchNotes(); // Revert on error
         }
     };
 
