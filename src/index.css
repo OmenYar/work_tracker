@@ -64,22 +64,16 @@
         @apply border-border;
     }
 
+    html, body, #root {
+        @apply h-full;
+        min-height: 100%;
+    }
+
     body {
         @apply bg-background text-foreground transition-colors duration-300;
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
             'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-    }
-}
-
-
-
-@layer base {
-  * {
-    @apply border-border;
-    }
-  body {
-    @apply bg-background text-foreground;
     }
 }

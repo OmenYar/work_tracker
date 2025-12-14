@@ -77,6 +77,7 @@ const AdminDashboard = () => {
     const [regionalFilter, setRegionalFilter] = useState(searchParams.get('trackerRegional') || 'all');
     const [statusFilter, setStatusFilter] = useState(searchParams.get('trackerStatus') || 'all');
     const [bastFilter, setBastFilter] = useState(searchParams.get('trackerBast') || 'all');
+    const [suspectedFilter, setSuspectedFilter] = useState(searchParams.get('trackerSuspected') || 'all');
 
     // PIC Filters - Initialize from URL params
     const [picSearchTerm, setPicSearchTerm] = useState(searchParams.get('picSearch') || '');
@@ -140,6 +141,9 @@ const AdminDashboard = () => {
     useEffect(() => {
         updateFilterParam('trackerBast', bastFilter);
     }, [bastFilter]);
+    useEffect(() => {
+        updateFilterParam('trackerSuspected', suspectedFilter);
+    }, [suspectedFilter]);
 
     // PIC filter sync
     useEffect(() => {
@@ -322,7 +326,17 @@ const AdminDashboard = () => {
         }
 
         if (regionalFilter !== 'all') {
-            result = result.filter(item => item.regional === regionalFilter);
+            if (regionalFilter === 'Jabo Outer') {
+                // 'Jabo Outer' includes all Jabo Outer 1, 2, 3 and 'Jabo Outer' itself
+                result = result.filter(item =>
+                    item.regional === 'Jabo Outer' ||
+                    item.regional === 'Jabo Outer 1' ||
+                    item.regional === 'Jabo Outer 2' ||
+                    item.regional === 'Jabo Outer 3'
+                );
+            } else {
+                result = result.filter(item => item.regional === regionalFilter);
+            }
         }
 
         if (statusFilter !== 'all') {
@@ -341,8 +355,12 @@ const AdminDashboard = () => {
             }
         }
 
+        if (suspectedFilter !== 'all') {
+            result = result.filter(item => item.suspected === suspectedFilter);
+        }
+
         setFilteredTrackers(result);
-    }, [workTrackers, searchTerm, regionalFilter, statusFilter, bastFilter]);
+    }, [workTrackers, searchTerm, regionalFilter, statusFilter, bastFilter, suspectedFilter]);
 
     // PIC Tab Filtering Logic
     useEffect(() => {
@@ -396,6 +414,55 @@ const AdminDashboard = () => {
             fetchCarData();
             fetchCctvData();
         }
+    }, [profile]);
+
+    // Supabase Realtime Subscriptions
+    useEffect(() => {
+        if (!profile) return;
+
+        // Subscribe to work_tracker changes
+        const trackerChannel = supabase
+            .channel('work_tracker_changes')
+            .on('postgres_changes',
+                { event: '*', schema: 'public', table: 'work_tracker' },
+                () => fetchTrackers()
+            )
+            .subscribe();
+
+        // Subscribe to pic_data changes
+        const picChannel = supabase
+            .channel('pic_data_changes')
+            .on('postgres_changes',
+                { event: '*', schema: 'public', table: 'pic_data' },
+                () => fetchPicData()
+            )
+            .subscribe();
+
+        // Subscribe to car_data changes
+        const carChannel = supabase
+            .channel('car_data_changes')
+            .on('postgres_changes',
+                { event: '*', schema: 'public', table: 'car_data' },
+                () => fetchCarData()
+            )
+            .subscribe();
+
+        // Subscribe to cctv_data changes
+        const cctvChannel = supabase
+            .channel('cctv_data_changes')
+            .on('postgres_changes',
+                { event: '*', schema: 'public', table: 'cctv_data' },
+                () => fetchCctvData()
+            )
+            .subscribe();
+
+        // Cleanup subscriptions on unmount
+        return () => {
+            supabase.removeChannel(trackerChannel);
+            supabase.removeChannel(picChannel);
+            supabase.removeChannel(carChannel);
+            supabase.removeChannel(cctvChannel);
+        };
     }, [profile]);
 
     const fetchTrackers = async () => {
@@ -1122,6 +1189,7 @@ const AdminDashboard = () => {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="all">All Regional</SelectItem>
+                                            <SelectItem value="Jabo Outer">Jabo Outer (All)</SelectItem>
                                             <SelectItem value="Jabo Outer 1">Jabo Outer 1</SelectItem>
                                             <SelectItem value="Jabo Outer 2">Jabo Outer 2</SelectItem>
                                             <SelectItem value="Jabo Outer 3">Jabo Outer 3</SelectItem>
@@ -1150,7 +1218,19 @@ const AdminDashboard = () => {
                                         <SelectItem value="Approve">Approve</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                {(searchTerm || regionalFilter !== 'all' || statusFilter !== 'all' || bastFilter !== 'all') && (
+                                <Select value={suspectedFilter} onValueChange={setSuspectedFilter}>
+                                    <SelectTrigger className="w-full md:w-[150px]">
+                                        <SelectValue placeholder="Suspected" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Suspected</SelectItem>
+                                        <SelectItem value="Reguler">Reguler</SelectItem>
+                                        <SelectItem value="Survey">Survey</SelectItem>
+                                        <SelectItem value="Delivery">Delivery</SelectItem>
+                                        <SelectItem value="Lumpsum">Lumpsum</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {(searchTerm || regionalFilter !== 'all' || statusFilter !== 'all' || bastFilter !== 'all' || suspectedFilter !== 'all') && (
                                     <Button
                                         variant="ghost"
                                         onClick={() => {
@@ -1158,6 +1238,7 @@ const AdminDashboard = () => {
                                             setRegionalFilter('all');
                                             setStatusFilter('all');
                                             setBastFilter('all');
+                                            setSuspectedFilter('all');
                                         }}
                                         className="px-3"
                                         title="Reset Filters"
@@ -1174,9 +1255,12 @@ const AdminDashboard = () => {
                                         filename="tracker-data"
                                         title="Work Tracker Data"
                                     />
-                                    <Button onClick={() => navigate('/admin/input-tracker', { state: { returnUrl: getCurrentUrl() } })}>
-                                        <Plus className="w-4 h-4 mr-2" />
-                                        Input Data Tracker
+                                    <Button
+                                        onClick={() => navigate('/admin/input-tracker', { state: { returnUrl: getCurrentUrl() } })}
+                                        size="icon"
+                                        title="Input Data Tracker"
+                                    >
+                                        <Plus className="w-4 h-4" />
                                     </Button>
                                 </div>
                             )}
@@ -1487,9 +1571,12 @@ const AdminDashboard = () => {
                                             filename="car-data"
                                             title="Car Data"
                                         />
-                                        <Button onClick={() => navigate('/admin/input-car', { state: { returnUrl: getCurrentUrl() } })}>
-                                            <Plus className="w-4 h-4 mr-2" />
-                                            Input Data Mobil
+                                        <Button
+                                            onClick={() => navigate('/admin/input-car', { state: { returnUrl: getCurrentUrl() } })}
+                                            size="icon"
+                                            title="Input Data Mobil"
+                                        >
+                                            <Plus className="w-4 h-4" />
                                         </Button>
                                     </div>
                                 </div>
@@ -1656,9 +1743,12 @@ const AdminDashboard = () => {
                                             filename="cctv-data"
                                             title="CCTV Data"
                                         />
-                                        <Button onClick={() => navigate('/admin/input-cctv', { state: { returnUrl: getCurrentUrl() } })}>
-                                            <Plus className="w-4 h-4 mr-2" />
-                                            Input Data CCTV
+                                        <Button
+                                            onClick={() => navigate('/admin/input-cctv', { state: { returnUrl: getCurrentUrl() } })}
+                                            size="icon"
+                                            title="Input Data CCTV"
+                                        >
+                                            <Plus className="w-4 h-4" />
                                         </Button>
                                     </div>
                                 </div>

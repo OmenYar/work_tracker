@@ -130,7 +130,7 @@ const Sidebar = memo(({ activeTab, setActiveTab, onLogout, isOpen, setIsOpen }) 
                 </nav>
 
                 {/* Logout Button */}
-                <div className="p-3 border-t border-border shrink-0">
+                <div className="p-3 pb-6 border-t border-border shrink-0 md:pb-3">
                     <Button
                         variant="ghost"
                         className={cn(

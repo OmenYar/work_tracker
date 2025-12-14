@@ -413,6 +413,7 @@ const WorkTrackerForm = ({ onSubmit, initialData, onCancel }) => {
                                     <SelectValue placeholder="Pilih Regional" />
                                 </SelectTrigger>
                                 <SelectContent>
+                                    <SelectItem value="Jabo Outer">Jabo Outer (All)</SelectItem>
                                     <SelectItem value="Jabo Outer 1">Jabo Outer 1</SelectItem>
                                     <SelectItem value="Jabo Outer 2">Jabo Outer 2</SelectItem>
                                     <SelectItem value="Jabo Outer 3">Jabo Outer 3</SelectItem>
