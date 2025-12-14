@@ -72,6 +72,14 @@ const AdminLayout = () => {
                 <main className="flex-1 overflow-y-auto overflow-x-hidden">
                     <Outlet />
                 </main>
+
+                {/* Footer */}
+                <footer className="shrink-0 border-t bg-card/50 py-3 px-6">
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-muted-foreground">
+                        <p>© 2024 WorkTracker. All rights reserved.</p>
+                        <p>Version 1.0.0</p>
+                    </div>
+                </footer>
             </div>
         </div>
     );

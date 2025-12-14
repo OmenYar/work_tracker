@@ -1427,9 +1427,12 @@ const AdminDashboard = () => {
                                             filename="pic-data"
                                             title="PIC Data"
                                         />
-                                        <Button onClick={() => navigate('/admin/input-pic', { state: { returnUrl: getCurrentUrl() } })}>
-                                            <Plus className="w-4 h-4 mr-2" />
-                                            Input New PIC
+                                        <Button
+                                            onClick={() => navigate('/admin/input-pic', { state: { returnUrl: getCurrentUrl() } })}
+                                            size="icon"
+                                            title="Input New PIC"
+                                        >
+                                            <Plus className="w-4 h-4" />
                                         </Button>
                                     </div>
                                 </div>

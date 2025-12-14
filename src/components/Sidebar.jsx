@@ -129,8 +129,8 @@ const Sidebar = memo(({ activeTab, setActiveTab, onLogout, isOpen, setIsOpen }) 
                     })}
                 </nav>
 
-                {/* Logout Button */}
-                <div className="p-3 pb-6 border-t border-border shrink-0 md:pb-3">
+                {/* Logout Button - Extra padding for iPhone safe area */}
+                <div className="p-3 border-t border-border shrink-0" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 1.5rem))' }}>
                     <Button
                         variant="ghost"
                         className={cn(

@@ -82,7 +82,6 @@ const CCTVDataTable = ({ data, onEdit, onDelete, isReadOnly = false }) => {
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Regional</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Branch</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Merk CCTV</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Model</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Install Date</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Tenant Available</th>
@@ -104,7 +103,6 @@ const CCTVDataTable = ({ data, onEdit, onDelete, isReadOnly = false }) => {
                                 </td>
                                 <td className="py-3 px-4">{cctv.branch || '-'}</td>
                                 <td className="py-3 px-4">{cctv.merk_cctv || '-'}</td>
-                                <td className="py-3 px-4">{cctv.model || '-'}</td>
                                 <td className="py-3 px-4">{formatDate(cctv.install_date)}</td>
                                 <td className="py-3 px-4">
                                     <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadge(cctv.status)}`}>
