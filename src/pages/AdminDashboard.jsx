@@ -32,6 +32,7 @@ const BulkOperations = React.lazy(() => import('@/components/BulkOperations'));
 
 // Non-lazy (small components)
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { TableSkeleton, DashboardSkeleton } from '@/components/ui/skeleton';
 
 // Loading fallback for lazy components
 const ComponentLoader = () => (
@@ -76,6 +77,12 @@ const AdminDashboard = () => {
     const [isFormOpen, setIsFormOpen] = useState(false); // Controls Dialog now
     const [isPicFormOpen, setIsPicFormOpen] = useState(false); // New state
     const [isCarFormOpen, setIsCarFormOpen] = useState(false); // Car Dialog
+
+    // Loading states for skeleton
+    const [isLoadingTrackers, setIsLoadingTrackers] = useState(true);
+    const [isLoadingPic, setIsLoadingPic] = useState(true);
+    const [isLoadingCar, setIsLoadingCar] = useState(true);
+    const [isLoadingCctv, setIsLoadingCctv] = useState(true);
 
     // Tracker Filters - Initialize from URL params
     const [searchTerm, setSearchTerm] = useState(searchParams.get('trackerSearch') || '');
@@ -471,6 +478,7 @@ const AdminDashboard = () => {
     }, [profile]);
 
     const fetchTrackers = async () => {
+        setIsLoadingTrackers(true);
         try {
             let query = supabase.from('work_trackers').select('*').order('created_at', { ascending: false });
 
@@ -484,10 +492,13 @@ const AdminDashboard = () => {
             setWorkTrackers(data || []);
         } catch (error) {
             console.error('Error:', error);
+        } finally {
+            setIsLoadingTrackers(false);
         }
     };
 
     const fetchPicData = async () => {
+        setIsLoadingPic(true);
         try {
             let query = supabase.from('pic_data').select('*').order('created_at', { ascending: false });
 
@@ -501,10 +512,13 @@ const AdminDashboard = () => {
             setPicData(data || []);
         } catch (error) {
             console.error('Error:', error);
+        } finally {
+            setIsLoadingPic(false);
         }
     };
 
     const fetchCarData = async () => {
+        setIsLoadingCar(true);
         try {
             let query = supabase.from('car_data').select('*').order('created_at', { ascending: false });
 
@@ -521,10 +535,13 @@ const AdminDashboard = () => {
             setCarData(data || []);
         } catch (error) {
             console.error('Error:', error);
+        } finally {
+            setIsLoadingCar(false);
         }
     };
 
     const fetchCctvData = async () => {
+        setIsLoadingCctv(true);
         try {
             let query = supabase.from('cctv_data').select('*').order('created_at', { ascending: false });
 
@@ -541,6 +558,8 @@ const AdminDashboard = () => {
             setCctvData(data || []);
         } catch (error) {
             console.error('Error:', error);
+        } finally {
+            setIsLoadingCctv(false);
         }
     };
 
