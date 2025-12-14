@@ -48,6 +48,7 @@ const WorkTrackerTable = ({ data, onEdit, onDelete, isReadOnly = false }) => {
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b bg-muted/50">
+                            <th className="text-left py-3 px-4 font-medium text-muted-foreground w-12">No</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Site ID</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Site Name</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Regional</th>
@@ -59,8 +60,9 @@ const WorkTrackerTable = ({ data, onEdit, onDelete, isReadOnly = false }) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {paginatedData.map((tracker) => (
+                        {paginatedData.map((tracker, index) => (
                             <tr key={tracker.id} className="border-b hover:bg-muted/50 transition-colors">
+                                <td className="py-3 px-4 text-muted-foreground">{startIndex + index + 1}</td>
                                 <td className="py-3 px-4">{tracker.site_id_1}</td>
                                 <td className="py-3 px-4 font-medium">{tracker.site_name}</td>
                                 <td className="py-3 px-4">{tracker.regional}</td>

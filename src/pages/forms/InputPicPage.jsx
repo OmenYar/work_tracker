@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
+import { syncPICToGoogleSheets } from '@/lib/googleSheetsSync';
+import { logInsert, logUpdate } from '@/lib/activityLogger';
 
 const InputPicPage = () => {
     const navigate = useNavigate();
@@ -51,13 +53,43 @@ const InputPicPage = () => {
             };
 
             let error;
+            let savedRecordId = id;
+
             if (id) {
                 ({ error } = await supabase.from('pic_data').update(payload).eq('id', id));
             } else {
-                ({ error } = await supabase.from('pic_data').insert([payload]));
+                const { data: insertedData, error: insertError } = await supabase
+                    .from('pic_data')
+                    .insert([payload])
+                    .select('id')
+                    .single();
+
+                error = insertError;
+                savedRecordId = insertedData?.id;
             }
 
             if (error) throw error;
+
+            // Log activity
+            if (id) {
+                logUpdate('pic_data', savedRecordId, `Updated PIC: ${payload.nama_pic}`);
+            } else {
+                logInsert('pic_data', savedRecordId, `Created PIC: ${payload.nama_pic}`);
+            }
+
+            // Sync to Google Sheets (non-blocking)
+            syncPICToGoogleSheets(payload, savedRecordId, !!id)
+                .then((syncResult) => {
+                    if (syncResult.success) {
+                        console.log('✅ PIC synced to Google Sheets');
+                    } else {
+                        console.warn('⚠️ Google Sheets sync failed:', syncResult.error);
+                    }
+                })
+                .catch((syncError) => {
+                    console.error('❌ Google Sheets sync error:', syncError);
+                });
+
             toast({ title: "Success", description: id ? "PIC Data updated." : "New PIC Data saved." });
             navigate(returnUrl);
         } catch (err) {

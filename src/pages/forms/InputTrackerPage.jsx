@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
+import { syncTrackerToGoogleSheets } from '@/lib/googleSheetsSync';
+import { logInsert, logUpdate } from '@/lib/activityLogger';
 
 const InputTrackerPage = () => {
     const navigate = useNavigate();
@@ -44,7 +46,6 @@ const InputTrackerPage = () => {
     const handleTrackerSubmit = async (formData) => {
         try {
             console.log("📥 Received form data in InputTrackerPage:", formData);
-            console.log("📥 Aging days from form:", formData.aging_days, "Type:", typeof formData.aging_days);
 
             const payload = {
                 ...formData,
@@ -55,19 +56,43 @@ const InputTrackerPage = () => {
                     : null,
             };
 
-            console.log("💾 Payload to send to database:", payload);
-            console.log("💾 Aging days in payload:", payload.aging_days, "Type:", typeof payload.aging_days);
-
             let error;
+            let savedRecordId = id;
+
             if (id) {
-                // Update
                 ({ error } = await supabase.from('work_trackers').update(payload).eq('id', id));
             } else {
-                // Insert
-                ({ error } = await supabase.from('work_trackers').insert([payload]));
+                const { data: insertedData, error: insertError } = await supabase
+                    .from('work_trackers')
+                    .insert([payload])
+                    .select('id')
+                    .single();
+
+                error = insertError;
+                savedRecordId = insertedData?.id;
             }
 
             if (error) throw error;
+
+            // Log activity
+            if (id) {
+                logUpdate('work_trackers', savedRecordId, `Updated tracker: ${payload.site_name || payload.site_id_1}`);
+            } else {
+                logInsert('work_trackers', savedRecordId, `Created tracker: ${payload.site_name || payload.site_id_1}`);
+            }
+
+            // Sync to Google Sheets (non-blocking)
+            syncTrackerToGoogleSheets(payload, savedRecordId, !!id)
+                .then((syncResult) => {
+                    if (syncResult.success) {
+                        console.log('✅ Tracker synced to Google Sheets');
+                    } else {
+                        console.warn('⚠️ Google Sheets sync failed:', syncResult.error);
+                    }
+                })
+                .catch((syncError) => {
+                    console.error('❌ Google Sheets sync error:', syncError);
+                });
 
             console.log("✅ Data saved successfully!");
             toast({ title: "Success", description: id ? "Tracker Data updated." : "New Tracker Data saved." });

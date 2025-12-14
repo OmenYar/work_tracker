@@ -74,11 +74,11 @@ const PicDataForm = ({ onSubmit, initialData, onCancel }) => {
         <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="space-y-2">
-                    <Label>Nama PIC</Label>
+                    <Label>Nama PIC <span className="text-red-500">*</span></Label>
                     <Input name="nama_pic" value={formData.nama_pic} onChange={handleChange} required />
                 </div>
                 <div className="space-y-2">
-                    <Label>Jabatan</Label>
+                    <Label>Jabatan <span className="text-red-500">*</span></Label>
                     <Select value={formData.jabatan} onValueChange={(v) => handleSelectChange('jabatan', v)}>
                         <SelectTrigger>
                             <SelectValue placeholder="Pilih Jabatan" />
@@ -91,7 +91,7 @@ const PicDataForm = ({ onSubmit, initialData, onCancel }) => {
                     </Select>
                 </div>
                 <div className="space-y-2">
-                    <Label>Active (Validasi)</Label>
+                    <Label>Active (Validasi) <span className="text-red-500">*</span></Label>
                     <Select value={formData.validasi} onValueChange={(v) => handleSelectChange('validasi', v)}>
                         <SelectTrigger>
                             <SelectValue placeholder="Pilih Status" />
@@ -104,7 +104,7 @@ const PicDataForm = ({ onSubmit, initialData, onCancel }) => {
                     </Select>
                 </div>
                 <div className="space-y-2">
-                    <Label>Regional</Label>
+                    <Label>Regional <span className="text-red-500">*</span></Label>
                     <Select value={formData.regional} onValueChange={(v) => handleSelectChange('regional', v)}>
                         <SelectTrigger>
                             <SelectValue placeholder="Pilih Regional" />

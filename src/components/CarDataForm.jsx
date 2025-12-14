@@ -131,6 +131,12 @@ const CarDataForm = ({ onSubmit, initialData, onCancel }) => {
         setFormData(prev => ({ ...prev, priority: newPriority }));
     }, [selectedServices]);
 
+    // Auto-update condition based on plan_next_service
+    useEffect(() => {
+        const newCondition = selectedServices.length > 0 ? 'NEED SERVICE' : 'GOOD';
+        setFormData(prev => ({ ...prev, condition: newCondition }));
+    }, [selectedServices]);
+
     // Auto-update document statuses when dates change
     useEffect(() => {
         setFormData(prev => ({
@@ -191,12 +197,12 @@ const CarDataForm = ({ onSubmit, initialData, onCancel }) => {
         <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl mx-auto py-2">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                    <Label>Nomor Polisi</Label>
+                    <Label>Nomor Polisi <span className="text-red-500">*</span></Label>
                     <Input name="nomor_polisi" value={formData.nomor_polisi} onChange={handleChange} required placeholder="B 1234 ABC" />
                 </div>
                 <div className="space-y-2">
-                    <Label>Owner</Label>
-                    <Input name="owner" value={formData.owner} onChange={handleChange} placeholder="PT CRI" />
+                    <Label>Owner <span className="text-red-500">*</span></Label>
+                    <Input name="owner" value={formData.owner} onChange={handleChange} required placeholder="PT CRI" />
                 </div>
                 <div className="space-y-2">
                     <Label>PIC Mobil</Label>
@@ -236,8 +242,8 @@ const CarDataForm = ({ onSubmit, initialData, onCancel }) => {
                     <Input name="province" value={formData.province} onChange={handleChange} placeholder="JAWA BARAT" />
                 </div>
                 <div className="space-y-2">
-                    <Label>Area</Label>
-                    <Select value={formData.area} onValueChange={v => handleSelectChange('area', v)}>
+                    <Label>Area <span className="text-red-500">*</span></Label>
+                    <Select value={formData.area} onValueChange={v => handleSelectChange('area', v)} required>
                         <SelectTrigger><SelectValue placeholder="Pilih Area" /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="Jabo Outer 1">Jabo Outer 1</SelectItem>
@@ -290,14 +296,11 @@ const CarDataForm = ({ onSubmit, initialData, onCancel }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-4">
                 <div className="space-y-2">
-                    <Label>Condition</Label>
-                    <Select value={formData.condition} onValueChange={v => handleSelectChange('condition', v)}>
-                        <SelectTrigger><SelectValue placeholder="Select Condition" /></SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="GOOD">GOOD</SelectItem>
-                            <SelectItem value="NEED SERVICE">NEED SERVICE</SelectItem>
-                        </SelectContent>
-                    </Select>
+                    <Label>Condition (Auto)</Label>
+                    <div className={`h-10 px-3 py-2 rounded-md border text-sm font-medium flex items-center ${formData.condition === 'NEED SERVICE' ? 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30' : 'text-green-600 bg-green-100 dark:bg-green-900/30'}`}>
+                        {formData.condition || 'GOOD'}
+                    </div>
+                    <p className="text-xs text-muted-foreground">Otomatis berdasarkan Plan Next Service</p>
                 </div>
                 <div className="space-y-2">
                     <Label>Status Mobil</Label>

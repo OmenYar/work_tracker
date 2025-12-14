@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,8 @@ const WorkTrackerForm = ({ onSubmit, initialData, onCancel }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [isSearching, setIsSearching] = useState(false);
+    const [isManualInput, setIsManualInput] = useState(false);
+    const [errors, setErrors] = useState({});
     const searchTimeoutRef = useRef(null);
 
     const [formData, setFormData] = useState({
@@ -65,7 +67,7 @@ const WorkTrackerForm = ({ onSubmit, initialData, onCancel }) => {
             clearTimeout(searchTimeoutRef.current);
         }
 
-        if (searchQuery.length >= 2) {
+        if (searchQuery.length >= 2 && !isManualInput) {
             searchTimeoutRef.current = setTimeout(() => {
                 searchSites(searchQuery);
             }, 300);
@@ -78,20 +80,23 @@ const WorkTrackerForm = ({ onSubmit, initialData, onCancel }) => {
                 clearTimeout(searchTimeoutRef.current);
             }
         };
-    }, [searchQuery, searchSites]);
+    }, [searchQuery, searchSites, isManualInput]);
 
     useEffect(() => {
         if (initialData) {
             setFormData({
                 ...initialData,
-                // Ensure date fields are properly formatted for input type="date"
                 bast_submit_date: initialData.bast_submit_date ? initialData.bast_submit_date.split('T')[0] : '',
                 bast_approve_date: initialData.bast_approve_date ? initialData.bast_approve_date.split('T')[0] : '',
             });
+            // If initialData has site_name, set search query
+            if (initialData.site_name) {
+                setSearchQuery(initialData.site_id_1 ? `${initialData.site_id_1} - ${initialData.site_name}` : initialData.site_name);
+            }
         }
     }, [initialData]);
 
-    // Auto-calculate aging days whenever bast_submit_date or bast_approve_date changes
+    // Auto-calculate aging days
     useEffect(() => {
         if (!formData.bast_submit_date) {
             setFormData(prev => ({ ...prev, aging_days: '' }));
@@ -109,76 +114,105 @@ const WorkTrackerForm = ({ onSubmit, initialData, onCancel }) => {
             diffTime = today - submitDate;
         }
 
-        // Convert to days
         const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-        setFormData(prev => ({
-            ...prev,
-            aging_days: diffDays
-        }));
+        setFormData(prev => ({ ...prev, aging_days: diffDays }));
     }, [formData.bast_submit_date, formData.bast_approve_date]);
+
+    // Auto-calculate status_bast based on dates and status_pekerjaan
+    useEffect(() => {
+        let newStatusBast = '';
+
+        if (formData.status_pekerjaan === 'Close') {
+            if (formData.bast_submit_date && formData.bast_approve_date) {
+                // Both dates filled = Approve
+                newStatusBast = 'Approve';
+            } else if (formData.bast_submit_date && !formData.bast_approve_date) {
+                // Only submit date = Waiting Approve
+                newStatusBast = 'Waiting Approve';
+            } else if (!formData.bast_submit_date) {
+                // No submit date = Need Created BAST
+                newStatusBast = 'Need Created BAST';
+            }
+        } else if (formData.status_pekerjaan === 'Open' || formData.status_pekerjaan === 'On Hold') {
+            // Not closed yet
+            newStatusBast = '';
+        }
+
+        setFormData(prev => ({ ...prev, status_bast: newStatusBast }));
+    }, [formData.status_pekerjaan, formData.bast_submit_date, formData.bast_approve_date]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        setFormData(prev => ({ ...prev, [name]: value }));
+        // Clear error when field is modified
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: '' }));
+        }
     };
 
     const handleSelectChange = (name, value) => {
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
-
-    const handleSiteChange = (value) => {
-        console.log("🔄 Site selected:", value);
-        console.log("Available sites:", siteMaster.length);
-
-        const selectedSite = siteMaster.find(s => s.site_id_1 === value);
-        console.log("Found site:", selectedSite);
-
-        if (selectedSite) {
-            setFormData(prev => ({
-                ...prev,
-                site_id_1: selectedSite.site_id_1,
-                site_id_2: selectedSite.site_id_2 || '',
-                site_name: selectedSite.site_name || '',
-                regional: selectedSite.regional || ''
-            }));
-            console.log("✅ Form updated with site data");
-        } else {
-            console.warn("⚠️ Site not found in siteMaster array");
+        setFormData(prev => ({ ...prev, [name]: value }));
+        if (errors[name]) {
+            setErrors(prev => ({ ...prev, [name]: '' }));
         }
     };
 
     const handleSiteSelect = (site) => {
-        console.log("🏢 Site selected from search:", site);
-        console.log("Current formData before update:", formData);
-
-        const newFormData = {
-            ...formData,
+        setFormData(prev => ({
+            ...prev,
             site_id_1: site.site_id_1,
             site_id_2: site.site_id_2 || '',
             site_name: site.site_name || '',
             regional: site.regional || ''
-        };
-
-        console.log("New formData to set:", newFormData);
-
-        setFormData(newFormData);
+        }));
         setSearchQuery(`${site.site_id_1} - ${site.site_name}`);
         setShowSuggestions(false);
+        setIsManualInput(false);
+    };
 
-        console.log("✅ Form data updated, suggestions closed");
+    // Enable manual input mode
+    const handleUseManualInput = () => {
+        setIsManualInput(true);
+        setShowSuggestions(false);
+        // Use search query as site_name if no site selected
+        if (!formData.site_name && searchQuery) {
+            setFormData(prev => ({
+                ...prev,
+                site_name: searchQuery,
+                site_id_1: '',
+                site_id_2: '',
+                regional: ''
+            }));
+        }
+    };
+
+    const validateForm = () => {
+        const newErrors = {};
+
+        if (!formData.site_name) {
+            newErrors.site_name = 'Site Name wajib diisi';
+        }
+        if (!formData.suspected) {
+            newErrors.suspected = 'Suspected wajib diisi';
+        }
+        if (!formData.main_addwork) {
+            newErrors.main_addwork = 'Main Addwork wajib diisi';
+        }
+        if (!formData.status_pekerjaan) {
+            newErrors.status_pekerjaan = 'Status Pekerjaan wajib diisi';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log("📤 Submitting form data:", formData);
-        console.log("📤 Aging days value:", formData.aging_days, "Type:", typeof formData.aging_days);
+
+        if (!validateForm()) {
+            return;
+        }
+
         onSubmit(formData);
         if (!initialData) {
             setFormData({
@@ -198,6 +232,17 @@ const WorkTrackerForm = ({ onSubmit, initialData, onCancel }) => {
                 aging_days: '',
                 remark: '',
             });
+            setSearchQuery('');
+            setIsManualInput(false);
+        }
+    };
+
+    const getStatusBastColor = (status) => {
+        switch (status) {
+            case 'Approve': return 'text-green-600 bg-green-100 dark:bg-green-900/30';
+            case 'Waiting Approve': return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30';
+            case 'Need Created BAST': return 'text-red-600 bg-red-100 dark:bg-red-900/30';
+            default: return 'text-gray-500 bg-gray-100 dark:bg-gray-900/30';
         }
     };
 
@@ -208,18 +253,22 @@ const WorkTrackerForm = ({ onSubmit, initialData, onCancel }) => {
                 <div className="space-y-4">
                     {/* Search Site */}
                     <div className="space-y-2">
-                        <Label htmlFor="site_search">Search Site</Label>
+                        <Label htmlFor="site_search">
+                            Search Site <span className="text-muted-foreground text-xs">(atau input manual)</span>
+                        </Label>
                         <div className="relative">
                             <Input
                                 id="site_search"
                                 type="text"
-                                placeholder="Ketik min. 2 karakter untuk mencari site..."
+                                placeholder="Ketik min. 2 karakter untuk mencari, atau input manual..."
                                 value={searchQuery}
                                 onChange={(e) => {
                                     setSearchQuery(e.target.value);
-                                    setShowSuggestions(true);
+                                    if (!isManualInput) {
+                                        setShowSuggestions(true);
+                                    }
                                 }}
-                                onFocus={() => setShowSuggestions(true)}
+                                onFocus={() => !isManualInput && setShowSuggestions(true)}
                                 className="pr-10"
                             />
                             {isSearching && (
@@ -231,6 +280,7 @@ const WorkTrackerForm = ({ onSubmit, initialData, onCancel }) => {
                                     onClick={() => {
                                         setSearchQuery('');
                                         setShowSuggestions(false);
+                                        setIsManualInput(false);
                                         setFormData(prev => ({
                                             ...prev,
                                             site_id_1: '',
@@ -246,7 +296,7 @@ const WorkTrackerForm = ({ onSubmit, initialData, onCancel }) => {
                             )}
 
                             {/* Suggestions Dropdown */}
-                            {showSuggestions && searchQuery.length >= 2 && (
+                            {showSuggestions && searchQuery.length >= 2 && !isManualInput && (
                                 <div className="suggestions-dropdown absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg max-h-[300px] overflow-y-auto">
                                     {isSearching ? (
                                         <div className="p-4 text-center text-sm text-muted-foreground flex items-center justify-center gap-2">
@@ -256,7 +306,7 @@ const WorkTrackerForm = ({ onSubmit, initialData, onCancel }) => {
                                     ) : siteMaster.length > 0 ? (
                                         <>
                                             <div className="p-2 text-xs text-muted-foreground border-b bg-muted/50">
-                                                Ditemukan {siteMaster.length} site {siteMaster.length === 50 && "(max 50 ditampilkan)"}
+                                                Ditemukan {siteMaster.length} site {siteMaster.length === 50 && "(max 50)"}
                                             </div>
                                             {siteMaster.map((site) => (
                                                 <button
@@ -275,24 +325,37 @@ const WorkTrackerForm = ({ onSubmit, initialData, onCancel }) => {
                                                     </div>
                                                 </button>
                                             ))}
+                                            <button
+                                                type="button"
+                                                onClick={handleUseManualInput}
+                                                className="w-full text-left px-3 py-2 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-sm font-medium"
+                                            >
+                                                📝 Input Manual: "{searchQuery}"
+                                            </button>
                                         </>
                                     ) : (
-                                        <div className="p-4 text-center text-sm text-muted-foreground">
-                                            Site tidak ditemukan untuk "{searchQuery}"
+                                        <div className="p-4 text-center">
+                                            <p className="text-sm text-muted-foreground mb-2">
+                                                Site tidak ditemukan untuk "{searchQuery}"
+                                            </p>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={handleUseManualInput}
+                                            >
+                                                📝 Gunakan Input Manual
+                                            </Button>
                                         </div>
                                     )}
                                 </div>
                             )}
-
-                            {/* Hint text when search query is too short */}
-                            {showSuggestions && searchQuery.length > 0 && searchQuery.length < 2 && (
-                                <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg">
-                                    <div className="p-3 text-sm text-muted-foreground text-center">
-                                        Ketik min. 2 karakter untuk mencari
-                                    </div>
-                                </div>
-                            )}
                         </div>
+                        {isManualInput && (
+                            <p className="text-xs text-blue-600 dark:text-blue-400">
+                                ✓ Mode input manual aktif. Site Name dapat diisi langsung.
+                            </p>
+                        )}
                     </div>
 
                     <div className="space-y-2">
@@ -301,9 +364,10 @@ const WorkTrackerForm = ({ onSubmit, initialData, onCancel }) => {
                             id="site_id_1"
                             name="site_id_1"
                             value={formData.site_id_1}
-                            readOnly
-                            className="bg-muted font-mono"
-                            placeholder="Auto-filled from search"
+                            onChange={isManualInput ? handleChange : undefined}
+                            readOnly={!isManualInput}
+                            className={!isManualInput ? "bg-muted font-mono" : "font-mono"}
+                            placeholder={isManualInput ? "Opsional" : "Auto-filled from search"}
                         />
                     </div>
 
@@ -313,43 +377,68 @@ const WorkTrackerForm = ({ onSubmit, initialData, onCancel }) => {
                             id="site_id_2"
                             name="site_id_2"
                             value={formData.site_id_2}
-                            readOnly
-                            className="bg-muted"
-                            placeholder="Auto-filled"
+                            onChange={isManualInput ? handleChange : undefined}
+                            readOnly={!isManualInput}
+                            className={!isManualInput ? "bg-muted" : ""}
+                            placeholder={isManualInput ? "Opsional" : "Auto-filled"}
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="site_name">Site Name</Label>
+                        <Label htmlFor="site_name">
+                            Site Name <span className="text-red-500">*</span>
+                        </Label>
                         <Input
                             id="site_name"
                             name="site_name"
                             value={formData.site_name}
-                            readOnly
-                            className="bg-muted"
-                            placeholder="Auto-filled"
+                            onChange={isManualInput ? handleChange : undefined}
+                            readOnly={!isManualInput}
+                            className={`${!isManualInput ? "bg-muted" : ""} ${errors.site_name ? "border-red-500" : ""}`}
+                            placeholder={isManualInput ? "Masukkan nama site manual" : "Auto-filled"}
+                            required
                         />
+                        {errors.site_name && (
+                            <p className="text-xs text-red-500 flex items-center gap-1">
+                                <AlertCircle className="w-3 h-3" /> {errors.site_name}
+                            </p>
+                        )}
                     </div>
 
                     <div className="space-y-2">
                         <Label htmlFor="regional">Regional</Label>
-                        <Input
-                            id="regional"
-                            name="regional"
-                            value={formData.regional}
-                            readOnly
-                            className="bg-muted"
-                            placeholder="Auto-filled"
-                        />
+                        {isManualInput ? (
+                            <Select value={formData.regional} onValueChange={(v) => handleSelectChange('regional', v)}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Pilih Regional" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Jabo Outer 1">Jabo Outer 1</SelectItem>
+                                    <SelectItem value="Jabo Outer 2">Jabo Outer 2</SelectItem>
+                                    <SelectItem value="Jabo Outer 3">Jabo Outer 3</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        ) : (
+                            <Input
+                                id="regional"
+                                name="regional"
+                                value={formData.regional}
+                                readOnly
+                                className="bg-muted"
+                                placeholder="Auto-filled"
+                            />
+                        )}
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="suspected">Suspected</Label>
+                        <Label htmlFor="suspected">
+                            Suspected <span className="text-red-500">*</span>
+                        </Label>
                         <Select
                             value={formData.suspected}
                             onValueChange={(value) => handleSelectChange('suspected', value)}
                         >
-                            <SelectTrigger>
+                            <SelectTrigger className={errors.suspected ? "border-red-500" : ""}>
                                 <SelectValue placeholder="Select Suspected" />
                             </SelectTrigger>
                             <SelectContent>
@@ -359,6 +448,11 @@ const WorkTrackerForm = ({ onSubmit, initialData, onCancel }) => {
                                 <SelectItem value="Lumpsum">Lumpsum</SelectItem>
                             </SelectContent>
                         </Select>
+                        {errors.suspected && (
+                            <p className="text-xs text-red-500 flex items-center gap-1">
+                                <AlertCircle className="w-3 h-3" /> {errors.suspected}
+                            </p>
+                        )}
                     </div>
 
                     <div className="space-y-2">
@@ -408,24 +502,35 @@ const WorkTrackerForm = ({ onSubmit, initialData, onCancel }) => {
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="main_addwork">Main Addwork</Label>
+                        <Label htmlFor="main_addwork">
+                            Main Addwork <span className="text-red-500">*</span>
+                        </Label>
                         <Input
                             id="main_addwork"
                             name="main_addwork"
                             value={formData.main_addwork}
                             onChange={handleChange}
                             placeholder="Enter Main Addwork"
+                            className={errors.main_addwork ? "border-red-500" : ""}
+                            required
                         />
+                        {errors.main_addwork && (
+                            <p className="text-xs text-red-500 flex items-center gap-1">
+                                <AlertCircle className="w-3 h-3" /> {errors.main_addwork}
+                            </p>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label htmlFor="status_pekerjaan">Status Pekerjaan</Label>
+                            <Label htmlFor="status_pekerjaan">
+                                Status Pekerjaan <span className="text-red-500">*</span>
+                            </Label>
                             <Select
                                 value={formData.status_pekerjaan}
                                 onValueChange={(value) => handleSelectChange('status_pekerjaan', value)}
                             >
-                                <SelectTrigger>
+                                <SelectTrigger className={errors.status_pekerjaan ? "border-red-500" : ""}>
                                     <SelectValue placeholder="Select Status" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -434,22 +539,21 @@ const WorkTrackerForm = ({ onSubmit, initialData, onCancel }) => {
                                     <SelectItem value="Close">Close</SelectItem>
                                 </SelectContent>
                             </Select>
+                            {errors.status_pekerjaan && (
+                                <p className="text-xs text-red-500 flex items-center gap-1">
+                                    <AlertCircle className="w-3 h-3" /> {errors.status_pekerjaan}
+                                </p>
+                            )}
                         </div>
 
                         <div className="space-y-2">
-                            <Label htmlFor="status_bast">Status BAST</Label>
-                            <Select
-                                value={formData.status_bast}
-                                onValueChange={(value) => handleSelectChange('status_bast', value)}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select Status BAST" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Waiting Approve">Waiting Approve</SelectItem>
-                                    <SelectItem value="Approve">Approve</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <Label htmlFor="status_bast">Status BAST (Auto)</Label>
+                            <div className={`h-10 px-3 py-2 rounded-md border text-sm font-medium flex items-center ${getStatusBastColor(formData.status_bast)}`}>
+                                {formData.status_bast || '-'}
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                                Otomatis berdasarkan Status Pekerjaan & Tanggal BAST
+                            </p>
                         </div>
                     </div>
 
@@ -506,19 +610,11 @@ const WorkTrackerForm = ({ onSubmit, initialData, onCancel }) => {
 
             <div className="flex gap-4 pt-6 justify-end border-t mt-6">
                 {onCancel && (
-                    <Button
-                        type="button"
-                        onClick={onCancel}
-                        variant="outline"
-                        className="w-24"
-                    >
+                    <Button type="button" onClick={onCancel} variant="outline" className="w-24">
                         Cancel
                     </Button>
                 )}
-                <Button
-                    type="submit"
-                    className="w-32"
-                >
+                <Button type="submit" className="w-32">
                     {initialData ? 'Update Data' : 'Save Data'}
                 </Button>
             </div>

@@ -84,6 +84,7 @@ const CarDataTable = ({ data, onEdit, onDelete, isReadOnly = false, picData = []
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b bg-muted/50">
+                            <th className="text-left py-3 px-4 font-medium text-muted-foreground w-12">No</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">No Polisi</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">PIC</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Area</th>
@@ -96,7 +97,7 @@ const CarDataTable = ({ data, onEdit, onDelete, isReadOnly = false, picData = []
                         </tr>
                     </thead>
                     <tbody>
-                        {paginatedData.map((car) => {
+                        {paginatedData.map((car, index) => {
                             const stnkStatus = getDocumentStatus(car.masa_berlaku_stnk);
                             const pajakStatus = getDocumentStatus(car.masa_berlaku_pajak);
                             const kirStatus = getDocumentStatus(car.masa_berlaku_kir);
@@ -104,6 +105,7 @@ const CarDataTable = ({ data, onEdit, onDelete, isReadOnly = false, picData = []
 
                             return (
                                 <tr key={car.id} className="border-b hover:bg-muted/50 transition-colors">
+                                    <td className="py-3 px-4 text-muted-foreground">{startIndex + index + 1}</td>
                                     <td className="py-3 px-4 font-medium font-mono">{car.nomor_polisi}</td>
                                     <td className="py-3 px-4">{picName}</td>
                                     <td className="py-3 px-4">{car.area || '-'}</td>

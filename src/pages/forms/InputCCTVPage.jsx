@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
+import { syncCCTVToGoogleSheets } from '@/lib/googleSheetsSync';
+import { logInsert, logUpdate } from '@/lib/activityLogger';
 
 const InputCCTVPage = () => {
     const navigate = useNavigate();
@@ -50,13 +52,45 @@ const InputCCTVPage = () => {
             };
 
             let error;
+            let savedRecordId = id; // For update, use existing id
+
             if (id) {
+                // Update existing record
                 ({ error } = await supabase.from('cctv_data').update(payload).eq('id', id));
             } else {
-                ({ error } = await supabase.from('cctv_data').insert([payload]));
+                // Insert new record and get the inserted ID
+                const { data: insertedData, error: insertError } = await supabase
+                    .from('cctv_data')
+                    .insert([payload])
+                    .select('id')
+                    .single();
+
+                error = insertError;
+                savedRecordId = insertedData?.id;
             }
 
             if (error) throw error;
+
+            // Log activity
+            if (id) {
+                logUpdate('cctv_data', savedRecordId, `Updated CCTV: ${payload.site_name || payload.site_id_display}`);
+            } else {
+                logInsert('cctv_data', savedRecordId, `Created CCTV: ${payload.site_name || payload.site_id_display}`);
+            }
+
+            // Sync to Google Sheets (non-blocking - don't wait for it)
+            syncCCTVToGoogleSheets(payload, savedRecordId, !!id)
+                .then((syncResult) => {
+                    if (syncResult.success) {
+                        console.log('✅ Synced to Google Sheets');
+                    } else {
+                        console.warn('⚠️ Google Sheets sync failed:', syncResult.error);
+                    }
+                })
+                .catch((syncError) => {
+                    console.error('❌ Google Sheets sync error:', syncError);
+                });
+
             toast({ title: "Success", description: id ? "CCTV Data updated." : "New CCTV Data saved." });
             navigate(returnUrl);
         } catch (err) {

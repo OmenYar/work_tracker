@@ -13,24 +13,18 @@ const AdminLayout = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+    // Close sidebar on route change (mobile)
+    useEffect(() => {
+        setIsSidebarOpen(false);
+    }, [location.pathname]);
+
     // Determine active tab based on URL path or query param
-    // Priority:
-    // 1. Path segment (e.g. /admin/tracker... -> 'tracker')
-    // 2. Query param ?tab=...
-    // 3. Default 'dashboard'
-
-    // Logic:
-    // If path is exactly '/admin', use query param or 'dashboard'.
-    // If path starts with '/admin/tracker', activeTab = 'tracker'.
-    // If path starts with '/admin/pic', activeTab = 'pic'.
-    // If path starts with '/admin/car', activeTab = 'car'.
-    // If path starts with '/admin/users', activeTab = 'users'.
-
     const getActiveTab = () => {
         const path = location.pathname;
         if (path.includes('/input-tracker') || path.includes('/edit-tracker')) return 'tracker';
         if (path.includes('/input-pic') || path.includes('/edit-pic')) return 'pic';
         if (path.includes('/input-car') || path.includes('/edit-car')) return 'car';
+        if (path.includes('/input-cctv') || path.includes('/edit-cctv')) return 'cctv';
 
         // Fallback to query param if on root
         return searchParams.get('tab') || 'dashboard';
@@ -39,8 +33,6 @@ const AdminLayout = () => {
     const activeTab = getActiveTab();
 
     const handleSetActiveTab = (tabId) => {
-        // If clicking a tab, always go to root /admin with ?tab=ID
-        // unless it's strictly the dashboard
         if (tabId === 'dashboard') {
             navigate('/admin?tab=dashboard');
         } else {
@@ -54,7 +46,8 @@ const AdminLayout = () => {
     };
 
     return (
-        <div className="flex min-h-screen bg-background text-foreground">
+        <div className="flex h-screen overflow-hidden bg-background text-foreground">
+            {/* Sidebar - Fixed position */}
             <Sidebar
                 activeTab={activeTab}
                 setActiveTab={handleSetActiveTab}
@@ -63,21 +56,23 @@ const AdminLayout = () => {
                 setIsOpen={setIsSidebarOpen}
             />
 
-            <main className="flex-1 flex flex-col h-screen overflow-hidden">
-                {/* Mobile Header */}
-                <div className="md:hidden p-4 border-b bg-card flex items-center justify-between shrink-0">
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col min-w-0 h-screen">
+                {/* Mobile Header - Fixed */}
+                <header className="md:hidden sticky top-0 z-30 p-3 border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 flex items-center justify-between shrink-0">
                     <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(true)}>
-                        <Menu className="h-6 w-6" />
+                        <Menu className="h-5 w-5" />
+                        <span className="sr-only">Open menu</span>
                     </Button>
-                    <h1 className="font-semibold text-lg">WorkTracker</h1>
+                    <h1 className="font-semibold text-base">WorkTracker</h1>
                     <ThemeToggle />
-                </div>
+                </header>
 
-                {/* Content Area - Scrollable */}
-                <div className="flex-1 overflow-y-auto">
+                {/* Scrollable Content Area */}
+                <main className="flex-1 overflow-y-auto overflow-x-hidden">
                     <Outlet />
-                </div>
-            </main>
+                </main>
+            </div>
         </div>
     );
 };

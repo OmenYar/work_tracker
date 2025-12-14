@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
+import { syncCarToGoogleSheets } from '@/lib/googleSheetsSync';
+import { logInsert, logUpdate } from '@/lib/activityLogger';
 
 const InputCarPage = () => {
     const navigate = useNavigate();
@@ -53,13 +55,59 @@ const InputCarPage = () => {
             };
 
             let error;
+            let savedRecordId = id;
+
             if (id) {
                 ({ error } = await supabase.from('car_data').update(payload).eq('id', id));
             } else {
-                ({ error } = await supabase.from('car_data').insert([payload]));
+                const { data: insertedData, error: insertError } = await supabase
+                    .from('car_data')
+                    .insert([payload])
+                    .select('id')
+                    .single();
+
+                error = insertError;
+                savedRecordId = insertedData?.id;
             }
 
             if (error) throw error;
+
+            // Log activity
+            if (id) {
+                logUpdate('car_data', savedRecordId, `Updated car: ${payload.nomor_polisi}`);
+            } else {
+                logInsert('car_data', savedRecordId, `Created car: ${payload.nomor_polisi}`);
+            }
+
+            // Fetch PIC name for Google Sheets sync
+            let picName = '';
+            if (payload.pic_id) {
+                const { data: picData } = await supabase
+                    .from('pic_data')
+                    .select('nama_pic')
+                    .eq('id', payload.pic_id)
+                    .single();
+                picName = picData?.nama_pic || '';
+            }
+
+            // Sync to Google Sheets (non-blocking) - include pic_name
+            const syncPayload = {
+                ...payload,
+                pic_name: picName,
+            };
+
+            syncCarToGoogleSheets(syncPayload, savedRecordId, !!id)
+                .then((syncResult) => {
+                    if (syncResult.success) {
+                        console.log('✅ Car synced to Google Sheets');
+                    } else {
+                        console.warn('⚠️ Google Sheets sync failed:', syncResult.error);
+                    }
+                })
+                .catch((syncError) => {
+                    console.error('❌ Google Sheets sync error:', syncError);
+                });
+
             toast({ title: "Success", description: id ? "Car Data updated." : "New Car Data saved." });
             navigate(returnUrl);
         } catch (err) {

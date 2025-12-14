@@ -48,6 +48,7 @@ const PicDataTable = ({ data, onEdit, onDelete, isReadOnly = false }) => {
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b bg-muted/50">
+                            <th className="text-left py-3 px-4 font-medium text-muted-foreground w-12">No</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Nama PIC</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Jabatan</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Regional</th>
@@ -58,8 +59,9 @@ const PicDataTable = ({ data, onEdit, onDelete, isReadOnly = false }) => {
                         </tr>
                     </thead>
                     <tbody>
-                        {paginatedData.map((pic) => (
+                        {paginatedData.map((pic, index) => (
                             <tr key={pic.id} className="border-b hover:bg-muted/50 transition-colors">
+                                <td className="py-3 px-4 text-muted-foreground">{startIndex + index + 1}</td>
                                 <td className="py-3 px-4 font-medium">{pic.nama_pic}</td>
                                 <td className="py-3 px-4">{pic.jabatan}</td>
                                 <td className="py-3 px-4">{pic.regional}</td>

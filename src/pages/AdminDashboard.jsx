@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, useMemo, useCallback } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
-import { Plus, Activity, AlertCircle, CheckCircle, Clock, Truck, Users as UsersIcon, Download, Briefcase, PlayCircle, PauseCircle, XCircle, Camera, Wifi, WifiOff } from 'lucide-react';
+import { Plus, Activity, AlertCircle, CheckCircle, Clock, Truck, Users as UsersIcon, Briefcase, PlayCircle, PauseCircle, XCircle, Camera, Wifi, WifiOff, FileText } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,16 +10,50 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/lib/customSupabaseClient';
-import { exportToCSV } from '@/lib/exportUtils';
+import { deleteCCTVFromGoogleSheets, deletePICFromGoogleSheets, deleteTrackerFromGoogleSheets, deleteCarFromGoogleSheets } from '@/lib/googleSheetsSync';
+import { logDelete } from '@/lib/activityLogger';
 
-// Components
-import WorkTrackerTable from '@/components/WorkTrackerTable';
-import UserManagement from '@/components/UserManagement';
-import PicDataTable from '@/components/PicDataTable';
-import CarDataTable from '@/components/CarDataTable';
-import CCTVDataTable from '@/components/CCTVDataTable';
-import StickyNotes from '@/components/StickyNotes';
+// Components - Lazy loaded for code splitting
+const WorkTrackerTable = React.lazy(() => import('@/components/WorkTrackerTable'));
+const UserManagement = React.lazy(() => import('@/components/UserManagement'));
+const PicDataTable = React.lazy(() => import('@/components/PicDataTable'));
+const CarDataTable = React.lazy(() => import('@/components/CarDataTable'));
+const CCTVDataTable = React.lazy(() => import('@/components/CCTVDataTable'));
+const StickyNotes = React.lazy(() => import('@/components/StickyNotes'));
+const ActivityLogs = React.lazy(() => import('@/components/ActivityLogs'));
+const ExportDropdown = React.lazy(() => import('@/components/ExportDropdown'));
+const DashboardExport = React.lazy(() => import('@/components/DashboardExport'));
+const GenerateBAST = React.lazy(() => import('@/components/GenerateBAST'));
+
+// Non-lazy (small components)
 import { ThemeToggle } from '@/components/ThemeToggle';
+
+// Loading fallback for lazy components
+const ComponentLoader = () => (
+    <div className="flex items-center justify-center p-8">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+);
+
+// Helper function to determine BAST status dynamically
+// "Need Created BAST" = status_pekerjaan is 'Close' AND status_bast not 'Approve'/'Waiting Approve' AND dates are empty
+const isNeedCreatedBast = (tracker) => {
+    const isStatusClose = tracker.status_pekerjaan === 'Close';
+    const isNotApprove = tracker.status_bast !== 'Approve' && tracker.status_bast !== 'BAST Approve Date';
+    const isNotWaiting = tracker.status_bast !== 'Waiting Approve' && tracker.status_bast !== 'Waiting Approve BAST';
+    const isDateEmpty = (!tracker.date_submit || tracker.date_submit === '') &&
+        (!tracker.date_approve || tracker.date_approve === '');
+
+    return isStatusClose && isNotApprove && isNotWaiting && isDateEmpty;
+};
+
+// Get computed BAST status for a tracker
+const getBastStatus = (tracker) => {
+    if (isNeedCreatedBast(tracker)) {
+        return 'Need Created BAST';
+    }
+    return tracker.status_bast || '-';
+};
 
 const AdminDashboard = () => {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -68,7 +103,7 @@ const AdminDashboard = () => {
 
     // Dashboard specific filters - MOVED UP
     const [dashSearch, setDashSearch] = useState('');
-    const [dashRegion, setDashRegion] = useState('all');
+    const [dashRegion, setDashRegion] = useState(searchParams.get('dashRegion') || 'all');
     const [dashBast, setDashBast] = useState('all');
     const [dashStatusPekerjaan, setDashStatusPekerjaan] = useState('all');
     const [dashFilteredTrackers, setDashFilteredTrackers] = useState([]);
@@ -155,10 +190,11 @@ const AdminDashboard = () => {
 
 
     useEffect(() => {
-        // Core criteria: Waiting BAST, On Hold, Open
+        // Core criteria: Waiting BAST, Need Created BAST, On Hold, Open
         let result = workTrackers.filter(t =>
             t.status_bast === 'Waiting Approve' ||
             t.status_bast === 'Waiting Approve BAST' ||
+            isNeedCreatedBast(t) ||
             t.status_pekerjaan === 'On Hold' ||
             t.status_pekerjaan === 'Open'
         );
@@ -181,6 +217,8 @@ const AdminDashboard = () => {
                 result = result.filter(item => item.status_bast === 'Waiting Approve' || item.status_bast === 'Waiting Approve BAST');
             } else if (dashBast === 'Approve') {
                 result = result.filter(item => item.status_bast === 'Approve' || item.status_bast === 'BAST Approve Date');
+            } else if (dashBast === 'Need Created BAST') {
+                result = result.filter(item => isNeedCreatedBast(item));
             } else {
                 result = result.filter(item => item.status_bast === dashBast);
             }
@@ -201,7 +239,7 @@ const AdminDashboard = () => {
             const lower = dashPicSearch.toLowerCase();
             result = result.filter(item =>
                 item.nama_pic?.toLowerCase().includes(lower) ||
-                item.area?.toLowerCase().includes(lower)
+                item.pic_number_1?.includes(lower)
             );
         }
 
@@ -224,13 +262,13 @@ const AdminDashboard = () => {
             const lower = carSearchTerm.toLowerCase();
             result = result.filter(item =>
                 item.nomor_polisi?.toLowerCase().includes(lower) ||
-                item.brand?.toLowerCase().includes(lower) ||
+                item.merk_mobil?.toLowerCase().includes(lower) ||
                 item.model?.toLowerCase().includes(lower)
             );
         }
 
         if (carPriorityFilter !== 'all') {
-            result = result.filter(item => item.priority === carPriorityFilter);
+            // Logic for priority filter if needed later
         }
 
         if (carFilterCondition !== 'all') {
@@ -251,19 +289,17 @@ const AdminDashboard = () => {
         if (cctvSearchTerm) {
             const lower = cctvSearchTerm.toLowerCase();
             result = result.filter(item =>
-                item.site_id_display?.toLowerCase().includes(lower) ||
                 item.site_name?.toLowerCase().includes(lower) ||
-                item.merk_cctv?.toLowerCase().includes(lower) ||
-                item.branch?.toLowerCase().includes(lower)
+                item.site_id_display?.toLowerCase().includes(lower)
             );
-        }
-
-        if (cctvRegionalFilter !== 'all') {
-            result = result.filter(item => item.regional === cctvRegionalFilter);
         }
 
         if (cctvStatusFilter !== 'all') {
             result = result.filter(item => item.status === cctvStatusFilter);
+        }
+
+        if (cctvRegionalFilter !== 'all') {
+            result = result.filter(item => item.regional === cctvRegionalFilter);
         }
 
         if (cctvCategoryFilter !== 'all') {
@@ -298,6 +334,8 @@ const AdminDashboard = () => {
                 result = result.filter(item => item.status_bast === 'Waiting Approve' || item.status_bast === 'Waiting Approve BAST');
             } else if (bastFilter === 'Approve') {
                 result = result.filter(item => item.status_bast === 'Approve' || item.status_bast === 'BAST Approve Date');
+            } else if (bastFilter === 'Need Created BAST') {
+                result = result.filter(item => isNeedCreatedBast(item));
             } else {
                 result = result.filter(item => item.status_bast === bastFilter);
             }
@@ -314,7 +352,7 @@ const AdminDashboard = () => {
             const lower = picSearchTerm.toLowerCase();
             result = result.filter(item =>
                 item.nama_pic?.toLowerCase().includes(lower) ||
-                item.area?.toLowerCase().includes(lower)
+                item.pic_number_1?.includes(lower)
             );
         }
 
@@ -339,14 +377,16 @@ const AdminDashboard = () => {
     // Role Helpers
     const isAdmin = profile?.role === 'Administrator';
     const isAM = profile?.role === 'AM';
-    const isSPV = profile?.role?.startsWith('SPV');
-    const userRegional = isSPV ? profile.role.replace('SPV ', '') : null;
+    const isSPV = profile?.role?.toLowerCase().startsWith('spv') || profile?.role?.toLowerCase().includes('supervisor');
+    // Robust Regional parsing: removes "spv", "supervisor" prefix and optional separator (- or :)
+    const userRegional = isSPV ? profile.role.replace(/^(spv|supervisor)\s*[-:]?\s*/i, '').trim() : null;
 
-    const canManageUsers = isAdmin;
+    // Permission helpers - Admin and AM can manage everything, SPV can manage their regional data
+    const canManageUsers = isAdmin; // Only Admin can manage users
     const canEditTracker = isAdmin || isAM || isSPV;
-    const canEditPic = isAdmin || isAM;
-    const canEditCar = isAdmin || isAM;
-    const canEditCctv = isAdmin || isAM;
+    const canEditPic = isAdmin || isAM || isSPV;
+    const canEditCar = isAdmin || isAM || isSPV;
+    const canEditCctv = isAdmin || isAM || isSPV;
 
     // Fetch Data
     useEffect(() => {
@@ -362,7 +402,7 @@ const AdminDashboard = () => {
         try {
             let query = supabase.from('work_trackers').select('*').order('created_at', { ascending: false });
 
-            // Filter for SPV
+            // Filter for SPV - only show data from their regional
             if (isSPV && userRegional) {
                 query = query.eq('regional', userRegional);
             }
@@ -377,7 +417,14 @@ const AdminDashboard = () => {
 
     const fetchPicData = async () => {
         try {
-            const { data, error } = await supabase.from('pic_data').select('*').order('created_at', { ascending: false });
+            let query = supabase.from('pic_data').select('*').order('created_at', { ascending: false });
+
+            // Filter for SPV - only show PIC from their regional
+            if (isSPV && userRegional) {
+                query = query.eq('regional', userRegional);
+            }
+
+            const { data, error } = await query;
             if (error) throw error;
             setPicData(data || []);
         } catch (error) {
@@ -387,9 +434,15 @@ const AdminDashboard = () => {
 
     const fetchCarData = async () => {
         try {
-            const { data, error } = await supabase.from('car_data').select('*').order('created_at', { ascending: false });
+            let query = supabase.from('car_data').select('*').order('created_at', { ascending: false });
+
+            // Filter for SPV - using 'area' field for Car Data
+            if (isSPV && userRegional) {
+                query = query.eq('area', userRegional);
+            }
+
+            const { data, error } = await query;
             if (error) {
-                // If table doesn't exist yet, we might get an error. Suppress or log.
                 console.error("Fetch Car Error", error);
                 return;
             }
@@ -401,7 +454,14 @@ const AdminDashboard = () => {
 
     const fetchCctvData = async () => {
         try {
-            const { data, error } = await supabase.from('cctv_data').select('*').order('created_at', { ascending: false });
+            let query = supabase.from('cctv_data').select('*').order('created_at', { ascending: false });
+
+            // Filter for SPV - only show CCTV from their regional
+            if (isSPV && userRegional) {
+                query = query.eq('regional', userRegional);
+            }
+
+            const { data, error } = await query;
             if (error) {
                 console.error("Fetch CCTV Error", error);
                 return;
@@ -446,13 +506,30 @@ const AdminDashboard = () => {
     };
 
     const handleTrackerDelete = async (id) => {
-        if (!isAdmin) { // Only admin can delete typically, or AM? Assuming Admin only for safety
+        if (!isAdmin) {
             toast({ variant: "destructive", title: "Access Denied", description: "Only Administrators can delete records." });
             return;
         }
         try {
             const { error } = await supabase.from('work_trackers').delete().eq('id', id);
             if (error) throw error;
+
+            // Log activity
+            logDelete('work_trackers', id, 'Deleted work tracker record');
+
+            // Sync delete to Google Sheets (non-blocking)
+            deleteTrackerFromGoogleSheets(id)
+                .then((syncResult) => {
+                    if (syncResult.success) {
+                        console.log('✅ Tracker deleted from Google Sheets');
+                    } else {
+                        console.warn('⚠️ Google Sheets delete sync failed:', syncResult.error);
+                    }
+                })
+                .catch((syncError) => {
+                    console.error('❌ Google Sheets delete sync error:', syncError);
+                });
+
             toast({ title: "Deleted", description: "Record deleted." });
             fetchTrackers();
         } catch (err) {
@@ -489,10 +566,27 @@ const AdminDashboard = () => {
     };
 
     const handlePicDelete = async (id) => {
-        if (!isAdmin) return;
+        if (!canEditPic) return;
         try {
             const { error } = await supabase.from('pic_data').delete().eq('id', id);
             if (error) throw error;
+
+            // Log activity
+            logDelete('pic_data', id, 'Deleted PIC record');
+
+            // Sync delete to Google Sheets (non-blocking)
+            deletePICFromGoogleSheets(id)
+                .then((syncResult) => {
+                    if (syncResult.success) {
+                        console.log('✅ PIC deleted from Google Sheets');
+                    } else {
+                        console.warn('⚠️ Google Sheets delete sync failed:', syncResult.error);
+                    }
+                })
+                .catch((syncError) => {
+                    console.error('❌ Google Sheets delete sync error:', syncError);
+                });
+
             fetchPicData();
             toast({ title: "Deleted", description: "PIC deleted." });
         } catch (err) {
@@ -531,10 +625,27 @@ const AdminDashboard = () => {
     };
 
     const handleCarDelete = async (id) => {
-        if (!isAdmin) return;
+        if (!canEditCar) return;
         try {
             const { error } = await supabase.from('car_data').delete().eq('id', id);
             if (error) throw error;
+
+            // Log activity
+            logDelete('car_data', id, 'Deleted car record');
+
+            // Sync delete to Google Sheets (non-blocking)
+            deleteCarFromGoogleSheets(id)
+                .then((syncResult) => {
+                    if (syncResult.success) {
+                        console.log('✅ Car deleted from Google Sheets');
+                    } else {
+                        console.warn('⚠️ Google Sheets delete sync failed:', syncResult.error);
+                    }
+                })
+                .catch((syncError) => {
+                    console.error('❌ Google Sheets delete sync error:', syncError);
+                });
+
             fetchCarData();
             toast({ title: "Deleted", description: "Car deleted." });
         } catch (err) {
@@ -544,10 +655,27 @@ const AdminDashboard = () => {
 
     // --- CCTV Handlers ---
     const handleCctvDelete = async (id) => {
-        if (!isAdmin) return;
+        if (!canEditCctv) return;
         try {
             const { error } = await supabase.from('cctv_data').delete().eq('id', id);
             if (error) throw error;
+
+            // Log activity
+            logDelete('cctv_data', id, 'Deleted CCTV record');
+
+            // Sync delete to Google Sheets (non-blocking)
+            deleteCCTVFromGoogleSheets(id)
+                .then((syncResult) => {
+                    if (syncResult.success) {
+                        console.log('✅ Deleted from Google Sheets');
+                    } else {
+                        console.warn('⚠️ Google Sheets delete sync failed:', syncResult.error);
+                    }
+                })
+                .catch((syncError) => {
+                    console.error('❌ Google Sheets delete sync error:', syncError);
+                });
+
             fetchCctvData();
             toast({ title: "Deleted", description: "CCTV deleted." });
         } catch (err) {
@@ -561,26 +689,88 @@ const AdminDashboard = () => {
         switch (activeTab) {
             case 'dashboard':
                 // Compute summary counts (Global)
-                const dTotal = workTrackers.length;
                 const dWaiting = workTrackers.filter(t => t.status_bast === 'Waiting Approve' || t.status_bast === 'Waiting Approve BAST').length;
-                const dApproved = workTrackers.filter(t => t.status_bast === 'Approve' || t.status_bast === 'BAST Approve Date').length;
+                const dNeedCreated = workTrackers.filter(t => isNeedCreatedBast(t)).length;
                 const dProgress = workTrackers.filter(t => t.status_pekerjaan === 'Open').length;
                 const dHold = workTrackers.filter(t => t.status_pekerjaan === 'On Hold').length;
-                const dClose = workTrackers.filter(t => t.status_pekerjaan === 'Close').length;
+                const dActivePic = picData.filter(p => p.validasi === 'Active').length;
+                const dTotalCar = carData.length;
+                const dActiveCctv = cctvData.filter(c => c.status === 'online').length;
+
+                // Regional BAST Stats (For Admin/AM) - Waiting Approve
+                const wJabo1 = workTrackers.filter(t => t.regional === 'Jabo Outer 1' && (t.status_bast === 'Waiting Approve' || t.status_bast === 'Waiting Approve BAST')).length;
+                const wJabo2 = workTrackers.filter(t => t.regional === 'Jabo Outer 2' && (t.status_bast === 'Waiting Approve' || t.status_bast === 'Waiting Approve BAST')).length;
+                const wJabo3 = workTrackers.filter(t => t.regional === 'Jabo Outer 3' && (t.status_bast === 'Waiting Approve' || t.status_bast === 'Waiting Approve BAST')).length;
+
+                // Regional BAST Stats (For Admin/AM) - Need Created
+                const nJabo1 = workTrackers.filter(t => t.regional === 'Jabo Outer 1' && isNeedCreatedBast(t)).length;
+                const nJabo2 = workTrackers.filter(t => t.regional === 'Jabo Outer 2' && isNeedCreatedBast(t)).length;
+                const nJabo3 = workTrackers.filter(t => t.regional === 'Jabo Outer 3' && isNeedCreatedBast(t)).length;
+
+                // Chart colors
+                const CHART_COLORS = ['#8b5cf6', '#06b6d4', '#f59e0b'];
+                const CCTV_COLORS = {
+                    online: '#22c55e',
+                    offline: '#eab308',
+                    broken: '#ef4444',
+                    stolen: '#a855f7'
+                };
+
+                // Data for PIC per Regional chart
+                const picPerRegionalData = [
+                    { name: 'Jabo Outer 1', value: picData.filter(p => p.validasi === 'Active' && p.regional === 'Jabo Outer 1').length, fill: CHART_COLORS[0] },
+                    { name: 'Jabo Outer 2', value: picData.filter(p => p.validasi === 'Active' && p.regional === 'Jabo Outer 2').length, fill: CHART_COLORS[1] },
+                    { name: 'Jabo Outer 3', value: picData.filter(p => p.validasi === 'Active' && p.regional === 'Jabo Outer 3').length, fill: CHART_COLORS[2] },
+                ];
+
+                // Data for CCTV Status chart
+                const cctvStatusData = [
+                    { name: 'Online', value: cctvData.filter(c => c.status === 'online').length, fill: CCTV_COLORS.online },
+                    { name: 'Offline', value: cctvData.filter(c => c.status === 'offline').length, fill: CCTV_COLORS.offline },
+                    { name: 'Broken', value: cctvData.filter(c => c.status === 'broken').length, fill: CCTV_COLORS.broken },
+                    { name: 'Stolen', value: cctvData.filter(c => c.status === 'stolen').length, fill: CCTV_COLORS.stolen },
+                ];
 
                 return (
-                    <div className="space-y-6">
-                        <h2 className="text-2xl font-bold">Dashboard Overview</h2>
+                    <div className="space-y-6" data-dashboard-content>
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                            <h2 className="text-2xl font-bold">Dashboard Overview</h2>
+                            <div className="flex items-center gap-2">
+                                {isSPV && userRegional && (
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary">
+                                        Regional: {userRegional}
+                                    </span>
+                                )}
+                                <DashboardExport
+                                    title="Dashboard Report"
+                                    stats={{
+                                        'Waiting Approve BAST': dWaiting,
+                                        'Open': dProgress,
+                                        'On Hold': dHold,
+                                        'PIC Aktif': dActivePic,
+                                        'Total Mobil': dTotalCar,
+                                        'CCTV Online': dActiveCctv,
+                                    }}
+                                    tableData={workTrackers.filter(t => t.status_pekerjaan !== 'Close').slice(0, 50)}
+                                    tableColumns={[
+                                        { key: 'site_name', header: 'Site Name' },
+                                        { key: 'regional', header: 'Regional' },
+                                        { key: 'status_pekerjaan', header: 'Status' },
+                                        { key: 'status_bast', header: 'BAST' },
+                                    ]}
+                                />
+                            </div>
+                        </div>
 
                         {/* Summary Stats with Icons */}
-                        <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
                             <div className="bg-card border rounded-xl p-4 shadow-sm">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-xs text-muted-foreground uppercase font-bold">Total Job</p>
-                                        <p className="text-2xl font-bold">{dTotal}</p>
+                                        <p className="text-xs text-muted-foreground uppercase font-bold text-purple-600">Need Created BAST</p>
+                                        <p className="text-2xl font-bold">{dNeedCreated}</p>
                                     </div>
-                                    <Briefcase className="w-8 h-8 text-muted-foreground opacity-50" />
+                                    <FileText className="w-8 h-8 text-purple-600 opacity-50" />
                                 </div>
                             </div>
                             <div className="bg-card border rounded-xl p-4 shadow-sm">
@@ -590,15 +780,6 @@ const AdminDashboard = () => {
                                         <p className="text-2xl font-bold">{dWaiting}</p>
                                     </div>
                                     <Clock className="w-8 h-8 text-yellow-600 opacity-50" />
-                                </div>
-                            </div>
-                            <div className="bg-card border rounded-xl p-4 shadow-sm">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xs text-muted-foreground uppercase font-bold text-green-600">Approve BAST</p>
-                                        <p className="text-2xl font-bold">{dApproved}</p>
-                                    </div>
-                                    <CheckCircle className="w-8 h-8 text-green-600 opacity-50" />
                                 </div>
                             </div>
                             <div className="bg-card border rounded-xl p-4 shadow-sm">
@@ -622,112 +803,245 @@ const AdminDashboard = () => {
                             <div className="bg-card border rounded-xl p-4 shadow-sm">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <p className="text-xs text-muted-foreground uppercase font-bold text-gray-600">Close</p>
-                                        <p className="text-2xl font-bold">{dClose}</p>
+                                        <p className="text-xs text-muted-foreground uppercase font-bold text-purple-600">PIC Aktif</p>
+                                        <p className="text-2xl font-bold">{dActivePic}</p>
                                     </div>
-                                    <XCircle className="w-8 h-8 text-gray-600 opacity-50" />
+                                    <UsersIcon className="w-8 h-8 text-purple-600 opacity-50" />
+                                </div>
+                            </div>
+                            <div className="bg-card border rounded-xl p-4 shadow-sm">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs text-muted-foreground uppercase font-bold text-teal-600">Data Mobil</p>
+                                        <p className="text-2xl font-bold">{dTotalCar}</p>
+                                    </div>
+                                    <Truck className="w-8 h-8 text-teal-600 opacity-50" />
+                                </div>
+                            </div>
+                            <div className="bg-card border rounded-xl p-4 shadow-sm">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs text-muted-foreground uppercase font-bold text-green-600">CCTV Online</p>
+                                        <p className="text-2xl font-bold">{dActiveCctv}</p>
+                                    </div>
+                                    <Camera className="w-8 h-8 text-green-600 opacity-50" />
                                 </div>
                             </div>
                         </div>
 
-                        {/* Regional Waiting Stats */}
-                        <div>
-                            <h3 className="text-lg font-semibold mb-4">Waiting Approval BAST per Regional</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                {['Jabo Outer 1', 'Jabo Outer 2', 'Jabo Outer 3'].map(reg => {
-                                    const count = workTrackers.filter(t =>
-                                        t.regional === reg &&
-                                        (t.status_bast === 'Waiting Approve' || t.status_bast === 'Waiting Approve BAST')
-                                    ).length;
-                                    return (
-                                        <div key={reg} className="bg-card border rounded-lg p-4">
-                                            <p className="text-sm font-medium text-muted-foreground">{reg}</p>
-                                            <div className="flex items-baseline gap-2 mt-1">
-                                                <p className="text-3xl font-bold">{count}</p>
-                                                <p className="text-xs text-muted-foreground">menunggu approval BAST</p>
-                                            </div>
+                        {/* Waiting BAST per Regional - Admin/AM Only */}
+                        {!isSPV && (
+                            <div className="bg-card border rounded-xl p-6 shadow-sm">
+                                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                                    <Clock className="w-5 h-5 text-yellow-600" />
+                                    Waiting Approval BAST per Regional
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="p-4 bg-muted/30 rounded-lg border flex justify-between items-center">
+                                        <span className="font-medium text-muted-foreground">Jabo Outer 1</span>
+                                        <span className="text-2xl font-bold text-primary">{wJabo1}</span>
+                                    </div>
+                                    <div className="p-4 bg-muted/30 rounded-lg border flex justify-between items-center">
+                                        <span className="font-medium text-muted-foreground">Jabo Outer 2</span>
+                                        <span className="text-2xl font-bold text-primary">{wJabo2}</span>
+                                    </div>
+                                    <div className="p-4 bg-muted/30 rounded-lg border flex justify-between items-center">
+                                        <span className="font-medium text-muted-foreground">Jabo Outer 3</span>
+                                        <span className="text-2xl font-bold text-primary">{wJabo3}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Need Created BAST per Regional - Admin/AM Only */}
+                        {!isSPV && (
+                            <div className="bg-card border rounded-xl p-6 shadow-sm">
+                                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                                    <FileText className="w-5 h-5 text-purple-600" />
+                                    Need Created BAST per Regional
+                                </h3>
+                                <div className="grid grid-cols-3 gap-4">
+                                    <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800 flex justify-between items-center">
+                                        <span className="font-medium text-muted-foreground">Jabo Outer 1</span>
+                                        <span className="text-2xl font-bold text-purple-600">{nJabo1}</span>
+                                    </div>
+                                    <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800 flex justify-between items-center">
+                                        <span className="font-medium text-muted-foreground">Jabo Outer 2</span>
+                                        <span className="text-2xl font-bold text-purple-600">{nJabo2}</span>
+                                    </div>
+                                    <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800 flex justify-between items-center">
+                                        <span className="font-medium text-muted-foreground">Jabo Outer 3</span>
+                                        <span className="text-2xl font-bold text-purple-600">{nJabo3}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Charts Section - PIC per Regional and CCTV Status */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {/* PIC Aktif per Regional - Donut Chart */}
+                            <div className="bg-card border rounded-xl p-6 shadow-sm">
+                                <h3 className="text-lg font-semibold mb-4">PIC Aktif per Regional</h3>
+                                <div className="h-[280px]">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie
+                                                data={picPerRegionalData}
+                                                cx="50%"
+                                                cy="50%"
+                                                innerRadius={60}
+                                                outerRadius={100}
+                                                paddingAngle={3}
+                                                dataKey="value"
+                                                label={({ name, value }) => `${value}`}
+                                                labelLine={false}
+                                            >
+                                                {picPerRegionalData.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip
+                                                contentStyle={{
+                                                    backgroundColor: 'hsl(var(--card))',
+                                                    border: '1px solid hsl(var(--border))',
+                                                    borderRadius: '8px'
+                                                }}
+                                            />
+                                            <Legend />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
+                                <div className="flex justify-center gap-6 mt-2">
+                                    {picPerRegionalData.map((item, idx) => (
+                                        <div key={idx} className="text-center">
+                                            <p className="text-2xl font-bold" style={{ color: item.fill }}>{item.value}</p>
+                                            <p className="text-xs text-muted-foreground">{item.name}</p>
                                         </div>
-                                    );
-                                })}
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* CCTV Status - Bar Chart */}
+                            <div className="bg-card border rounded-xl p-6 shadow-sm">
+                                <h3 className="text-lg font-semibold mb-4">Status CCTV</h3>
+                                <div className="h-[280px]">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart data={cctvStatusData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                                            <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+                                            <XAxis type="number" />
+                                            <YAxis type="category" dataKey="name" width={70} />
+                                            <Tooltip
+                                                contentStyle={{
+                                                    backgroundColor: 'hsl(var(--card))',
+                                                    border: '1px solid hsl(var(--border))',
+                                                    borderRadius: '8px'
+                                                }}
+                                            />
+                                            <Bar dataKey="value" radius={[0, 4, 4, 0]}>
+                                                {cctvStatusData.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                                                ))}
+                                            </Bar>
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                                <div className="flex justify-center gap-4 mt-2 flex-wrap">
+                                    {cctvStatusData.map((item, idx) => (
+                                        <div key={idx} className="flex items-center gap-2">
+                                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.fill }}></div>
+                                            <span className="text-sm">{item.name}: <span className="font-bold">{item.value}</span></span>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
 
+
+
                         {/* Active Jobs Table - Full Width */}
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                                <h3 className="text-lg font-semibold">Active Jobs (Waiting Approve BAST/On Hold/Open)</h3>
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-xl border bg-card shadow overflow-hidden">
+                            <div className="p-6 border-b flex justify-between items-center">
+                                <h3 className="text-lg font-semibold">
+                                    Active Jobs (Waiting Approve BAST/On Hold/Open) <span className="text-sm font-normal text-muted-foreground ml-2">({dashFilteredTrackers.length} records)</span>
+                                </h3>
                             </div>
 
-                            {/* Dashboard Filters - Added Status Pekerjaan */}
-                            <div className="flex flex-wrap gap-2 bg-card p-3 rounded-lg border">
-                                <Input
-                                    placeholder="Search..."
-                                    className="h-8 w-32 lg:w-40"
-                                    value={dashSearch}
-                                    onChange={e => setDashSearch(e.target.value)}
-                                />
-                                <Select value={dashRegion} onValueChange={setDashRegion}>
-                                    <SelectTrigger className="h-8 w-[110px]">
-                                        <SelectValue placeholder="Regional" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Regional</SelectItem>
-                                        <SelectItem value="Jabo Outer 1">Jabo Outer 1</SelectItem>
-                                        <SelectItem value="Jabo Outer 2">Jabo Outer 2</SelectItem>
-                                        <SelectItem value="Jabo Outer 3">Jabo Outer 3</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <Select value={dashBast} onValueChange={setDashBast}>
-                                    <SelectTrigger className="h-8 w-[110px]">
-                                        <SelectValue placeholder="BAST" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Status BAST</SelectItem>
-                                        <SelectItem value="Waiting Approve">Waiting</SelectItem>
-                                        <SelectItem value="Approve">Approved</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <Select value={dashStatusPekerjaan} onValueChange={setDashStatusPekerjaan}>
-                                    <SelectTrigger className="h-8 w-[110px]">
-                                        <SelectValue placeholder="Status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Status Pekerjaan</SelectItem>
-                                        <SelectItem value="Open">Open</SelectItem>
-                                        <SelectItem value="On Hold">On Hold</SelectItem>
-                                        <SelectItem value="Close">Close</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                {(dashSearch || dashRegion !== 'all' || dashBast !== 'all' || dashStatusPekerjaan !== 'all') && (
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-8 px-2"
-                                        onClick={() => {
-                                            setDashSearch('');
-                                            setDashRegion('all');
-                                            setDashBast('all');
-                                            setDashStatusPekerjaan('all');
-                                        }}
-                                    >
-                                        Reset
-                                    </Button>
-                                )}
+                            {/* Dashboard Filters - Same style as Tracker Data */}
+                            <div className="flex flex-col xl:flex-row gap-4 justify-between items-start xl:items-center bg-card p-4 border-b">
+                                <div className="flex flex-col md:flex-row gap-2 w-full xl:w-auto flex-1 flex-wrap">
+                                    <Input
+                                        placeholder="Search Site ID or Name..."
+                                        className="w-full md:w-48 lg:w-64"
+                                        value={dashSearch}
+                                        onChange={e => setDashSearch(e.target.value)}
+                                    />
+                                    {!isSPV && (
+                                        <Select value={dashRegion} onValueChange={setDashRegion}>
+                                            <SelectTrigger className="w-full md:w-[150px]">
+                                                <SelectValue placeholder="Regional" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">All Regional</SelectItem>
+                                                <SelectItem value="Jabo Outer 1">Jabo Outer 1</SelectItem>
+                                                <SelectItem value="Jabo Outer 2">Jabo Outer 2</SelectItem>
+                                                <SelectItem value="Jabo Outer 3">Jabo Outer 3</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                    <Select value={dashStatusPekerjaan} onValueChange={setDashStatusPekerjaan}>
+                                        <SelectTrigger className="w-full md:w-[150px]">
+                                            <SelectValue placeholder="Status Work" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Status</SelectItem>
+                                            <SelectItem value="Open">Open</SelectItem>
+                                            <SelectItem value="On Hold">On Hold</SelectItem>
+                                            <SelectItem value="Close">Close</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <Select value={dashBast} onValueChange={setDashBast}>
+                                        <SelectTrigger className="w-full md:w-[150px]">
+                                            <SelectValue placeholder="Status BAST" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All BAST Status</SelectItem>
+                                            <SelectItem value="Need Created BAST">Need Created BAST</SelectItem>
+                                            <SelectItem value="Waiting Approve">Waiting Approve</SelectItem>
+                                            <SelectItem value="Approve">Approve</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    {(dashSearch || dashRegion !== 'all' || dashBast !== 'all' || dashStatusPekerjaan !== 'all') && (
+                                        <Button
+                                            variant="ghost"
+                                            onClick={() => {
+                                                setDashSearch('');
+                                                setDashRegion('all');
+                                                setDashBast('all');
+                                                setDashStatusPekerjaan('all');
+                                            }}
+                                            className="px-3"
+                                            title="Reset Filters"
+                                        >
+                                            Reset
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
 
-                            <div className="rounded-xl border bg-card shadow">
+                            <div className="px-4 pb-4">
                                 <WorkTrackerTable
                                     data={dashFilteredTrackers}
                                     isReadOnly={true}
                                 />
                             </div>
-                        </div>
+                        </motion.div>
                     </div>
                 );
             case 'tracker':
                 // Compute summary counts
                 const total = workTrackers.length;
                 const waitingBast = workTrackers.filter(t => t.status_bast === 'Waiting Approve' || t.status_bast === 'Waiting Approve BAST').length;
+                const needCreatedBast = workTrackers.filter(t => isNeedCreatedBast(t)).length;
                 const approvedBast = workTrackers.filter(t => t.status_bast === 'Approve' || t.status_bast === 'BAST Approve Date').length;
                 const onProgress = workTrackers.filter(t => t.status_pekerjaan === 'Open').length;
                 const onHold = workTrackers.filter(t => t.status_pekerjaan === 'On Hold').length;
@@ -735,7 +1049,7 @@ const AdminDashboard = () => {
                 return (
                     <div className="space-y-6">
                         {/* Summary Stats */}
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                             <div className="bg-card border rounded-xl p-4 shadow-sm">
                                 <div className="flex items-center justify-between">
                                     <div>
@@ -743,6 +1057,15 @@ const AdminDashboard = () => {
                                         <p className="text-2xl font-bold">{total}</p>
                                     </div>
                                     <Briefcase className="w-8 h-8 text-muted-foreground opacity-50" />
+                                </div>
+                            </div>
+                            <div className="bg-card border rounded-xl p-4 shadow-sm">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs text-muted-foreground uppercase font-bold text-purple-600">Need Created</p>
+                                        <p className="text-2xl font-bold">{needCreatedBast}</p>
+                                    </div>
+                                    <FileText className="w-8 h-8 text-purple-600 opacity-50" />
                                 </div>
                             </div>
                             <div className="bg-card border rounded-xl p-4 shadow-sm">
@@ -792,17 +1115,19 @@ const AdminDashboard = () => {
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                 />
-                                <Select value={regionalFilter} onValueChange={setRegionalFilter}>
-                                    <SelectTrigger className="w-full md:w-[150px]">
-                                        <SelectValue placeholder="Regional" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Regionals</SelectItem>
-                                        <SelectItem value="Jabo Outer 1">Jabo Outer 1</SelectItem>
-                                        <SelectItem value="Jabo Outer 2">Jabo Outer 2</SelectItem>
-                                        <SelectItem value="Jabo Outer 3">Jabo Outer 3</SelectItem>
-                                    </SelectContent>
-                                </Select>
+                                {!isSPV && (
+                                    <Select value={regionalFilter} onValueChange={setRegionalFilter}>
+                                        <SelectTrigger className="w-full md:w-[150px]">
+                                            <SelectValue placeholder="Regional" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Regional</SelectItem>
+                                            <SelectItem value="Jabo Outer 1">Jabo Outer 1</SelectItem>
+                                            <SelectItem value="Jabo Outer 2">Jabo Outer 2</SelectItem>
+                                            <SelectItem value="Jabo Outer 3">Jabo Outer 3</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                )}
                                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                                     <SelectTrigger className="w-full md:w-[150px]">
                                         <SelectValue placeholder="Status Work" />
@@ -820,6 +1145,7 @@ const AdminDashboard = () => {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">All BAST Status</SelectItem>
+                                        <SelectItem value="Need Created BAST">Need Created BAST</SelectItem>
                                         <SelectItem value="Waiting Approve">Waiting Approve</SelectItem>
                                         <SelectItem value="Approve">Approve</SelectItem>
                                     </SelectContent>
@@ -843,10 +1169,11 @@ const AdminDashboard = () => {
 
                             {canEditTracker && (
                                 <div className="flex gap-2">
-                                    <Button variant="outline" onClick={() => exportToCSV(filteredTrackers, 'tracker-data.csv')}>
-                                        <Download className="w-4 h-4 mr-2" />
-                                        Export CSV
-                                    </Button>
+                                    <ExportDropdown
+                                        data={filteredTrackers}
+                                        filename="tracker-data"
+                                        title="Work Tracker Data"
+                                    />
                                     <Button onClick={() => navigate('/admin/input-tracker', { state: { returnUrl: getCurrentUrl() } })}>
                                         <Plus className="w-4 h-4 mr-2" />
                                         Input Data Tracker
@@ -955,17 +1282,19 @@ const AdminDashboard = () => {
                                             value={picSearchTerm}
                                             onChange={(e) => setPicSearchTerm(e.target.value)}
                                         />
-                                        <Select value={picRegionalFilter} onValueChange={setPicRegionalFilter}>
-                                            <SelectTrigger className="w-full md:w-[150px]">
-                                                <SelectValue placeholder="Regional" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="all">All Regionals</SelectItem>
-                                                <SelectItem value="Jabo Outer 1">Jabo Outer 1</SelectItem>
-                                                <SelectItem value="Jabo Outer 2">Jabo Outer 2</SelectItem>
-                                                <SelectItem value="Jabo Outer 3">Jabo Outer 3</SelectItem>
-                                            </SelectContent>
-                                        </Select>
+                                        {!isSPV && (
+                                            <Select value={picRegionalFilter} onValueChange={setPicRegionalFilter}>
+                                                <SelectTrigger className="w-full md:w-[150px]">
+                                                    <SelectValue placeholder="Regional" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="all">All Regional</SelectItem>
+                                                    <SelectItem value="Jabo Outer 1">Jabo Outer 1</SelectItem>
+                                                    <SelectItem value="Jabo Outer 2">Jabo Outer 2</SelectItem>
+                                                    <SelectItem value="Jabo Outer 3">Jabo Outer 3</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        )}
                                         <Select value={picStatusFilter} onValueChange={setPicStatusFilter}>
                                             <SelectTrigger className="w-full md:w-[150px]">
                                                 <SelectValue placeholder="Status" />
@@ -1009,10 +1338,11 @@ const AdminDashboard = () => {
                                     </div>
 
                                     <div className="flex gap-2">
-                                        <Button variant="outline" onClick={() => exportToCSV(filteredPicData, 'pic-data.csv')}>
-                                            <Download className="w-4 h-4 mr-2" />
-                                            Export CSV
-                                        </Button>
+                                        <ExportDropdown
+                                            data={filteredPicData}
+                                            filename="pic-data"
+                                            title="PIC Data"
+                                        />
                                         <Button onClick={() => navigate('/admin/input-pic', { state: { returnUrl: getCurrentUrl() } })}>
                                             <Plus className="w-4 h-4 mr-2" />
                                             Input New PIC
@@ -1111,6 +1441,19 @@ const AdminDashboard = () => {
                                         value={carSearchTerm}
                                         onChange={e => setCarSearchTerm(e.target.value)}
                                     />
+                                    {!isSPV && (
+                                        <Select value={carRegionalFilter} onValueChange={setCarRegionalFilter}>
+                                            <SelectTrigger className="w-full md:w-[150px]">
+                                                <SelectValue placeholder="Regional" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">All Regional</SelectItem>
+                                                <SelectItem value="Jabo Outer 1">Jabo Outer 1</SelectItem>
+                                                <SelectItem value="Jabo Outer 2">Jabo Outer 2</SelectItem>
+                                                <SelectItem value="Jabo Outer 3">Jabo Outer 3</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    )}
                                     <Select value={carPriorityFilter} onValueChange={setCarPriorityFilter}>
                                         <SelectTrigger className="w-full md:w-[150px]">
                                             <SelectValue placeholder="Priority" />
@@ -1132,28 +1475,18 @@ const AdminDashboard = () => {
                                             <SelectItem value="NEED SERVICE">Need Service</SelectItem>
                                         </SelectContent>
                                     </Select>
-                                    <Select value={carRegionalFilter} onValueChange={setCarRegionalFilter}>
-                                        <SelectTrigger className="w-full md:w-[150px]">
-                                            <SelectValue placeholder="Regional" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">All Regional</SelectItem>
-                                            <SelectItem value="Jabo Outer 1">Jabo Outer 1</SelectItem>
-                                            <SelectItem value="Jabo Outer 2">Jabo Outer 2</SelectItem>
-                                            <SelectItem value="Jabo Outer 3">Jabo Outer 3</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    {(carSearchTerm || carFilterCondition !== 'all' || carPriorityFilter !== 'all' || carRegionalFilter !== 'all') && (
-                                        <Button variant="ghost" onClick={() => { setCarSearchTerm(''); setCarPriorityFilter('all'); setCarFilterCondition('all'); setCarRegionalFilter('all'); }}>
+                                    {(carSearchTerm || carRegionalFilter !== 'all' || carFilterCondition !== 'all' || carPriorityFilter !== 'all') && (
+                                        <Button variant="ghost" onClick={() => { setCarSearchTerm(''); setCarRegionalFilter('all'); setCarPriorityFilter('all'); setCarFilterCondition('all'); }}>
                                             Reset
                                         </Button>
                                     )}
 
                                     <div className="flex gap-2 ml-auto">
-                                        <Button variant="outline" onClick={() => exportToCSV(filteredCarData, 'car-data.csv')}>
-                                            <Download className="w-4 h-4 mr-2" />
-                                            Export CSV
-                                        </Button>
+                                        <ExportDropdown
+                                            data={filteredCarData}
+                                            filename="car-data"
+                                            title="Car Data"
+                                        />
                                         <Button onClick={() => navigate('/admin/input-car', { state: { returnUrl: getCurrentUrl() } })}>
                                             <Plus className="w-4 h-4 mr-2" />
                                             Input Data Mobil
@@ -1276,17 +1609,19 @@ const AdminDashboard = () => {
                                         value={cctvSearchTerm}
                                         onChange={e => setCctvSearchTerm(e.target.value)}
                                     />
-                                    <Select value={cctvRegionalFilter} onValueChange={setCctvRegionalFilter}>
-                                        <SelectTrigger className="w-full md:w-[150px]">
-                                            <SelectValue placeholder="Regional" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">All Regional</SelectItem>
-                                            <SelectItem value="Jabo Outer 1">Jabo Outer 1</SelectItem>
-                                            <SelectItem value="Jabo Outer 2">Jabo Outer 2</SelectItem>
-                                            <SelectItem value="Jabo Outer 3">Jabo Outer 3</SelectItem>
-                                        </SelectContent>
-                                    </Select>
+                                    {!isSPV && (
+                                        <Select value={cctvRegionalFilter} onValueChange={setCctvRegionalFilter}>
+                                            <SelectTrigger className="w-full md:w-[150px]">
+                                                <SelectValue placeholder="Regional" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="all">All Regional</SelectItem>
+                                                <SelectItem value="Jabo Outer 1">Jabo Outer 1</SelectItem>
+                                                <SelectItem value="Jabo Outer 2">Jabo Outer 2</SelectItem>
+                                                <SelectItem value="Jabo Outer 3">Jabo Outer 3</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    )}
                                     <Select value={cctvStatusFilter} onValueChange={setCctvStatusFilter}>
                                         <SelectTrigger className="w-full md:w-[150px]">
                                             <SelectValue placeholder="Status" />
@@ -1316,10 +1651,11 @@ const AdminDashboard = () => {
                                     )}
 
                                     <div className="flex gap-2 ml-auto">
-                                        <Button variant="outline" onClick={() => exportToCSV(filteredCctvData, 'cctv-data.csv')}>
-                                            <Download className="w-4 h-4 mr-2" />
-                                            Export CSV
-                                        </Button>
+                                        <ExportDropdown
+                                            data={filteredCctvData}
+                                            filename="cctv-data"
+                                            title="CCTV Data"
+                                        />
                                         <Button onClick={() => navigate('/admin/input-cctv', { state: { returnUrl: getCurrentUrl() } })}>
                                             <Plus className="w-4 h-4 mr-2" />
                                             Input Data CCTV
@@ -1351,6 +1687,14 @@ const AdminDashboard = () => {
                 );
             case 'notes':
                 return <StickyNotes />;
+            case 'logs':
+                return isAdmin ? <ActivityLogs /> : <div className="p-4">Access Denied - Admin Only</div>;
+            case 'generate-bast':
+                return isAdmin ? (
+                    <div className="bg-card border rounded-xl p-6 shadow-sm">
+                        <GenerateBAST />
+                    </div>
+                ) : <div className="p-4">Access Denied - Admin Only</div>;
             default:
                 return null;
         }
@@ -1372,7 +1716,9 @@ const AdminDashboard = () => {
                 <ThemeToggle />
             </div>
 
-            {renderContent()}
+            <Suspense fallback={<ComponentLoader />}>
+                {renderContent()}
+            </Suspense>
         </div>
     );
 };

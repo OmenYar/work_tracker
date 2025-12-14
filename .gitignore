@@ -46,3 +46,9 @@ coverage/
 *.tmp
 *.temp
 .cache/
+
+# Scripts (local use only)
+scripts/
+
+# Template files (stored in Supabase Storage)
+public/templates/*.docx

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/customSupabaseClient';
+import { logLogin, logLogout } from '@/lib/activityLogger';
 
 const AuthContext = createContext(null);
 
@@ -203,6 +204,10 @@ export const AuthProvider = ({ children }) => {
             }
 
             console.log("✅ Login successful, waiting for auth state change...");
+
+            // Log login activity
+            logLogin();
+
             // onAuthStateChange will handle setting the user state
             return { success: true };
         } catch (err) {
@@ -220,6 +225,10 @@ export const AuthProvider = ({ children }) => {
 
         try {
             console.log("🚪 Logging out...");
+
+            // Log logout activity before clearing session
+            await logLogout();
+
             setIsLoading(true);
             await supabase.auth.signOut();
             console.log("✅ Logout successful");
