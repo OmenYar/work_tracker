@@ -1,5 +1,5 @@
 import React, { useState, useCallback, memo } from 'react';
-import { LayoutDashboard, TableProperties, Users, LogOut, Contact, Car, StickyNote, Camera, History, FileText, X, PanelLeftClose, PanelLeft } from 'lucide-react';
+import { LayoutDashboard, TableProperties, Users, LogOut, Contact, Car, StickyNote, Camera, History, FileText, X, PanelLeftClose, PanelLeft, BarChart3, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,6 +11,8 @@ const Sidebar = memo(({ activeTab, setActiveTab, onLogout, isOpen, setIsOpen }) 
 
     const menuItems = [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+        { id: 'calendar', label: 'Calendar', icon: CalendarDays },
         { id: 'tracker', label: 'Data Tracker', icon: TableProperties },
         { id: 'pic', label: 'Data PIC', icon: Contact },
         { id: 'car', label: 'Data Mobil', icon: Car },

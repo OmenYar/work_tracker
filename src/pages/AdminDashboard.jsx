@@ -24,6 +24,8 @@ const ActivityLogs = React.lazy(() => import('@/components/ActivityLogs'));
 const ExportDropdown = React.lazy(() => import('@/components/ExportDropdown'));
 const DashboardExport = React.lazy(() => import('@/components/DashboardExport'));
 const GenerateBAST = React.lazy(() => import('@/components/GenerateBAST'));
+const AnalyticsDashboard = React.lazy(() => import('@/components/AnalyticsDashboard'));
+const CalendarView = React.lazy(() => import('@/components/CalendarView'));
 
 // Non-lazy (small components)
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -1780,6 +1782,23 @@ const AdminDashboard = () => {
                 );
             case 'notes':
                 return <StickyNotes />;
+            case 'analytics':
+                return (
+                    <AnalyticsDashboard
+                        workTrackers={workTrackers}
+                        picData={picData}
+                        carData={carData}
+                        cctvData={cctvData}
+                    />
+                );
+            case 'calendar':
+                return (
+                    <CalendarView
+                        workTrackers={workTrackers}
+                        carData={carData}
+                        cctvData={cctvData}
+                    />
+                );
             case 'logs':
                 return isAdmin ? <ActivityLogs /> : <div className="p-4">Access Denied - Admin Only</div>;
             case 'generate-bast':
