@@ -90,15 +90,24 @@ const PicDataTable = ({ data, onEdit, onDelete, onRefresh, isReadOnly = false })
 
         setIsSaving(true);
         try {
-            const { error } = await supabase
-                .from('pic_data')
-                .update({
-                    [editingCell.field]: editValue,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', editingCell.id);
+            const updateData = {
+                [editingCell.field]: editValue
+            };
 
-            if (error) throw error;
+            console.log('Updating pic_data:', editingCell.id, updateData);
+
+            const { data, error } = await supabase
+                .from('pic_data')
+                .update(updateData)
+                .eq('id', editingCell.id)
+                .select();
+
+            if (error) {
+                console.error('Supabase error:', error);
+                throw error;
+            }
+
+            console.log('Update result:', data);
 
             toast({
                 title: 'Updated',
@@ -111,7 +120,7 @@ const PicDataTable = ({ data, onEdit, onDelete, onRefresh, isReadOnly = false })
             console.error('Update error:', error);
             toast({
                 title: 'Error',
-                description: 'Failed to update field',
+                description: error.message || 'Failed to update field',
                 variant: 'destructive',
             });
         } finally {

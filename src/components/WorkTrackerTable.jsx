@@ -117,15 +117,24 @@ const WorkTrackerTable = ({
 
         setIsSaving(true);
         try {
-            const { error } = await supabase
-                .from('work_trackers')
-                .update({
-                    [editingCell.field]: editValue,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', editingCell.id);
+            const updateData = {
+                [editingCell.field]: editValue
+            };
 
-            if (error) throw error;
+            console.log('Updating work_trackers:', editingCell.id, updateData);
+
+            const { data, error } = await supabase
+                .from('work_trackers')
+                .update(updateData)
+                .eq('id', editingCell.id)
+                .select();
+
+            if (error) {
+                console.error('Supabase error:', error);
+                throw error;
+            }
+
+            console.log('Update result:', data);
 
             toast({
                 title: 'Updated',
@@ -138,7 +147,7 @@ const WorkTrackerTable = ({
             console.error('Update error:', error);
             toast({
                 title: 'Error',
-                description: 'Failed to update field',
+                description: error.message || 'Failed to update field',
                 variant: 'destructive',
             });
         } finally {
