@@ -1,14 +1,19 @@
 import React, { memo } from 'react';
-import { LayoutDashboard, TableProperties, Contact, Car, MoreHorizontal } from 'lucide-react';
+import { LayoutDashboard, TableProperties, Contact, Car, MoreHorizontal, LogOut, Camera, StickyNote, BarChart3, CalendarDays, Trophy, History, Users, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/contexts/AuthContext';
 
 const MobileBottomNav = memo(({ activeTab, setActiveTab }) => {
+    const { logout, profile } = useAuth();
+    const isAdmin = profile?.role === 'Administrator';
+
     // Main navigation items (show on bottom bar)
     const mainItems = [
         { id: 'dashboard', label: 'Home', icon: LayoutDashboard },
@@ -19,16 +24,27 @@ const MobileBottomNav = memo(({ activeTab, setActiveTab }) => {
 
     // More items (show in dropdown)
     const moreItems = [
-        { id: 'cctv', label: 'CCTV' },
-        { id: 'notes', label: 'Notes' },
-        { id: 'analytics', label: 'Analytics' },
-        { id: 'calendar', label: 'Calendar' },
-        { id: 'performance', label: 'Performance' },
-        { id: 'logs', label: 'Activity Logs' },
-        { id: 'users', label: 'Pengaturan User' },
+        { id: 'cctv', label: 'CCTV', icon: Camera },
+        { id: 'notes', label: 'Notes', icon: StickyNote },
+        { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+        { id: 'calendar', label: 'Calendar', icon: CalendarDays },
+        { id: 'performance', label: 'Performance', icon: Trophy },
+        ...(isAdmin ? [
+            { id: 'logs', label: 'Activity Logs', icon: History },
+            { id: 'generate-bast', label: 'Generate BAST', icon: FileText },
+            { id: 'users', label: 'Pengaturan User', icon: Users },
+        ] : []),
     ];
 
     const isMoreActive = moreItems.some(item => item.id === activeTab);
+
+    const handleLogout = async () => {
+        try {
+            await logout();
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+    };
 
     return (
         <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-card border-t safe-area-pb">
@@ -73,18 +89,31 @@ const MobileBottomNav = memo(({ activeTab, setActiveTab }) => {
                             <span className="text-[10px] font-medium">More</span>
                         </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-48 mb-2">
+                    <DropdownMenuContent align="end" className="w-52 mb-2">
                         {moreItems.map((item) => (
                             <DropdownMenuItem
                                 key={item.id}
                                 onClick={() => setActiveTab(item.id)}
                                 className={cn(
+                                    "gap-2",
                                     activeTab === item.id && "bg-primary/10 text-primary"
                                 )}
                             >
+                                {item.icon && <item.icon className="h-4 w-4" />}
                                 {item.label}
                             </DropdownMenuItem>
                         ))}
+
+                        <DropdownMenuSeparator />
+
+                        {/* Logout Button */}
+                        <DropdownMenuItem
+                            onClick={handleLogout}
+                            className="gap-2 text-destructive focus:text-destructive focus:bg-destructive/10"
+                        >
+                            <LogOut className="h-4 w-4" />
+                            Logout
+                        </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
