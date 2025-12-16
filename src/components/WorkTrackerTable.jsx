@@ -23,6 +23,7 @@ import {
 import { Pagination } from '@/components/ui/pagination';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/customSupabaseClient';
+import { logInlineEdit } from '@/lib/activityLogger';
 import { cn } from '@/lib/utils';
 
 // Status options for inline edit
@@ -117,13 +118,15 @@ const WorkTrackerTable = ({
 
         setIsSaving(true);
         try {
+            // Find old value for logging
+            const currentRecord = data.find(t => t.id === editingCell.id);
+            const oldValue = currentRecord?.[editingCell.field];
+
             const updateData = {
                 [editingCell.field]: editValue
             };
 
-            console.log('Updating work_trackers:', editingCell.id, updateData);
-
-            const { data, error } = await supabase
+            const { data: result, error } = await supabase
                 .from('work_trackers')
                 .update(updateData)
                 .eq('id', editingCell.id)
@@ -134,7 +137,8 @@ const WorkTrackerTable = ({
                 throw error;
             }
 
-            console.log('Update result:', data);
+            // Log the inline edit
+            await logInlineEdit('work_trackers', editingCell.id, editingCell.field, oldValue, editValue);
 
             toast({
                 title: 'Updated',

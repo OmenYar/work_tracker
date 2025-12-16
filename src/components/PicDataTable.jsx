@@ -23,6 +23,7 @@ import {
 import { Pagination } from '@/components/ui/pagination';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/customSupabaseClient';
+import { logInlineEdit } from '@/lib/activityLogger';
 import { cn } from '@/lib/utils';
 
 // Options for dropdowns
@@ -90,13 +91,15 @@ const PicDataTable = ({ data, onEdit, onDelete, onRefresh, isReadOnly = false })
 
         setIsSaving(true);
         try {
+            // Find old value for logging
+            const currentRecord = data.find(p => p.id === editingCell.id);
+            const oldValue = currentRecord?.[editingCell.field];
+
             const updateData = {
                 [editingCell.field]: editValue
             };
 
-            console.log('Updating pic_data:', editingCell.id, updateData);
-
-            const { data, error } = await supabase
+            const { data: result, error } = await supabase
                 .from('pic_data')
                 .update(updateData)
                 .eq('id', editingCell.id)
@@ -107,7 +110,8 @@ const PicDataTable = ({ data, onEdit, onDelete, onRefresh, isReadOnly = false })
                 throw error;
             }
 
-            console.log('Update result:', data);
+            // Log the inline edit
+            await logInlineEdit('pic_data', editingCell.id, editingCell.field, oldValue, editValue);
 
             toast({
                 title: 'Updated',

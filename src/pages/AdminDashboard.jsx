@@ -33,6 +33,9 @@ const BulkOperations = React.lazy(() => import('@/components/BulkOperations'));
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { TableSkeleton, DashboardSkeleton } from '@/components/ui/skeleton';
 import NotificationCenter, { AlertSummary } from '@/components/NotificationCenter';
+import GlobalSearch from '@/components/GlobalSearch';
+import MobileBottomNav from '@/components/MobileBottomNav';
+import AdvancedFilters from '@/components/AdvancedFilters';
 
 // Loading fallback for lazy components
 const ComponentLoader = () => (
@@ -1894,6 +1897,7 @@ const AdminDashboard = () => {
                 <title>Admin Dashboard | WorkTracker</title>
             </Helmet>
 
+            {/* Desktop Header */}
             <div className="hidden md:flex justify-between items-center mb-8">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight capitalize">{activeTab.replace('-', ' ')}</h1>
@@ -1902,6 +1906,29 @@ const AdminDashboard = () => {
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
+                    <GlobalSearch
+                        workTrackers={workTrackers}
+                        picData={picData}
+                        carData={carData}
+                        cctvData={cctvData}
+                        onNavigate={(type, id, data) => {
+                            // Navigate to the appropriate tab
+                            switch (type) {
+                                case 'tracker':
+                                    setActiveTab('tracker');
+                                    break;
+                                case 'pic':
+                                    setActiveTab('pic');
+                                    break;
+                                case 'car':
+                                    setActiveTab('car');
+                                    break;
+                                case 'cctv':
+                                    setActiveTab('cctv');
+                                    break;
+                            }
+                        }}
+                    />
                     <NotificationCenter
                         workTrackers={workTrackers}
                         carData={carData}
@@ -1914,6 +1941,12 @@ const AdminDashboard = () => {
             <Suspense fallback={<ComponentLoader />}>
                 {renderContent()}
             </Suspense>
+
+            {/* Mobile Bottom Navigation */}
+            <MobileBottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
+
+            {/* Add padding at bottom for mobile nav */}
+            <div className="h-16 md:hidden" />
         </div>
     );
 };
