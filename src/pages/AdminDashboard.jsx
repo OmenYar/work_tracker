@@ -68,6 +68,11 @@ const AdminDashboard = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const activeTab = searchParams.get('tab') || 'dashboard';
 
+    // Function to change active tab via URL params
+    const setActiveTab = useCallback((tab) => {
+        setSearchParams({ tab });
+    }, [setSearchParams]);
+
     // const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Removed Sidebar state
     const [workTrackers, setWorkTrackers] = useState([]);
     const [filteredTrackers, setFilteredTrackers] = useState([]);
