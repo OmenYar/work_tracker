@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Phone, Mail, MapPin, CreditCard } from 'lucide-react';
 
 // Dropdown options
 const JABATAN_OPTIONS = ['PM', 'CM', 'PM/CM', 'CM+MBP', 'VERTI & TII', 'Expert Genset', 'MBP'];
@@ -29,6 +30,11 @@ const PicDataForm = ({ onSubmit, initialData, onCancel }) => {
         tgl_berakhir: '',
         remark: '',
         validasi: '',
+        // New fields
+        no_hp: '',
+        email: '',
+        alamat_domisili: '',
+        no_bpjs: '',
     });
 
     // Update formData when initialData changes (for edit mode)
@@ -52,6 +58,11 @@ const PicDataForm = ({ onSubmit, initialData, onCancel }) => {
                 tgl_berakhir: initialData.tgl_berakhir || '',
                 remark: initialData.remark || '',
                 validasi: initialData.validasi || '',
+                // New fields
+                no_hp: initialData.no_hp || '',
+                email: initialData.email || '',
+                alamat_domisili: initialData.alamat_domisili || '',
+                no_bpjs: initialData.no_bpjs || '',
             });
         }
     }, [initialData]);
@@ -72,110 +83,204 @@ const PicDataForm = ({ onSubmit, initialData, onCancel }) => {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div className="space-y-2">
-                    <Label>Nama PIC <span className="text-red-500">*</span></Label>
-                    <Input name="nama_pic" value={formData.nama_pic} onChange={handleChange} required />
-                </div>
-                <div className="space-y-2">
-                    <Label>Jabatan <span className="text-red-500">*</span></Label>
-                    <Select value={formData.jabatan} onValueChange={(v) => handleSelectChange('jabatan', v)}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Pilih Jabatan" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {JABATAN_OPTIONS.map(opt => (
-                                <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="space-y-2">
-                    <Label>Active (Validasi) <span className="text-red-500">*</span></Label>
-                    <Select value={formData.validasi} onValueChange={(v) => handleSelectChange('validasi', v)}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Pilih Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {VALIDASI_OPTIONS.map(opt => (
-                                <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="space-y-2">
-                    <Label>Regional <span className="text-red-500">*</span></Label>
-                    <Select value={formData.regional} onValueChange={(v) => handleSelectChange('regional', v)}>
-                        <SelectTrigger>
-                            <SelectValue placeholder="Pilih Regional" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {REGIONAL_OPTIONS.map(opt => (
-                                <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="space-y-2">
-                    <Label>NIK Karyawan</Label>
-                    <Input name="nik_karyawan" value={formData.nik_karyawan} onChange={handleChange} />
-                </div>
-                <div className="space-y-2">
-                    <Label>NIK KTP</Label>
-                    <Input name="nik_ktp" value={formData.nik_ktp} onChange={handleChange} required />
-                </div>
-                <div className="space-y-2">
-                    <Label>NPWP</Label>
-                    <Input name="npwp" value={formData.npwp} onChange={handleChange} />
-                </div>
-                <div className="space-y-2">
-                    <Label>Nama Penerima Penghasilan</Label>
-                    <Input name="nama_penerima_penghasilan" value={formData.nama_penerima_penghasilan} onChange={handleChange} />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                    <Label>Alamat</Label>
-                    <Input name="alamat" value={formData.alamat} onChange={handleChange} />
-                </div>
-                <div className="space-y-2">
-                    <Label>Status</Label>
-                    <Input name="status" value={formData.status} onChange={handleChange} placeholder="Lajang/Kawin" />
-                </div>
-                <div className="space-y-2">
-                    <Label>Nama Bank</Label>
-                    <Input name="nama_bank" value={formData.nama_bank} onChange={handleChange} />
-                </div>
-                <div className="space-y-2">
-                    <Label>Nama Rekening</Label>
-                    <Input name="nama_rekening" value={formData.nama_rekening} onChange={handleChange} />
-                </div>
-                <div className="space-y-2">
-                    <Label>No Rekening</Label>
-                    <Input name="no_rekening" value={formData.no_rekening} onChange={handleChange} />
-                </div>
-                <div className="space-y-2">
-                    <Label>Area</Label>
-                    <Input name="area" value={formData.area} onChange={handleChange} />
-                </div>
-                <div className="space-y-2">
-                    <Label>Tgl Join</Label>
-                    <Input type="date" name="tgl_join" value={formData.tgl_join} onChange={handleChange} />
-                </div>
-                <div className="space-y-2">
-                    <Label>Tgl Berakhir</Label>
-                    <Input type="date" name="tgl_berakhir" value={formData.tgl_berakhir} onChange={handleChange} />
-                </div>
-                <div className="space-y-2 md:col-span-3">
-                    <Label>Remark</Label>
-                    <Textarea
-                        name="remark"
-                        value={formData.remark}
-                        onChange={handleChange}
-                        placeholder="Catatan tambahan..."
-                        rows={3}
-                    />
+            {/* Personal Information Section */}
+            <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">
+                    Informasi Pribadi
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                        <Label>Nama PIC <span className="text-red-500">*</span></Label>
+                        <Input name="nama_pic" value={formData.nama_pic} onChange={handleChange} required />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Jabatan <span className="text-red-500">*</span></Label>
+                        <Select value={formData.jabatan} onValueChange={(v) => handleSelectChange('jabatan', v)}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Pilih Jabatan" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {JABATAN_OPTIONS.map(opt => (
+                                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Active (Validasi) <span className="text-red-500">*</span></Label>
+                        <Select value={formData.validasi} onValueChange={(v) => handleSelectChange('validasi', v)}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Pilih Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {VALIDASI_OPTIONS.map(opt => (
+                                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Regional <span className="text-red-500">*</span></Label>
+                        <Select value={formData.regional} onValueChange={(v) => handleSelectChange('regional', v)}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Pilih Regional" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {REGIONAL_OPTIONS.map(opt => (
+                                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Status Pernikahan</Label>
+                        <Input name="status" value={formData.status} onChange={handleChange} placeholder="Lajang/Kawin" />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Area</Label>
+                        <Input name="area" value={formData.area} onChange={handleChange} />
+                    </div>
                 </div>
             </div>
-            <div className="flex gap-4 pt-4">
+
+            {/* Contact Information Section */}
+            <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">
+                    Informasi Kontak
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                        <Label className="flex items-center gap-2">
+                            <Phone className="w-4 h-4" />
+                            No. HP <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                            name="no_hp"
+                            value={formData.no_hp}
+                            onChange={handleChange}
+                            placeholder="08xxxxxxxxxx"
+                            type="tel"
+                            required
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label className="flex items-center gap-2">
+                            <Mail className="w-4 h-4" />
+                            Email
+                        </Label>
+                        <Input
+                            name="email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            placeholder="email@example.com"
+                            type="email"
+                        />
+                    </div>
+                    <div className="space-y-2 md:col-span-2 lg:col-span-1">
+                        <Label className="flex items-center gap-2">
+                            <MapPin className="w-4 h-4" />
+                            Alamat Domisili/Rumah
+                        </Label>
+                        <Input
+                            name="alamat_domisili"
+                            value={formData.alamat_domisili}
+                            onChange={handleChange}
+                            placeholder="Alamat tempat tinggal saat ini"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Identity Section */}
+            <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">
+                    Data Identitas
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                        <Label>NIK Karyawan</Label>
+                        <Input name="nik_karyawan" value={formData.nik_karyawan} onChange={handleChange} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>NIK KTP <span className="text-red-500">*</span></Label>
+                        <Input name="nik_ktp" value={formData.nik_ktp} onChange={handleChange} required />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>NPWP</Label>
+                        <Input name="npwp" value={formData.npwp} onChange={handleChange} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label className="flex items-center gap-2">
+                            <CreditCard className="w-4 h-4" />
+                            No. BPJS
+                        </Label>
+                        <Input
+                            name="no_bpjs"
+                            value={formData.no_bpjs}
+                            onChange={handleChange}
+                            placeholder="Nomor BPJS Kesehatan/Ketenagakerjaan"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Nama Penerima Penghasilan</Label>
+                        <Input name="nama_penerima_penghasilan" value={formData.nama_penerima_penghasilan} onChange={handleChange} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Alamat (KTP)</Label>
+                        <Input name="alamat" value={formData.alamat} onChange={handleChange} placeholder="Alamat sesuai KTP" />
+                    </div>
+                </div>
+            </div>
+
+            {/* Bank Information Section */}
+            <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">
+                    Informasi Bank
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                        <Label>Nama Bank</Label>
+                        <Input name="nama_bank" value={formData.nama_bank} onChange={handleChange} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Nama Rekening</Label>
+                        <Input name="nama_rekening" value={formData.nama_rekening} onChange={handleChange} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>No Rekening</Label>
+                        <Input name="no_rekening" value={formData.no_rekening} onChange={handleChange} />
+                    </div>
+                </div>
+            </div>
+
+            {/* Employment Section */}
+            <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider border-b pb-2">
+                    Informasi Kepegawaian
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                        <Label>Tgl Join</Label>
+                        <Input type="date" name="tgl_join" value={formData.tgl_join} onChange={handleChange} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Tgl Berakhir</Label>
+                        <Input type="date" name="tgl_berakhir" value={formData.tgl_berakhir} onChange={handleChange} />
+                    </div>
+                    <div className="space-y-2 lg:col-span-1 md:col-span-2">
+                        <Label>Remark</Label>
+                        <Textarea
+                            name="remark"
+                            value={formData.remark}
+                            onChange={handleChange}
+                            placeholder="Catatan tambahan..."
+                            rows={3}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex gap-4 pt-4 border-t">
                 <Button type="submit">{initialData ? 'Update PIC' : 'Save PIC'}</Button>
                 {onCancel && <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>}
             </div>

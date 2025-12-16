@@ -26,10 +26,17 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { cn } from '@/lib/utils';
 
 // Status options for inline edit
-const STATUS_OPTIONS = [
+const STATUS_PEKERJAAN_OPTIONS = [
     { value: 'Open', label: 'Open' },
     { value: 'On Hold', label: 'On Hold' },
     { value: 'Close', label: 'Close' },
+];
+
+const STATUS_BAST_OPTIONS = [
+    { value: 'Waiting Approve', label: 'Waiting Approve' },
+    { value: 'Approve', label: 'Approve' },
+    { value: 'Need Created BAST', label: 'Need Created' },
+    { value: 'N/A', label: 'N/A' },
 ];
 
 const WorkTrackerTable = ({
@@ -147,7 +154,7 @@ const WorkTrackerTable = ({
         }
     }, [saveEdit, cancelEdit]);
 
-    // Render editable status cell
+    // Render editable status cell (dropdown)
     const renderStatusCell = (tracker, field, value, options, badgeColors) => {
         const isEditing = editingCell?.id === tracker.id && editingCell?.field === field;
 
@@ -159,12 +166,12 @@ const WorkTrackerTable = ({
                         onValueChange={setEditValue}
                         disabled={isSaving}
                     >
-                        <SelectTrigger className="h-7 w-[120px]">
+                        <SelectTrigger className="h-6 w-[130px] text-xs">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                             {options.map(opt => (
-                                <SelectItem key={opt.value} value={opt.value}>
+                                <SelectItem key={opt.value} value={opt.value} className="text-xs">
                                     {opt.label}
                                 </SelectItem>
                             ))}
@@ -175,7 +182,7 @@ const WorkTrackerTable = ({
                         variant="ghost"
                         onClick={saveEdit}
                         disabled={isSaving}
-                        className="h-6 w-6 text-green-600"
+                        className="h-5 w-5 text-green-600"
                     >
                         <Check className="h-3 w-3" />
                     </Button>
@@ -184,7 +191,7 @@ const WorkTrackerTable = ({
                         variant="ghost"
                         onClick={cancelEdit}
                         disabled={isSaving}
-                        className="h-6 w-6 text-red-600"
+                        className="h-5 w-5 text-red-600"
                     >
                         <X className="h-3 w-3" />
                     </Button>
@@ -196,13 +203,66 @@ const WorkTrackerTable = ({
             <span
                 onClick={() => enableInlineEdit && !isReadOnly && startEdit(tracker.id, field, value)}
                 className={cn(
-                    "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
+                    "inline-flex items-center justify-center rounded-md px-2 py-1 text-[11px] font-semibold leading-none whitespace-nowrap",
                     badgeColors,
-                    enableInlineEdit && !isReadOnly && "cursor-pointer hover:opacity-80"
+                    enableInlineEdit && !isReadOnly && "cursor-pointer hover:opacity-80 transition-opacity"
                 )}
                 title={enableInlineEdit && !isReadOnly ? "Click to edit" : undefined}
             >
                 {value || '-'}
+            </span>
+        );
+    };
+
+    // Render editable text cell (input)
+    const renderTextCell = (tracker, field, value, placeholder = 'Add remark...') => {
+        const isEditing = editingCell?.id === tracker.id && editingCell?.field === field;
+
+        if (isEditing) {
+            return (
+                <div className="flex items-center gap-1">
+                    <Input
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        disabled={isSaving}
+                        className="h-6 w-[150px] text-xs"
+                        placeholder={placeholder}
+                        autoFocus
+                    />
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={saveEdit}
+                        disabled={isSaving}
+                        className="h-5 w-5 text-green-600"
+                    >
+                        <Check className="h-3 w-3" />
+                    </Button>
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={cancelEdit}
+                        disabled={isSaving}
+                        className="h-5 w-5 text-red-600"
+                    >
+                        <X className="h-3 w-3" />
+                    </Button>
+                </div>
+            );
+        }
+
+        return (
+            <span
+                onClick={() => enableInlineEdit && !isReadOnly && startEdit(tracker.id, field, value)}
+                className={cn(
+                    "text-sm max-w-[150px] truncate block",
+                    value ? "text-foreground" : "text-muted-foreground italic",
+                    enableInlineEdit && !isReadOnly && "cursor-pointer hover:bg-muted/50 px-1 py-0.5 rounded -mx-1"
+                )}
+                title={enableInlineEdit && !isReadOnly ? (value || "Click to add remark") : value}
+            >
+                {value || placeholder}
             </span>
         );
     };
@@ -222,7 +282,7 @@ const WorkTrackerTable = ({
                     <thead>
                         <tr className="border-b bg-muted/50">
                             {enableSelection && (
-                                <th className="w-12 py-3 px-4">
+                                <th className="w-10 py-3 px-3">
                                     <button
                                         onClick={handleSelectAll}
                                         className="flex items-center justify-center"
@@ -237,15 +297,16 @@ const WorkTrackerTable = ({
                                     </button>
                                 </th>
                             )}
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground w-12">No</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Site ID</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Site Name</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Regional</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Main Addwork</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status Pekerjaan</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status BAST</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Aging</th>
-                            {!isReadOnly && <th className="text-right py-3 px-4 font-medium text-muted-foreground">Actions</th>}
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground w-10">No</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Site ID</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Site Name</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Regional</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Main Addwork</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">BAST</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Aging</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Remark</th>
+                            {!isReadOnly && <th className="text-right py-3 px-3 font-medium text-muted-foreground w-12">Act</th>}
                         </tr>
                     </thead>
                     <tbody>
@@ -261,7 +322,7 @@ const WorkTrackerTable = ({
                                     )}
                                 >
                                     {enableSelection && (
-                                        <td className="py-3 px-4">
+                                        <td className="py-2 px-3">
                                             <button
                                                 onClick={() => handleSelectRow(tracker.id)}
                                                 className="flex items-center justify-center"
@@ -274,42 +335,50 @@ const WorkTrackerTable = ({
                                             </button>
                                         </td>
                                     )}
-                                    <td className="py-3 px-4 text-muted-foreground">{startIndex + index + 1}</td>
-                                    <td className="py-3 px-4">{tracker.site_id_1}</td>
-                                    <td className="py-3 px-4 font-medium">{tracker.site_name}</td>
-                                    <td className="py-3 px-4">{tracker.regional}</td>
-                                    <td className="py-3 px-4">{tracker.main_addwork}</td>
-                                    <td className="py-3 px-4">
+                                    <td className="py-2 px-3 text-muted-foreground text-xs">{startIndex + index + 1}</td>
+                                    <td className="py-2 px-3 text-xs">{tracker.site_id_1}</td>
+                                    <td className="py-2 px-3 font-medium text-xs">{tracker.site_name}</td>
+                                    <td className="py-2 px-3 text-xs">{tracker.regional}</td>
+                                    <td className="py-2 px-3 text-xs">{tracker.main_addwork}</td>
+                                    <td className="py-2 px-3">
                                         {renderStatusCell(
                                             tracker,
                                             'status_pekerjaan',
                                             tracker.status_pekerjaan,
-                                            STATUS_OPTIONS,
+                                            STATUS_PEKERJAAN_OPTIONS,
                                             tracker.status_pekerjaan === 'Open'
-                                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+                                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
                                                 : tracker.status_pekerjaan === 'On Hold'
-                                                    ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400'
-                                                    : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                                    ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300'
+                                                    : 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
                                         )}
                                     </td>
-                                    <td className="py-3 px-4">
-                                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${tracker.status_bast === 'Waiting Approve' || tracker.status_bast === 'Waiting Approve BAST'
-                                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
-                                            : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                            } `}>
-                                            {tracker.status_bast || '-'}
-                                        </span>
+                                    <td className="py-2 px-3">
+                                        {renderStatusCell(
+                                            tracker,
+                                            'status_bast',
+                                            tracker.status_bast,
+                                            STATUS_BAST_OPTIONS,
+                                            tracker.status_bast === 'Waiting Approve' || tracker.status_bast === 'Waiting Approve BAST'
+                                                ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300'
+                                                : tracker.status_bast === 'Approve'
+                                                    ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
+                                                    : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                                        )}
                                     </td>
-                                    <td className="py-3 px-4">
+                                    <td className="py-2 px-3 text-xs">
                                         {tracker.aging_days !== null && tracker.aging_days !== undefined && tracker.aging_days !== ''
-                                            ? `${tracker.aging_days} Days`
+                                            ? `${tracker.aging_days}d`
                                             : '-'}
                                     </td>
+                                    <td className="py-2 px-3">
+                                        {renderTextCell(tracker, 'remark', tracker.remark, 'Add remark...')}
+                                    </td>
                                     {!isReadOnly && (
-                                        <td className="py-3 px-4 text-right">
+                                        <td className="py-2 px-3 text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
                                                         <MoreHorizontal className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>

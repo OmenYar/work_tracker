@@ -58,6 +58,7 @@ const PicDataTable = ({ data, onEdit, onDelete, isReadOnly = false }) => {
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Nama PIC</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Jabatan</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Regional</th>
+                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">No HP</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Area</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Active</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Remark</th>
@@ -71,6 +72,7 @@ const PicDataTable = ({ data, onEdit, onDelete, isReadOnly = false }) => {
                                 <td className="py-3 px-4 font-medium">{pic.nama_pic}</td>
                                 <td className="py-3 px-4">{pic.jabatan}</td>
                                 <td className="py-3 px-4">{pic.regional}</td>
+                                <td className="py-3 px-4">{pic.no_hp || '-'}</td>
                                 <td className="py-3 px-4">{pic.area}</td>
                                 <td className="py-3 px-4">
                                     <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${pic.validasi === 'Active' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
