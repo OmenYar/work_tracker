@@ -1518,6 +1518,7 @@ const AdminDashboard = () => {
                                             data={filteredPicData}
                                             onEdit={(p) => navigate(`/admin/edit-pic/${p.id}`, { state: { returnUrl: getCurrentUrl() } })}
                                             onDelete={handlePicDelete}
+                                            onRefresh={fetchPicData}
                                             isReadOnly={false}
                                         />
                                     </div>
