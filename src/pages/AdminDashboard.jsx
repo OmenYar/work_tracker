@@ -987,8 +987,8 @@ const AdminDashboard = () => {
                             {/* PIC Aktif per Regional - Donut Chart */}
                             <div className="bg-card border rounded-xl p-6 shadow-sm">
                                 <h3 className="text-lg font-semibold mb-4">PIC Aktif per Regional</h3>
-                                <div className="h-[280px]">
-                                    <ResponsiveContainer width="100%" height="100%">
+                                <div className="h-[280px] min-w-0">
+                                    <ResponsiveContainer width="100%" height="100%" minWidth={200}>
                                         <PieChart>
                                             <Pie
                                                 data={picPerRegionalData}
@@ -1029,8 +1029,8 @@ const AdminDashboard = () => {
                             {/* CCTV Status - Bar Chart */}
                             <div className="bg-card border rounded-xl p-6 shadow-sm">
                                 <h3 className="text-lg font-semibold mb-4">Status CCTV</h3>
-                                <div className="h-[280px]">
-                                    <ResponsiveContainer width="100%" height="100%">
+                                <div className="h-[280px] min-w-0">
+                                    <ResponsiveContainer width="100%" height="100%" minWidth={200}>
                                         <BarChart data={cctvStatusData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
                                             <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
                                             <XAxis type="number" />
