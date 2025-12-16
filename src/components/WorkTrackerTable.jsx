@@ -354,17 +354,16 @@ const WorkTrackerTable = ({
                                         )}
                                     </td>
                                     <td className="py-2 px-3">
-                                        {renderStatusCell(
-                                            tracker,
-                                            'status_bast',
-                                            tracker.status_bast,
-                                            STATUS_BAST_OPTIONS,
+                                        <span className={cn(
+                                            "inline-flex items-center justify-center rounded-md px-2 py-1 text-[11px] font-semibold leading-none whitespace-nowrap",
                                             tracker.status_bast === 'Waiting Approve' || tracker.status_bast === 'Waiting Approve BAST'
                                                 ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300'
                                                 : tracker.status_bast === 'Approve'
                                                     ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
                                                     : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-                                        )}
+                                        )}>
+                                            {tracker.status_bast || '-'}
+                                        </span>
                                     </td>
                                     <td className="py-2 px-3 text-xs">
                                         {tracker.aging_days !== null && tracker.aging_days !== undefined && tracker.aging_days !== ''

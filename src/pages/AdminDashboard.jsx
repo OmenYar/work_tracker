@@ -27,7 +27,6 @@ const GenerateBAST = React.lazy(() => import('@/components/GenerateBAST'));
 const AnalyticsDashboard = React.lazy(() => import('@/components/AnalyticsDashboard'));
 const CalendarView = React.lazy(() => import('@/components/CalendarView'));
 const PerformanceMonitoring = React.lazy(() => import('@/components/PerformanceMonitoring'));
-const EnhancedAuditTrail = React.lazy(() => import('@/components/EnhancedAuditTrail'));
 const BulkOperations = React.lazy(() => import('@/components/BulkOperations'));
 
 // Non-lazy (small components)
@@ -1877,8 +1876,6 @@ const AdminDashboard = () => {
                         picData={picData}
                     />
                 );
-            case 'audit-trail':
-                return isAdmin ? <EnhancedAuditTrail /> : <div className="p-4">Access Denied - Admin Only</div>;
             case 'generate-bast':
                 return isAdmin ? (
                     <div className="bg-card border rounded-xl p-6 shadow-sm">
