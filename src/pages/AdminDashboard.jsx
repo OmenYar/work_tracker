@@ -33,6 +33,7 @@ const BulkOperations = React.lazy(() => import('@/components/BulkOperations'));
 // Non-lazy (small components)
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { TableSkeleton, DashboardSkeleton } from '@/components/ui/skeleton';
+import NotificationCenter, { AlertSummary } from '@/components/NotificationCenter';
 
 // Loading fallback for lazy components
 const ComponentLoader = () => (
@@ -83,6 +84,9 @@ const AdminDashboard = () => {
     const [isLoadingPic, setIsLoadingPic] = useState(true);
     const [isLoadingCar, setIsLoadingCar] = useState(true);
     const [isLoadingCctv, setIsLoadingCctv] = useState(true);
+
+    // Selection state for bulk operations
+    const [selectedTrackerIds, setSelectedTrackerIds] = useState([]);
 
     // Tracker Filters - Initialize from URL params
     const [searchTerm, setSearchTerm] = useState(searchParams.get('trackerSearch') || '');
@@ -853,6 +857,9 @@ const AdminDashboard = () => {
                             </div>
                         </div>
 
+                        {/* Alert Summary */}
+                        <AlertSummary workTrackers={workTrackers} carData={carData} />
+
                         {/* Summary Stats with Icons */}
                         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
                             <div className="bg-card border rounded-xl p-4 shadow-sm">
@@ -1290,6 +1297,37 @@ const AdminDashboard = () => {
                             )}
                         </div>
 
+                        {/* Bulk Operations */}
+                        {selectedTrackerIds.length > 0 && (
+                            <div className="mb-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm font-medium">
+                                        {selectedTrackerIds.length} item(s) selected
+                                    </span>
+                                    <div className="flex gap-2">
+                                        <Suspense fallback={<ComponentLoader />}>
+                                            <BulkOperations
+                                                selectedIds={selectedTrackerIds}
+                                                tableName="work_trackers"
+                                                onComplete={() => {
+                                                    setSelectedTrackerIds([]);
+                                                    fetchTrackers();
+                                                }}
+                                                data={filteredTrackers}
+                                            />
+                                        </Suspense>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setSelectedTrackerIds([])}
+                                        >
+                                            Clear Selection
+                                        </Button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Table Content */}
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-xl border bg-card shadow">
                             <div className="p-6 border-b flex justify-between items-center">
@@ -1298,12 +1336,21 @@ const AdminDashboard = () => {
                                 </h2>
                             </div>
                             <div className="p-6">
-                                <WorkTrackerTable
-                                    data={filteredTrackers}
-                                    onEdit={(t) => navigate(`/admin/edit-tracker/${t.id}`, { state: { returnUrl: getCurrentUrl() } })}
-                                    onDelete={handleTrackerDelete}
-                                    isReadOnly={!canEditTracker}
-                                />
+                                {isLoadingTrackers ? (
+                                    <TableSkeleton rows={10} columns={8} />
+                                ) : (
+                                    <WorkTrackerTable
+                                        data={filteredTrackers}
+                                        onEdit={(t) => navigate(`/admin/edit-tracker/${t.id}`, { state: { returnUrl: getCurrentUrl() } })}
+                                        onDelete={handleTrackerDelete}
+                                        onRefresh={fetchTrackers}
+                                        isReadOnly={!canEditTracker}
+                                        enableInlineEdit={canEditTracker}
+                                        enableSelection={canEditTracker}
+                                        selectedIds={selectedTrackerIds}
+                                        onSelectionChange={setSelectedTrackerIds}
+                                    />
+                                )}
                             </div>
                         </motion.div>
                     </div>
@@ -1856,7 +1903,14 @@ const AdminDashboard = () => {
                         Selamat Datang, {profile?.name || 'User'} ({profile?.role}).
                     </p>
                 </div>
-                <ThemeToggle />
+                <div className="flex items-center gap-2">
+                    <NotificationCenter
+                        workTrackers={workTrackers}
+                        carData={carData}
+                        cctvData={cctvData}
+                    />
+                    <ThemeToggle />
+                </div>
             </div>
 
             <Suspense fallback={<ComponentLoader />}>
