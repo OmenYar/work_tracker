@@ -511,8 +511,11 @@ const PerformanceMonitoring = ({ workTrackers = [], picData = [] }) => {
                     <CardContent>
                         {(() => {
                             const outstandingWIP = workTrackers.filter(t =>
-                                (t.aging_days && Number(t.aging_days) > 90) ||
-                                t.status_pekerjaan === 'On Hold'
+                                // Exclude if BAST already approved
+                                t.status_bast !== 'Approve' &&
+                                t.status_bast !== 'BAST Approve Date' &&
+                                // Include if aging >90 days OR On Hold
+                                ((t.aging_days && Number(t.aging_days) > 90) || t.status_pekerjaan === 'On Hold')
                             ).sort((a, b) => Number(b.aging_days || 0) - Number(a.aging_days || 0));
 
                             if (outstandingWIP.length === 0) {
