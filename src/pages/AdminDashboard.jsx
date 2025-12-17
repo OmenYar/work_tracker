@@ -9,6 +9,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/customSupabaseClient';
 import { deleteCCTVFromGoogleSheets, deletePICFromGoogleSheets, deleteTrackerFromGoogleSheets, deleteCarFromGoogleSheets } from '@/lib/googleSheetsSync';
 import { logDelete } from '@/lib/activityLogger';
@@ -892,30 +894,6 @@ const AdminDashboard = () => {
                             </div>
                         )}
 
-                        {/* Need Created BAST per Regional - Admin/AM Only */}
-                        {!isSPV && (
-                            <div className="bg-card border rounded-xl p-6 shadow-sm">
-                                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                                    <FileText className="w-5 h-5 text-purple-600" />
-                                    Need Created BAST per Regional
-                                </h3>
-                                <div className="grid grid-cols-3 gap-4">
-                                    <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800 flex justify-between items-center">
-                                        <span className="font-medium text-muted-foreground">Jabo Outer 1</span>
-                                        <span className="text-2xl font-bold text-purple-600">{nJabo1}</span>
-                                    </div>
-                                    <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800 flex justify-between items-center">
-                                        <span className="font-medium text-muted-foreground">Jabo Outer 2</span>
-                                        <span className="text-2xl font-bold text-purple-600">{nJabo2}</span>
-                                    </div>
-                                    <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800 flex justify-between items-center">
-                                        <span className="font-medium text-muted-foreground">Jabo Outer 3</span>
-                                        <span className="text-2xl font-bold text-purple-600">{nJabo3}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
                         {/* Charts Section - PIC per Regional and CCTV Status */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {/* PIC Aktif per Regional - Donut Chart */}
@@ -1301,73 +1279,81 @@ const AdminDashboard = () => {
                 const activePic = picData.filter(p => p.validasi === 'Active').length;
                 const inactivePic = picData.filter(p => p.validasi === 'Inactive').length;
 
-                // Active PIC per regional
-                const activePicJabo1 = picData.filter(p => p.validasi === 'Active' && p.regional === 'Jabo Outer 1').length;
-                const activePicJabo2 = picData.filter(p => p.validasi === 'Active' && p.regional === 'Jabo Outer 2').length;
-                const activePicJabo3 = picData.filter(p => p.validasi === 'Active' && p.regional === 'Jabo Outer 3').length;
+                // Count per jabatan
+                const jabatanCounts = picData.reduce((acc, p) => {
+                    const jabatan = p.jabatan || 'Unknown';
+                    acc[jabatan] = (acc[jabatan] || 0) + 1;
+                    return acc;
+                }, {});
+
+                // Count per regional
+                const regionalCounts = {
+                    'Jabo Outer 1': picData.filter(p => p.regional === 'Jabo Outer 1' && p.validasi === 'Active').length,
+                    'Jabo Outer 2': picData.filter(p => p.regional === 'Jabo Outer 2' && p.validasi === 'Active').length,
+                    'Jabo Outer 3': picData.filter(p => p.regional === 'Jabo Outer 3' && p.validasi === 'Active').length,
+                };
 
                 return (
                     <div className="space-y-6">
                         {canEditPic ? (
                             <>
-                                {/* Summary Stats */}
-                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                    <div className="bg-card border rounded-xl p-4 shadow-sm relative overflow-hidden">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <p className="text-xs text-muted-foreground uppercase font-bold">Total PIC</p>
-                                                <p className="text-2xl font-bold">{totalPic}</p>
+                                {/* Summary Card - Consistent Style */}
+                                <Card className="border-2 border-primary/20">
+                                    <CardHeader className="pb-2">
+                                        <CardTitle className="flex items-center justify-between text-lg">
+                                            <span className="flex items-center gap-2">
+                                                <UsersIcon className="w-5 h-5" />
+                                                Data PIC Summary
+                                            </span>
+                                            <span className="text-sm font-normal text-muted-foreground">
+                                                Total: {totalPic} PIC
+                                            </span>
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                                            {/* Status Cards */}
+                                            <div className="p-3 rounded-lg bg-blue-500/10">
+                                                <p className="text-[10px] text-muted-foreground">Total PIC</p>
+                                                <p className="text-xl font-bold text-blue-600">{totalPic}</p>
                                             </div>
-                                            <UsersIcon className="w-5 h-5 text-muted-foreground opacity-50" />
-                                        </div>
-                                    </div>
-                                    <div className="bg-card border rounded-xl p-4 shadow-sm relative overflow-hidden">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <p className="text-xs text-muted-foreground uppercase font-bold text-green-600">Active PIC</p>
-                                                <p className="text-2xl font-bold">{activePic}</p>
+                                            <div className="p-3 rounded-lg bg-green-500/10">
+                                                <p className="text-[10px] text-muted-foreground">Active</p>
+                                                <p className="text-xl font-bold text-green-600">{activePic}</p>
                                             </div>
-                                            <CheckCircle className="w-5 h-5 text-green-600 opacity-50" />
-                                        </div>
-                                    </div>
-                                    <div className="bg-card border rounded-xl p-4 shadow-sm relative overflow-hidden">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <p className="text-xs text-muted-foreground uppercase font-bold text-red-600">Inactive PIC</p>
-                                                <p className="text-2xl font-bold">{inactivePic}</p>
+                                            <div className="p-3 rounded-lg bg-red-500/10">
+                                                <p className="text-[10px] text-muted-foreground">Inactive</p>
+                                                <p className="text-xl font-bold text-red-600">{inactivePic}</p>
                                             </div>
-                                            <XCircle className="w-5 h-5 text-red-600 opacity-50" />
+                                            {/* Regional Cards */}
+                                            <div className="p-3 rounded-lg bg-purple-500/10">
+                                                <p className="text-[10px] text-muted-foreground">JO 1 Aktif</p>
+                                                <p className="text-xl font-bold text-purple-600">{regionalCounts['Jabo Outer 1']}</p>
+                                            </div>
+                                            <div className="p-3 rounded-lg bg-amber-500/10">
+                                                <p className="text-[10px] text-muted-foreground">JO 2 Aktif</p>
+                                                <p className="text-xl font-bold text-amber-600">{regionalCounts['Jabo Outer 2']}</p>
+                                            </div>
+                                            <div className="p-3 rounded-lg bg-teal-500/10">
+                                                <p className="text-[10px] text-muted-foreground">JO 3 Aktif</p>
+                                                <p className="text-xl font-bold text-teal-600">{regionalCounts['Jabo Outer 3']}</p>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
 
-                                {/* Active PIC per Regional */}
-                                <div>
-                                    <h3 className="text-lg font-semibold mb-4">Active PIC per Regional</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        <div className="bg-card border rounded-lg p-4">
-                                            <p className="text-sm font-medium text-muted-foreground">Jabo Outer 1</p>
-                                            <div className="flex items-baseline gap-2 mt-1">
-                                                <p className="text-3xl font-bold">{activePicJabo1}</p>
-                                                <p className="text-xs text-muted-foreground">PIC aktif</p>
+                                        {/* Jabatan Distribution */}
+                                        <div className="mt-4 pt-4 border-t">
+                                            <p className="text-sm font-medium mb-2">Distribusi Jabatan</p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {Object.entries(jabatanCounts).sort((a, b) => b[1] - a[1]).map(([jabatan, count]) => (
+                                                    <Badge key={jabatan} variant="secondary" className="text-xs">
+                                                        {jabatan}: {count}
+                                                    </Badge>
+                                                ))}
                                             </div>
                                         </div>
-                                        <div className="bg-card border rounded-lg p-4">
-                                            <p className="text-sm font-medium text-muted-foreground">Jabo Outer 2</p>
-                                            <div className="flex items-baseline gap-2 mt-1">
-                                                <p className="text-3xl font-bold">{activePicJabo2}</p>
-                                                <p className="text-xs text-muted-foreground">PIC aktif</p>
-                                            </div>
-                                        </div>
-                                        <div className="bg-card border rounded-lg p-4">
-                                            <p className="text-sm font-medium text-muted-foreground">Jabo Outer 3</p>
-                                            <div className="flex items-baseline gap-2 mt-1">
-                                                <p className="text-3xl font-bold">{activePicJabo3}</p>
-                                                <p className="text-xs text-muted-foreground">PIC aktif</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                    </CardContent>
+                                </Card>
+
 
                                 {/* Filters & Actions */}
                                 <div className="flex flex-col xl:flex-row gap-4 justify-between items-start xl:items-center bg-card p-4 rounded-xl border shadow-sm">
