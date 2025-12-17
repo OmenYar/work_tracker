@@ -505,30 +505,18 @@ const PerformanceMonitoring = ({ workTrackers = [], picData = [] }) => {
                             Outstanding Work in Progress
                         </CardTitle>
                         <CardDescription>
-                            Pekerjaan dengan aging &gt;90 hari, status On Hold, atau Waiting Approve &gt;14 hari
+                            Pekerjaan dengan aging &gt;90 hari atau status On Hold
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         {(() => {
                             const outstandingWIP = workTrackers.filter(t => {
-                                // Exclude if BAST already approved
-                                if (t.status_bast === 'Approve' || t.status_bast === 'BAST Approve Date') {
-                                    return false;
-                                }
-                                // Include if: aging >90 days OR On Hold OR Waiting Approve >14 days
-                                const isAgingHigh = t.aging_days && Number(t.aging_days) > 90;
-                                const isOnHold = t.status_pekerjaan === 'On Hold';
-                                const isWaitingTooLong = t.status_bast === 'Waiting Approve' && t.aging_days && Number(t.aging_days) > 14;
-
-                                return isAgingHigh || isOnHold || isWaitingTooLong;
+                                if (t.status_bast === 'Approve' || t.status_bast === 'BAST Approve Date') return false;
+                                return (t.aging_days && Number(t.aging_days) > 90) || t.status_pekerjaan === 'On Hold';
                             }).sort((a, b) => Number(b.aging_days || 0) - Number(a.aging_days || 0));
 
                             if (outstandingWIP.length === 0) {
-                                return (
-                                    <p className="text-center text-muted-foreground py-8">
-                                        ✅ Tidak ada pekerjaan outstanding. Semua dalam kondisi baik!
-                                    </p>
-                                );
+                                return <p className="text-center text-muted-foreground py-6">✅ Tidak ada pekerjaan outstanding</p>;
                             }
 
                             return (
@@ -542,38 +530,93 @@ const PerformanceMonitoring = ({ workTrackers = [], picData = [] }) => {
                                                 <th className="pb-3 font-medium">Regional</th>
                                                 <th className="pb-3 font-medium text-center">Status</th>
                                                 <th className="pb-3 font-medium text-center">Aging</th>
-                                                <th className="pb-3 font-medium hidden lg:table-cell">Remark</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y">
-                                            {outstandingWIP.slice(0, 20).map((tracker, idx) => (
-                                                <tr key={tracker.id} className="hover:bg-muted/50">
-                                                    <td className="py-3 font-mono text-xs">{tracker.site_id_1 || '-'}</td>
-                                                    <td className="py-3 max-w-[200px] truncate">{tracker.site_name || '-'}</td>
-                                                    <td className="py-3 hidden md:table-cell max-w-[150px] truncate">{tracker.main_addwork || '-'}</td>
-                                                    <td className="py-3">{tracker.regional || '-'}</td>
+                                            {outstandingWIP.slice(0, 15).map(t => (
+                                                <tr key={t.id} className="hover:bg-muted/50">
+                                                    <td className="py-3 font-mono text-xs">{t.site_id_1 || '-'}</td>
+                                                    <td className="py-3 max-w-[180px] truncate">{t.site_name || '-'}</td>
+                                                    <td className="py-3 hidden md:table-cell max-w-[120px] truncate">{t.main_addwork || '-'}</td>
+                                                    <td className="py-3">{t.regional || '-'}</td>
                                                     <td className="py-3 text-center">
-                                                        <Badge variant={tracker.status_pekerjaan === 'On Hold' ? 'secondary' : 'outline'}
-                                                            className={tracker.status_pekerjaan === 'On Hold' ? 'bg-yellow-500/20 text-yellow-600' : ''}>
-                                                            {tracker.status_pekerjaan}
+                                                        <Badge className={t.status_pekerjaan === 'On Hold' ? 'bg-yellow-500/20 text-yellow-600' : ''}>
+                                                            {t.status_pekerjaan}
                                                         </Badge>
                                                     </td>
                                                     <td className="py-3 text-center">
-                                                        <span className={`font-semibold ${Number(tracker.aging_days) > 90 ? 'text-red-500' : ''}`}>
-                                                            {tracker.aging_days || 0} hari
+                                                        <span className={Number(t.aging_days) > 90 ? 'text-red-500 font-semibold' : ''}>
+                                                            {t.aging_days || 0}d
                                                         </span>
-                                                    </td>
-                                                    <td className="py-3 hidden lg:table-cell max-w-[200px] truncate text-muted-foreground">
-                                                        {tracker.remark || '-'}
                                                     </td>
                                                 </tr>
                                             ))}
                                         </tbody>
                                     </table>
-                                    {outstandingWIP.length > 20 && (
-                                        <p className="text-center text-sm text-muted-foreground mt-4">
-                                            Menampilkan 20 dari {outstandingWIP.length} item
-                                        </p>
+                                    {outstandingWIP.length > 15 && (
+                                        <p className="text-center text-xs text-muted-foreground mt-3">+{outstandingWIP.length - 15} lainnya</p>
+                                    )}
+                                </div>
+                            );
+                        })()}
+                    </CardContent>
+                </Card>
+            </motion.div>
+
+            {/* Outstanding BAST */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}>
+                <Card className="border-red-500/30">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-red-600">
+                            <TrendingDown className="w-5 h-5" />
+                            Outstanding BAST Approval
+                        </CardTitle>
+                        <CardDescription>
+                            BAST dengan status Waiting Approve lebih dari 14 hari
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {(() => {
+                            const outstandingBAST = workTrackers.filter(t =>
+                                t.status_bast === 'Waiting Approve' && t.aging_days && Number(t.aging_days) > 14
+                            ).sort((a, b) => Number(b.aging_days || 0) - Number(a.aging_days || 0));
+
+                            if (outstandingBAST.length === 0) {
+                                return <p className="text-center text-muted-foreground py-6">✅ Semua BAST sudah diproses tepat waktu</p>;
+                            }
+
+                            return (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                        <thead>
+                                            <tr className="border-b text-left">
+                                                <th className="pb-3 font-medium">Site ID</th>
+                                                <th className="pb-3 font-medium">Site Name</th>
+                                                <th className="pb-3 font-medium hidden md:table-cell">Pekerjaan</th>
+                                                <th className="pb-3 font-medium">Regional</th>
+                                                <th className="pb-3 font-medium text-center">BAST Status</th>
+                                                <th className="pb-3 font-medium text-center">Waiting</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y">
+                                            {outstandingBAST.slice(0, 15).map(t => (
+                                                <tr key={t.id} className="hover:bg-muted/50">
+                                                    <td className="py-3 font-mono text-xs">{t.site_id_1 || '-'}</td>
+                                                    <td className="py-3 max-w-[180px] truncate">{t.site_name || '-'}</td>
+                                                    <td className="py-3 hidden md:table-cell max-w-[120px] truncate">{t.main_addwork || '-'}</td>
+                                                    <td className="py-3">{t.regional || '-'}</td>
+                                                    <td className="py-3 text-center">
+                                                        <Badge className="bg-amber-500/20 text-amber-600">Waiting Approve</Badge>
+                                                    </td>
+                                                    <td className="py-3 text-center">
+                                                        <span className="text-red-500 font-semibold">{t.aging_days || 0}d</span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    {outstandingBAST.length > 15 && (
+                                        <p className="text-center text-xs text-muted-foreground mt-3">+{outstandingBAST.length - 15} lainnya</p>
                                     )}
                                 </div>
                             );
