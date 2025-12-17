@@ -2,11 +2,11 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
     Briefcase, Clock, AlertTriangle, FileCheck, TrendingUp,
-    Users, PauseCircle, CheckCircle2, Timer, Target
+    Users, PauseCircle, CheckCircle2, Timer, Target, Car, Camera, Wifi
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-const MeetingSummary = ({ workTrackers = [], picData = [] }) => {
+const Summary = ({ workTrackers = [], picData = [], carData = [], cctvData = [] }) => {
     const stats = useMemo(() => {
         const total = workTrackers.length;
         const open = workTrackers.filter(t => t.status_pekerjaan === 'Open').length;
@@ -41,18 +41,22 @@ const MeetingSummary = ({ workTrackers = [], picData = [] }) => {
         // Active PIC
         const activePIC = picData.filter(p => p.validasi === 'Aktif' || p.validasi === 'Active').length;
 
-        // Average aging
-        const avgAging = workTrackers.filter(t => t.aging_days).length > 0
-            ? Math.round(workTrackers.filter(t => t.aging_days).reduce((sum, t) => sum + Number(t.aging_days), 0) / workTrackers.filter(t => t.aging_days).length)
-            : 0;
+        // Car stats
+        const totalCars = carData.length;
+        const activeCars = carData.filter(c => c.status === 'Aktif' || c.status === 'Active').length;
+
+        // CCTV stats
+        const totalCCTV = cctvData.length;
+        const cctvOnline = cctvData.filter(c => c.status === 'Online' || c.status === 'online').length;
 
         return {
             total, open, onHold, close,
             bastApproved, bastWaiting, bastNeedCreate,
             outstandingWIP, outstandingBAST,
-            completionRate, activePIC, avgAging
+            completionRate, activePIC,
+            totalCars, activeCars, totalCCTV, cctvOnline
         };
-    }, [workTrackers, picData]);
+    }, [workTrackers, picData, carData, cctvData]);
 
     const cards = [
         {
@@ -63,9 +67,8 @@ const MeetingSummary = ({ workTrackers = [], picData = [] }) => {
             bg: 'bg-blue-500/10'
         },
         {
-            title: 'Sedang Dikerjakan',
+            title: 'Open',
             value: stats.open,
-            subtitle: 'Open',
             icon: TrendingUp,
             color: 'text-green-600',
             bg: 'bg-green-500/10'
@@ -79,7 +82,7 @@ const MeetingSummary = ({ workTrackers = [], picData = [] }) => {
             alert: stats.onHold > 0
         },
         {
-            title: 'Selesai',
+            title: 'Close',
             value: stats.close,
             subtitle: `${stats.completionRate}%`,
             icon: CheckCircle2,
@@ -102,7 +105,7 @@ const MeetingSummary = ({ workTrackers = [], picData = [] }) => {
             alert: stats.bastWaiting > 5
         },
         {
-            title: 'Perlu Buat BAST',
+            title: 'Need BAST',
             value: stats.bastNeedCreate,
             icon: FileCheck,
             color: 'text-orange-600',
@@ -112,7 +115,6 @@ const MeetingSummary = ({ workTrackers = [], picData = [] }) => {
         {
             title: 'Outstanding WIP',
             value: stats.outstandingWIP,
-            subtitle: '>90 hari / Hold',
             icon: AlertTriangle,
             color: 'text-red-600',
             bg: 'bg-red-500/10',
@@ -121,19 +123,10 @@ const MeetingSummary = ({ workTrackers = [], picData = [] }) => {
         {
             title: 'Outstanding BAST',
             value: stats.outstandingBAST,
-            subtitle: 'Waiting >14 hari',
             icon: Clock,
             color: 'text-red-600',
             bg: 'bg-red-500/10',
             alert: stats.outstandingBAST > 0
-        },
-        {
-            title: 'Avg Aging',
-            value: `${stats.avgAging}`,
-            subtitle: 'hari',
-            icon: Target,
-            color: 'text-indigo-600',
-            bg: 'bg-indigo-500/10'
         },
         {
             title: 'PIC Aktif',
@@ -142,44 +135,60 @@ const MeetingSummary = ({ workTrackers = [], picData = [] }) => {
             color: 'text-teal-600',
             bg: 'bg-teal-500/10'
         },
+        {
+            title: 'Mobil',
+            value: stats.activeCars,
+            subtitle: `/${stats.totalCars}`,
+            icon: Car,
+            color: 'text-sky-600',
+            bg: 'bg-sky-500/10'
+        },
+        {
+            title: 'CCTV Online',
+            value: stats.cctvOnline,
+            subtitle: `/${stats.totalCCTV}`,
+            icon: Wifi,
+            color: 'text-cyan-600',
+            bg: 'bg-cyan-500/10'
+        },
     ];
 
     return (
         <Card className="border-2 border-primary/20">
             <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                    📊 Meeting Summary
-                    <span className="text-xs font-normal text-muted-foreground ml-2">
+                <CardTitle className="flex items-center justify-between text-lg">
+                    <span>📊 Summary</span>
+                    <span className="text-sm font-normal text-muted-foreground">
                         {new Date().toLocaleDateString('id-ID', {
                             weekday: 'long',
-                            year: 'numeric',
+                            day: 'numeric',
                             month: 'long',
-                            day: 'numeric'
+                            year: 'numeric'
                         })}
                     </span>
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-2">
                     {cards.map((card, idx) => (
                         <motion.div
                             key={card.title}
                             initial={{ opacity: 0, scale: 0.9 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: idx * 0.05 }}
-                            className={`relative p-3 rounded-lg ${card.bg} ${card.alert ? 'ring-2 ring-red-500/50' : ''}`}
+                            transition={{ delay: idx * 0.03 }}
+                            className={`relative p-2 rounded-lg ${card.bg} ${card.alert ? 'ring-2 ring-red-500/50' : ''}`}
                         >
                             <div className="flex items-start justify-between">
                                 <div>
-                                    <p className="text-xs text-muted-foreground">{card.title}</p>
-                                    <p className={`text-2xl font-bold ${card.color}`}>
+                                    <p className="text-[10px] text-muted-foreground leading-tight">{card.title}</p>
+                                    <p className={`text-xl font-bold ${card.color}`}>
                                         {card.value}
                                         {card.subtitle && (
-                                            <span className="text-xs font-normal ml-1">{card.subtitle}</span>
+                                            <span className="text-[10px] font-normal opacity-70">{card.subtitle}</span>
                                         )}
                                     </p>
                                 </div>
-                                <card.icon className={`w-4 h-4 ${card.color} opacity-60`} />
+                                <card.icon className={`w-3 h-3 ${card.color} opacity-50`} />
                             </div>
                             {card.alert && (
                                 <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
@@ -192,4 +201,4 @@ const MeetingSummary = ({ workTrackers = [], picData = [] }) => {
     );
 };
 
-export default MeetingSummary;
+export default Summary;

@@ -865,78 +865,8 @@ const AdminDashboard = () => {
                             </div>
                         </div>
 
-                        {/* Meeting Summary Card */}
-                        <MeetingSummary workTrackers={workTrackers} picData={picData} />
-
-                        {/* Alert Summary */}
-                        <AlertSummary workTrackers={workTrackers} carData={carData} />
-
-                        {/* Summary Stats with Icons */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-                            <div className="bg-card border rounded-xl p-4 shadow-sm">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xs text-muted-foreground uppercase font-bold text-purple-600">Need Created BAST</p>
-                                        <p className="text-2xl font-bold">{dNeedCreated}</p>
-                                    </div>
-                                    <FileText className="w-8 h-8 text-purple-600 opacity-50" />
-                                </div>
-                            </div>
-                            <div className="bg-card border rounded-xl p-4 shadow-sm">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xs text-muted-foreground uppercase font-bold text-yellow-600">Waiting Approve BAST</p>
-                                        <p className="text-2xl font-bold">{dWaiting}</p>
-                                    </div>
-                                    <Clock className="w-8 h-8 text-yellow-600 opacity-50" />
-                                </div>
-                            </div>
-                            <div className="bg-card border rounded-xl p-4 shadow-sm">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xs text-muted-foreground uppercase font-bold text-blue-600">Open</p>
-                                        <p className="text-2xl font-bold">{dProgress}</p>
-                                    </div>
-                                    <PlayCircle className="w-8 h-8 text-blue-600 opacity-50" />
-                                </div>
-                            </div>
-                            <div className="bg-card border rounded-xl p-4 shadow-sm">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xs text-muted-foreground uppercase font-bold text-orange-600">On Hold</p>
-                                        <p className="text-2xl font-bold">{dHold}</p>
-                                    </div>
-                                    <PauseCircle className="w-8 h-8 text-orange-600 opacity-50" />
-                                </div>
-                            </div>
-                            <div className="bg-card border rounded-xl p-4 shadow-sm">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xs text-muted-foreground uppercase font-bold text-purple-600">PIC Aktif</p>
-                                        <p className="text-2xl font-bold">{dActivePic}</p>
-                                    </div>
-                                    <UsersIcon className="w-8 h-8 text-purple-600 opacity-50" />
-                                </div>
-                            </div>
-                            <div className="bg-card border rounded-xl p-4 shadow-sm">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xs text-muted-foreground uppercase font-bold text-teal-600">Data Mobil</p>
-                                        <p className="text-2xl font-bold">{dTotalCar}</p>
-                                    </div>
-                                    <Truck className="w-8 h-8 text-teal-600 opacity-50" />
-                                </div>
-                            </div>
-                            <div className="bg-card border rounded-xl p-4 shadow-sm">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xs text-muted-foreground uppercase font-bold text-green-600">CCTV Online</p>
-                                        <p className="text-2xl font-bold">{dActiveCctv}</p>
-                                    </div>
-                                    <Camera className="w-8 h-8 text-green-600 opacity-50" />
-                                </div>
-                            </div>
-                        </div>
+                        {/* Summary Card */}
+                        <MeetingSummary workTrackers={workTrackers} picData={picData} carData={carData} cctvData={cctvData} />
 
                         {/* Waiting BAST per Regional - Admin/AM Only */}
                         {!isSPV && (
