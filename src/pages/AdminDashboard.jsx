@@ -1345,6 +1345,77 @@ const AdminDashboard = () => {
                                     </CardContent>
                                 </Card>
 
+                                {/* MBP Requirements Planning 2026 */}
+                                <Card className="border-2 border-amber-500/30 bg-amber-50/50 dark:bg-amber-900/10">
+                                    <CardHeader className="pb-2">
+                                        <CardTitle className="flex items-center justify-between text-lg">
+                                            <span className="flex items-center gap-2 text-amber-700 dark:text-amber-500">
+                                                <AlertCircle className="w-5 h-5" />
+                                                📋 Require PIC MBP 2026
+                                            </span>
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {/* Jan - Mar 2026 */}
+                                            <div className="p-4 rounded-lg bg-white/50 dark:bg-card border">
+                                                <p className="text-sm font-semibold text-amber-700 dark:text-amber-500">Periode Jan - Mar 2026</p>
+                                                <div className="mt-2 flex items-baseline gap-2">
+                                                    <span className="text-3xl font-bold text-amber-600">10</span>
+                                                    <span className="text-sm text-muted-foreground">orang</span>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground mt-1">
+                                                    Jabatan: CM+MBP, MBP, Expert Genset
+                                                </p>
+                                                <div className="mt-2">
+                                                    {(() => {
+                                                        const mbpJabatans = ['CM+MBP', 'MBP', 'Expert Genset'];
+                                                        const currentMBP = picData.filter(p =>
+                                                            p.validasi === 'Active' &&
+                                                            mbpJabatans.some(j => p.jabatan?.includes(j))
+                                                        ).length;
+                                                        const diff = currentMBP - 10;
+                                                        return (
+                                                            <Badge className={diff >= 0 ? 'bg-green-500/20 text-green-700' : 'bg-red-500/20 text-red-700'}>
+                                                                Saat ini: {currentMBP} ({diff >= 0 ? '+' : ''}{diff})
+                                                            </Badge>
+                                                        );
+                                                    })()}
+                                                </div>
+                                            </div>
+
+                                            {/* Apr - Des 2026 */}
+                                            <div className="p-4 rounded-lg bg-white/50 dark:bg-card border">
+                                                <p className="text-sm font-semibold text-amber-700 dark:text-amber-500">Periode Apr - Des 2026</p>
+                                                <div className="mt-2 flex items-baseline gap-2">
+                                                    <span className="text-3xl font-bold text-amber-600">7</span>
+                                                    <span className="text-sm text-muted-foreground">orang</span>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground mt-1">
+                                                    Jabatan: CM+MBP, MBP, Expert Genset
+                                                </p>
+                                                <div className="mt-2">
+                                                    {(() => {
+                                                        const mbpJabatans = ['CM+MBP', 'MBP', 'Expert Genset'];
+                                                        const currentMBP = picData.filter(p =>
+                                                            p.validasi === 'Active' &&
+                                                            mbpJabatans.some(j => p.jabatan?.includes(j))
+                                                        ).length;
+                                                        const diff = currentMBP - 7;
+                                                        return (
+                                                            <Badge className={diff >= 0 ? 'bg-green-500/20 text-green-700' : 'bg-red-500/20 text-red-700'}>
+                                                                Saat ini: {currentMBP} ({diff >= 0 ? '+' : ''}{diff})
+                                                            </Badge>
+                                                        );
+                                                    })()}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <p className="text-xs text-muted-foreground mt-3 italic">
+                                            ⚠️ Note: Jumlah require sudah termasuk semua jabatan CM+MBP, MBP, dan Expert Genset
+                                        </p>
+                                    </CardContent>
+                                </Card>
 
                                 {/* Filters & Actions */}
                                 <div className="flex flex-col xl:flex-row gap-4 justify-between items-start xl:items-center bg-card p-4 rounded-xl border shadow-sm">

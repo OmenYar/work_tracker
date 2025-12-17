@@ -32,7 +32,9 @@ const PerformanceMonitoring = ({ workTrackers = [], picData = [] }) => {
     // Calculate SLA metrics
     const slaMetrics = useMemo(() => {
         const totalJobs = workTrackers.length;
+        const openJobs = workTrackers.filter(t => t.status_pekerjaan === 'Open').length;
         const completedJobs = workTrackers.filter(t => t.status_pekerjaan === 'Close').length;
+        const onHoldJobs = workTrackers.filter(t => t.status_pekerjaan === 'On Hold').length;
         const bastApproved = workTrackers.filter(t =>
             t.status_bast === 'Approve' || t.status_bast === 'BAST Approve Date'
         ).length;
@@ -56,6 +58,8 @@ const PerformanceMonitoring = ({ workTrackers = [], picData = [] }) => {
 
         return {
             totalJobs,
+            openJobs,
+            onHoldJobs,
             completedJobs,
             bastApproved,
             withinSla,
@@ -208,7 +212,7 @@ const PerformanceMonitoring = ({ workTrackers = [], picData = [] }) => {
             </div>
 
             {/* SLA Overview Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
                     <Card>
                         <CardHeader className="pb-2">
@@ -285,6 +289,23 @@ const PerformanceMonitoring = ({ workTrackers = [], picData = [] }) => {
                             </p>
                             <p className="text-xs text-muted-foreground mt-1">
                                 jobs exceeded SLA limit
+                            </p>
+                        </CardContent>
+                    </Card>
+                </motion.div>
+
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+                    <Card className="border-blue-500/30">
+                        <CardHeader className="pb-2">
+                            <CardDescription className="flex items-center gap-2 text-blue-600">
+                                <TrendingUp className="w-4 h-4" />
+                                Open Work
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-3xl font-bold text-blue-600">{slaMetrics.openJobs}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                                pekerjaan sedang berjalan
                             </p>
                         </CardContent>
                     </Card>
