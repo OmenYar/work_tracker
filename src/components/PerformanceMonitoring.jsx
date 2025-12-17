@@ -14,10 +14,15 @@ import {
 } from 'recharts';
 
 // SLA Configuration
+// - maxAgingDays: BAST harus approve dalam 14 hari setelah submit ke RC
+// - maxWipDays: Pekerjaan harus selesai dalam 90 hari (jadi outstanding jika lebih)
+// - targetCompletionRate: Target % pekerjaan selesai
+// - targetBastApprovalRate: Target % BAST yang diapprove
 const SLA_CONFIG = {
-    maxAgingDays: 14, // Max days for BAST processing
-    targetCompletionRate: 90, // %
-    targetBastApprovalRate: 85, // %
+    maxAgingDays: 14, // Max days for BAST approval (dari submit ke RC sampai approve)
+    maxWipDays: 90, // Max days for Work in Progress (sebelum jadi outstanding)
+    targetCompletionRate: 90, // Target completion %
+    targetBastApprovalRate: 85, // Target BAST approval %
 };
 
 const PerformanceMonitoring = ({ workTrackers = [], picData = [] }) => {
