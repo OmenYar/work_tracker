@@ -36,6 +36,7 @@ import NotificationCenter, { AlertSummary } from '@/components/NotificationCente
 import GlobalSearch from '@/components/GlobalSearch';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import AdvancedFilters from '@/components/AdvancedFilters';
+import MeetingSummary from '@/components/MeetingSummary';
 
 // Loading fallback for lazy components
 const ComponentLoader = () => (
@@ -863,6 +864,9 @@ const AdminDashboard = () => {
                                 />
                             </div>
                         </div>
+
+                        {/* Meeting Summary Card */}
+                        <MeetingSummary workTrackers={workTrackers} picData={picData} />
 
                         {/* Alert Summary */}
                         <AlertSummary workTrackers={workTrackers} carData={carData} />
