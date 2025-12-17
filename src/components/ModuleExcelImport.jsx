@@ -15,22 +15,22 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/customSupabaseClient';
 import * as XLSX from 'xlsx';
 
-// Column mapping from Excel to database
+// Column mapping from Excel to database (case-insensitive, multiple variants)
 const COLUMN_MAPPING = {
-    'SITE ID': 'site_id',
-    'SITE NAME': 'site_name',
-    'PROVINSI': 'provinsi',
-    'KAB/KOTA': 'kab_kota',
-    'MITRA': 'mitra',
-    'MODULE QTY': 'module_qty',
-    'WEEK': 'plan_week',
-    'HW Plan': 'hw_plan',
-    'RFS STATUS': 'rfs_status',
-    'RFS Date': 'rfs_date',
-    'Install Qty': 'install_qty',
-    'GAP': 'gap',
-    'PRIORITY': 'priority',
-    'TOWER PROVIDER': 'tower_provider',
+    'site_id': ['SITE ID', 'Site ID', 'site_id', 'SITE_ID', 'SiteID'],
+    'site_name': ['SITE NAME', 'Site Name', 'site_name', 'SITE_NAME', 'SiteName'],
+    'provinsi': ['PROVINSI', 'Provinsi', 'provinsi', 'Province'],
+    'kab_kota': ['KAB/KOTA', 'Kab/Kota', 'kab_kota', 'KABKOTA', 'Kabupaten'],
+    'mitra': ['MITRA', 'Mitra', 'mitra', 'Vendor'],
+    'module_qty': ['MODULE QTY', 'Module Qty', 'module_qty', 'ModuleQty', 'Qty'],
+    'plan_week': ['WEEK', 'Week', 'week', 'Plan Week'],
+    'hw_plan': ['HW Plan', 'HW PLAN', 'hw_plan', 'HWPlan'],
+    'rfs_status': ['RFS STATUS', 'RFS Status', 'rfs_status', 'Status'],
+    'rfs_date': ['RFS Date', 'RFS DATE', 'rfs_date', 'RFSDate'],
+    'install_qty': ['Install Qty', 'INSTALL QTY', 'install_qty', 'InstallQty'],
+    'gap': ['GAP', 'Gap', 'gap'],
+    'priority': ['PRIORITY', 'Priority', 'priority'],
+    'tower_provider': ['TOWER PROVIDER', 'Tower Provider', 'tower_provider'],
 };
 
 const ModuleExcelImport = ({ open, onClose, onSuccess }) => {
@@ -42,6 +42,7 @@ const ModuleExcelImport = ({ open, onClose, onSuccess }) => {
     const [isImporting, setIsImporting] = useState(false);
     const [importProgress, setImportProgress] = useState(0);
     const [importResult, setImportResult] = useState(null);
+    const [errorMessages, setErrorMessages] = useState([]);
 
     const handleFileSelect = (e) => {
         const selectedFile = e.target.files[0];
@@ -53,6 +54,7 @@ const ModuleExcelImport = ({ open, onClose, onSuccess }) => {
         }
 
         setFile(selectedFile);
+        setErrorMessages([]);
         parseExcel(selectedFile);
     };
 
@@ -75,10 +77,22 @@ const ModuleExcelImport = ({ open, onClose, onSuccess }) => {
         reader.readAsArrayBuffer(file);
     };
 
+    // Find matching column from Excel headers
+    const findColumn = (row, dbCol) => {
+        const variants = COLUMN_MAPPING[dbCol] || [];
+        for (const variant of variants) {
+            if (row[variant] !== undefined) {
+                return row[variant];
+            }
+        }
+        return null;
+    };
+
     const mapRowToDatabase = (row) => {
         const mapped = {};
-        Object.entries(COLUMN_MAPPING).forEach(([excelCol, dbCol]) => {
-            let value = row[excelCol];
+
+        Object.keys(COLUMN_MAPPING).forEach(dbCol => {
+            let value = findColumn(row, dbCol);
 
             // Handle date conversion
             if (dbCol === 'rfs_date' && value) {
@@ -86,10 +100,10 @@ const ModuleExcelImport = ({ open, onClose, onSuccess }) => {
                     // Excel serial date
                     const date = new Date((value - 25569) * 86400 * 1000);
                     value = date.toISOString().split('T')[0];
-                } else if (typeof value === 'string' && value.includes('-')) {
+                } else if (typeof value === 'string' && value.length > 0) {
                     // Try to parse string date
                     const parsed = new Date(value);
-                    if (!isNaN(parsed)) {
+                    if (!isNaN(parsed.getTime())) {
                         value = parsed.toISOString().split('T')[0];
                     } else {
                         value = null;
@@ -104,11 +118,16 @@ const ModuleExcelImport = ({ open, onClose, onSuccess }) => {
                 value = parseInt(value) || 0;
             }
 
-            mapped[dbCol] = value;
+            // Only add non-null values
+            if (value !== null && value !== undefined && value !== '') {
+                mapped[dbCol] = value;
+            }
         });
 
         // Set default values
-        mapped.install_status = mapped.rfs_status === 'Done' ? 'Done' : 'Pending';
+        if (mapped.site_id) {
+            mapped.install_status = mapped.rfs_status === 'Done' ? 'Done' : 'Pending';
+        }
 
         return mapped;
     };
@@ -119,6 +138,7 @@ const ModuleExcelImport = ({ open, onClose, onSuccess }) => {
         setIsImporting(true);
         setImportProgress(0);
         setImportResult(null);
+        setErrorMessages([]);
 
         try {
             const reader = new FileReader();
@@ -129,20 +149,27 @@ const ModuleExcelImport = ({ open, onClose, onSuccess }) => {
                 const worksheet = workbook.Sheets[sheetName];
                 const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
 
-                const mappedData = jsonData.map(row => mapRowToDatabase(row));
-                const batchSize = 100;
+                // Map and filter valid data (must have site_id)
+                const mappedData = jsonData
+                    .map(row => mapRowToDatabase(row))
+                    .filter(row => row.site_id);
+
+                const batchSize = 50;
                 let successCount = 0;
                 let errorCount = 0;
+                const errors = [];
 
                 for (let i = 0; i < mappedData.length; i += batchSize) {
                     const batch = mappedData.slice(i, i + batchSize);
 
+                    // Use insert instead of upsert
                     const { error } = await supabase
                         .from('module_tracker')
-                        .upsert(batch, { onConflict: 'site_id' });
+                        .insert(batch);
 
                     if (error) {
                         errorCount += batch.length;
+                        errors.push(`Batch ${Math.floor(i / batchSize) + 1}: ${error.message}`);
                         console.error('Import error:', error);
                     } else {
                         successCount += batch.length;
@@ -152,6 +179,7 @@ const ModuleExcelImport = ({ open, onClose, onSuccess }) => {
                 }
 
                 setImportResult({ success: successCount, error: errorCount });
+                setErrorMessages(errors.slice(0, 3)); // Show max 3 errors
                 setIsImporting(false);
 
                 if (successCount > 0) {
@@ -290,6 +318,14 @@ const ModuleExcelImport = ({ open, onClose, onSuccess }) => {
                                         </p>
                                     </div>
                                 </div>
+                                {errorMessages.length > 0 && (
+                                    <div className="mt-3 p-2 bg-red-50 dark:bg-red-900/20 rounded text-xs text-red-600 dark:text-red-400">
+                                        <p className="font-medium mb-1">Error details:</p>
+                                        {errorMessages.map((msg, i) => (
+                                            <p key={i}>{msg}</p>
+                                        ))}
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     )}
