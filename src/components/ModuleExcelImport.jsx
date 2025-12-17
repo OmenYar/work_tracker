@@ -124,9 +124,10 @@ const ModuleExcelImport = ({ open, onClose, onSuccess }) => {
             }
         });
 
-        // Set default values
+        // Set default values - case insensitive check
         if (mapped.site_id) {
-            mapped.install_status = mapped.rfs_status === 'Done' ? 'Done' : 'Pending';
+            const rfsLower = String(mapped.rfs_status || '').toLowerCase();
+            mapped.install_status = rfsLower === 'done' ? 'Done' : 'Pending';
         }
 
         return mapped;
