@@ -136,9 +136,8 @@ const Summary = ({ workTrackers = [], picData = [], carData = [], cctvData = [] 
             bg: 'bg-teal-500/10'
         },
         {
-            title: 'Mobil',
-            value: stats.activeCars,
-            subtitle: `/${stats.totalCars}`,
+            title: 'Data Mobil',
+            value: stats.totalCars,
             icon: Car,
             color: 'text-sky-600',
             bg: 'bg-sky-500/10'
@@ -169,7 +168,7 @@ const Summary = ({ workTrackers = [], picData = [], carData = [], cctvData = [] 
                 </CardTitle>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-2">
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
                     {cards.map((card, idx) => (
                         <motion.div
                             key={card.title}
