@@ -505,18 +505,23 @@ const PerformanceMonitoring = ({ workTrackers = [], picData = [] }) => {
                             Outstanding Work in Progress
                         </CardTitle>
                         <CardDescription>
-                            Pekerjaan dengan aging &gt;90 hari atau status On Hold yang memerlukan perhatian
+                            Pekerjaan dengan aging &gt;90 hari, status On Hold, atau Waiting Approve &gt;14 hari
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         {(() => {
-                            const outstandingWIP = workTrackers.filter(t =>
+                            const outstandingWIP = workTrackers.filter(t => {
                                 // Exclude if BAST already approved
-                                t.status_bast !== 'Approve' &&
-                                t.status_bast !== 'BAST Approve Date' &&
-                                // Include if aging >90 days OR On Hold
-                                ((t.aging_days && Number(t.aging_days) > 90) || t.status_pekerjaan === 'On Hold')
-                            ).sort((a, b) => Number(b.aging_days || 0) - Number(a.aging_days || 0));
+                                if (t.status_bast === 'Approve' || t.status_bast === 'BAST Approve Date') {
+                                    return false;
+                                }
+                                // Include if: aging >90 days OR On Hold OR Waiting Approve >14 days
+                                const isAgingHigh = t.aging_days && Number(t.aging_days) > 90;
+                                const isOnHold = t.status_pekerjaan === 'On Hold';
+                                const isWaitingTooLong = t.status_bast === 'Waiting Approve' && t.aging_days && Number(t.aging_days) > 14;
+
+                                return isAgingHigh || isOnHold || isWaitingTooLong;
+                            }).sort((a, b) => Number(b.aging_days || 0) - Number(a.aging_days || 0));
 
                             if (outstandingWIP.length === 0) {
                                 return (
