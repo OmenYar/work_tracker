@@ -40,6 +40,11 @@ import MobileBottomNav from '@/components/MobileBottomNav';
 import AdvancedFilters from '@/components/AdvancedFilters';
 import MeetingSummary from '@/components/MeetingSummary';
 
+// Module Tracker components
+const ModuleSummary = React.lazy(() => import('@/components/ModuleSummary'));
+const ModuleDataTable = React.lazy(() => import('@/components/ModuleDataTable'));
+const ModuleExcelImport = React.lazy(() => import('@/components/ModuleExcelImport'));
+
 // Loading fallback for lazy components
 const ComponentLoader = () => (
     <div className="flex items-center justify-center p-8">
@@ -94,6 +99,11 @@ const AdminDashboard = () => {
     const [isLoadingPic, setIsLoadingPic] = useState(true);
     const [isLoadingCar, setIsLoadingCar] = useState(true);
     const [isLoadingCctv, setIsLoadingCctv] = useState(true);
+
+    // Module Tracker states
+    const [moduleData, setModuleData] = useState([]);
+    const [isLoadingModule, setIsLoadingModule] = useState(true);
+    const [isModuleImportOpen, setIsModuleImportOpen] = useState(false);
 
     // Selection state for bulk operations
     const [selectedTrackerIds, setSelectedTrackerIds] = useState([]);
@@ -439,6 +449,7 @@ const AdminDashboard = () => {
             fetchPicData();
             fetchCarData();
             fetchCctvData();
+            fetchModuleData();
         }
     }, [profile]);
 
@@ -574,6 +585,27 @@ const AdminDashboard = () => {
             console.error('Error:', error);
         } finally {
             setIsLoadingCctv(false);
+        }
+    };
+
+    // Fetch Module Tracker data
+    const fetchModuleData = async () => {
+        setIsLoadingModule(true);
+        try {
+            const { data, error } = await supabase
+                .from('module_tracker')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error("Fetch Module Error", error);
+                return;
+            }
+            setModuleData(data || []);
+        } catch (error) {
+            console.error('Error:', error);
+        } finally {
+            setIsLoadingModule(false);
         }
     };
 
@@ -1873,6 +1905,25 @@ const AdminDashboard = () => {
                         <GenerateBAST />
                     </div>
                 ) : <div className="p-4">Access Denied - Admin Only</div>;
+            case 'module':
+                return (
+                    <Suspense fallback={<ComponentLoader />}>
+                        <div className="space-y-6">
+                            <ModuleSummary moduleData={moduleData} />
+                            <ModuleDataTable
+                                moduleData={moduleData}
+                                onRefresh={fetchModuleData}
+                                onImportClick={() => setIsModuleImportOpen(true)}
+                                isLoading={isLoadingModule}
+                            />
+                            <ModuleExcelImport
+                                open={isModuleImportOpen}
+                                onClose={() => setIsModuleImportOpen(false)}
+                                onSuccess={fetchModuleData}
+                            />
+                        </div>
+                    </Suspense>
+                );
             default:
                 return null;
         }
