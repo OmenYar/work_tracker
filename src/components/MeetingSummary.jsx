@@ -99,6 +99,7 @@ const Summary = ({ workTrackers = [], picData = [], carData = [], cctvData = [] 
         {
             title: 'BAST Waiting',
             value: stats.bastWaiting,
+            subtitle: 'Approve',
             icon: Timer,
             color: 'text-amber-600',
             bg: 'bg-amber-500/10',
@@ -107,6 +108,7 @@ const Summary = ({ workTrackers = [], picData = [], carData = [], cctvData = [] 
         {
             title: 'Need BAST',
             value: stats.bastNeedCreate,
+            subtitle: 'Create',
             icon: FileCheck,
             color: 'text-orange-600',
             bg: 'bg-orange-500/10',
@@ -115,6 +117,7 @@ const Summary = ({ workTrackers = [], picData = [], carData = [], cctvData = [] 
         {
             title: 'Outstanding WIP',
             value: stats.outstandingWIP,
+            subtitle: '>90 hari',
             icon: AlertTriangle,
             color: 'text-red-600',
             bg: 'bg-red-500/10',
@@ -123,6 +126,7 @@ const Summary = ({ workTrackers = [], picData = [], carData = [], cctvData = [] 
         {
             title: 'Outstanding BAST',
             value: stats.outstandingBAST,
+            subtitle: '>14 hari',
             icon: Clock,
             color: 'text-red-600',
             bg: 'bg-red-500/10',
@@ -131,6 +135,7 @@ const Summary = ({ workTrackers = [], picData = [], carData = [], cctvData = [] 
         {
             title: 'PIC Aktif',
             value: stats.activePIC,
+            subtitle: 'orang',
             icon: Users,
             color: 'text-teal-600',
             bg: 'bg-teal-500/10'
@@ -138,6 +143,7 @@ const Summary = ({ workTrackers = [], picData = [], carData = [], cctvData = [] 
         {
             title: 'Data Mobil',
             value: stats.totalCars,
+            subtitle: 'unit',
             icon: Car,
             color: 'text-sky-600',
             bg: 'bg-sky-500/10'

@@ -870,30 +870,6 @@ const AdminDashboard = () => {
                         {/* Summary Card */}
                         <MeetingSummary workTrackers={workTrackers} picData={picData} carData={carData} cctvData={cctvData} />
 
-                        {/* Waiting BAST per Regional - Admin/AM Only */}
-                        {!isSPV && (
-                            <div className="bg-card border rounded-xl p-6 shadow-sm">
-                                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                                    <Clock className="w-5 h-5 text-yellow-600" />
-                                    Waiting Approval BAST per Regional
-                                </h3>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="p-4 bg-muted/30 rounded-lg border flex justify-between items-center">
-                                        <span className="font-medium text-muted-foreground">Jabo Outer 1</span>
-                                        <span className="text-2xl font-bold text-primary">{wJabo1}</span>
-                                    </div>
-                                    <div className="p-4 bg-muted/30 rounded-lg border flex justify-between items-center">
-                                        <span className="font-medium text-muted-foreground">Jabo Outer 2</span>
-                                        <span className="text-2xl font-bold text-primary">{wJabo2}</span>
-                                    </div>
-                                    <div className="p-4 bg-muted/30 rounded-lg border flex justify-between items-center">
-                                        <span className="font-medium text-muted-foreground">Jabo Outer 3</span>
-                                        <span className="text-2xl font-bold text-primary">{wJabo3}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
                         {/* Charts Section - PIC per Regional and CCTV Status */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {/* PIC Aktif per Regional - Donut Chart */}
@@ -1062,66 +1038,81 @@ const AdminDashboard = () => {
                 const approvedBast = workTrackers.filter(t => t.status_bast === 'Approve' || t.status_bast === 'BAST Approve Date').length;
                 const onProgress = workTrackers.filter(t => t.status_pekerjaan === 'Open').length;
                 const onHold = workTrackers.filter(t => t.status_pekerjaan === 'On Hold').length;
+                const closedWork = workTrackers.filter(t => t.status_pekerjaan === 'Close').length;
+
+                // Waiting BAST per Regional
+                const waitingJabo1 = workTrackers.filter(t => t.status_bast === 'Waiting Approve' && t.regional === 'Jabo Outer 1').length;
+                const waitingJabo2 = workTrackers.filter(t => t.status_bast === 'Waiting Approve' && t.regional === 'Jabo Outer 2').length;
+                const waitingJabo3 = workTrackers.filter(t => t.status_bast === 'Waiting Approve' && t.regional === 'Jabo Outer 3').length;
 
                 return (
                     <div className="space-y-6">
-                        {/* Summary Stats */}
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                            <div className="bg-card border rounded-xl p-4 shadow-sm">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xs text-muted-foreground uppercase font-bold">Total</p>
-                                        <p className="text-2xl font-bold">{total}</p>
+                        {/* Summary Card - Consistent Style */}
+                        <Card className="border-2 border-primary/20">
+                            <CardHeader className="pb-2">
+                                <CardTitle className="flex items-center justify-between text-lg">
+                                    <span className="flex items-center gap-2">
+                                        <Briefcase className="w-5 h-5" />
+                                        Work Tracker Summary
+                                    </span>
+                                    <span className="text-sm font-normal text-muted-foreground">
+                                        Total: {total} pekerjaan
+                                    </span>
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                                    <div className="p-3 rounded-lg bg-blue-500/10">
+                                        <p className="text-[10px] text-muted-foreground">Total</p>
+                                        <p className="text-xl font-bold text-blue-600">{total}</p>
                                     </div>
-                                    <Briefcase className="w-8 h-8 text-muted-foreground opacity-50" />
-                                </div>
-                            </div>
-                            <div className="bg-card border rounded-xl p-4 shadow-sm">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xs text-muted-foreground uppercase font-bold text-purple-600">Need Created</p>
-                                        <p className="text-2xl font-bold">{needCreatedBast}</p>
+                                    <div className="p-3 rounded-lg bg-green-500/10">
+                                        <p className="text-[10px] text-muted-foreground">Open</p>
+                                        <p className="text-xl font-bold text-green-600">{onProgress}</p>
                                     </div>
-                                    <FileText className="w-8 h-8 text-purple-600 opacity-50" />
-                                </div>
-                            </div>
-                            <div className="bg-card border rounded-xl p-4 shadow-sm">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xs text-muted-foreground uppercase font-bold text-yellow-600">Waiting BAST</p>
-                                        <p className="text-2xl font-bold">{waitingBast}</p>
+                                    <div className="p-3 rounded-lg bg-yellow-500/10">
+                                        <p className="text-[10px] text-muted-foreground">On Hold</p>
+                                        <p className="text-xl font-bold text-yellow-600">{onHold}</p>
                                     </div>
-                                    <Clock className="w-8 h-8 text-yellow-600 opacity-50" />
-                                </div>
-                            </div>
-                            <div className="bg-card border rounded-xl p-4 shadow-sm">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xs text-muted-foreground uppercase font-bold text-green-600">Approve BAST</p>
-                                        <p className="text-2xl font-bold">{approvedBast}</p>
+                                    <div className="p-3 rounded-lg bg-emerald-500/10">
+                                        <p className="text-[10px] text-muted-foreground">Close</p>
+                                        <p className="text-xl font-bold text-emerald-600">{closedWork}</p>
                                     </div>
-                                    <CheckCircle className="w-8 h-8 text-green-600 opacity-50" />
-                                </div>
-                            </div>
-                            <div className="bg-card border rounded-xl p-4 shadow-sm">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xs text-muted-foreground uppercase font-bold text-blue-600">Open</p>
-                                        <p className="text-2xl font-bold">{onProgress}</p>
+                                    <div className="p-3 rounded-lg bg-purple-500/10">
+                                        <p className="text-[10px] text-muted-foreground">Need BAST</p>
+                                        <p className="text-xl font-bold text-purple-600">{needCreatedBast}</p>
                                     </div>
-                                    <PlayCircle className="w-8 h-8 text-blue-600 opacity-50" />
-                                </div>
-                            </div>
-                            <div className="bg-card border rounded-xl p-4 shadow-sm">
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <p className="text-xs text-muted-foreground uppercase font-bold text-orange-600">On Hold</p>
-                                        <p className="text-2xl font-bold">{onHold}</p>
+                                    <div className="p-3 rounded-lg bg-amber-500/10">
+                                        <p className="text-[10px] text-muted-foreground">Waiting BAST</p>
+                                        <p className="text-xl font-bold text-amber-600">{waitingBast}</p>
                                     </div>
-                                    <PauseCircle className="w-8 h-8 text-orange-600 opacity-50" />
                                 </div>
-                            </div>
-                        </div>
+
+                                {/* Waiting BAST per Regional */}
+                                {!isSPV && (
+                                    <div className="mt-4 pt-4 border-t">
+                                        <p className="text-sm font-medium mb-3 flex items-center gap-2">
+                                            <Clock className="w-4 h-4 text-amber-600" />
+                                            Waiting Approval BAST per Regional
+                                        </p>
+                                        <div className="grid grid-cols-3 gap-3">
+                                            <div className="p-3 rounded-lg bg-amber-500/10 flex justify-between items-center">
+                                                <span className="text-xs text-muted-foreground">JO 1</span>
+                                                <span className="text-lg font-bold text-amber-600">{waitingJabo1}</span>
+                                            </div>
+                                            <div className="p-3 rounded-lg bg-amber-500/10 flex justify-between items-center">
+                                                <span className="text-xs text-muted-foreground">JO 2</span>
+                                                <span className="text-lg font-bold text-amber-600">{waitingJabo2}</span>
+                                            </div>
+                                            <div className="p-3 rounded-lg bg-amber-500/10 flex justify-between items-center">
+                                                <span className="text-xs text-muted-foreground">JO 3</span>
+                                                <span className="text-lg font-bold text-amber-600">{waitingJabo3}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
 
                         {/* Filters & Actions */}
                         <div className="flex flex-col xl:flex-row gap-4 justify-between items-start xl:items-center bg-card p-4 rounded-xl border shadow-sm">
