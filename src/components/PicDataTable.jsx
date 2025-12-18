@@ -256,10 +256,10 @@ const PicDataTable = ({ data, onEdit, onDelete, onRefresh, isReadOnly = false })
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Nama PIC</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Jabatan</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Regional</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">No HP</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Area</th>
+                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">No HP</th>
+                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Email</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Remark</th>
                             {!isReadOnly && <th className="text-right py-3 px-4 font-medium text-muted-foreground w-12">Act</th>}
                         </tr>
                     </thead>
@@ -277,10 +277,13 @@ const PicDataTable = ({ data, onEdit, onDelete, onRefresh, isReadOnly = false })
                                     {renderSelectCell(pic, 'regional', pic.regional, REGIONAL_OPTIONS)}
                                 </td>
                                 <td className="py-3 px-4">
+                                    {renderTextCell(pic, 'area', pic.area)}
+                                </td>
+                                <td className="py-3 px-4">
                                     {renderTextCell(pic, 'no_hp', pic.no_hp)}
                                 </td>
                                 <td className="py-3 px-4">
-                                    {renderTextCell(pic, 'area', pic.area)}
+                                    {renderTextCell(pic, 'email', pic.email)}
                                 </td>
                                 <td className="py-3 px-4">
                                     {renderSelectCell(
@@ -292,9 +295,6 @@ const PicDataTable = ({ data, onEdit, onDelete, onRefresh, isReadOnly = false })
                                             ? 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300'
                                             : 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
                                     )}
-                                </td>
-                                <td className="py-3 px-4 max-w-[150px]">
-                                    {renderTextCell(pic, 'remark', pic.remark)}
                                 </td>
                                 {!isReadOnly && (
                                     <td className="py-3 px-4 text-right">
