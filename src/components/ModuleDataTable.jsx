@@ -36,7 +36,7 @@ const ModuleDataTable = ({
 }) => {
     const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState('');
-    const [provinsiFilter, setProvinsiFilter] = useState('all');
+    const [kotaFilter, setKotaFilter] = useState('all');
     const [statusFilter, setStatusFilter] = useState('all');
     const [mitraFilter, setMitraFilter] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
@@ -46,8 +46,8 @@ const ModuleDataTable = ({
     const [deleteDialog, setDeleteDialog] = useState({ open: false, item: null });
 
     // Get unique values for filters
-    const provinsiList = useMemo(() =>
-        [...new Set(moduleData.map(m => m.provinsi).filter(Boolean))].sort(),
+    const kotaList = useMemo(() =>
+        [...new Set(moduleData.map(m => m.kab_kota).filter(Boolean))].sort(),
         [moduleData]
     );
     const mitraList = useMemo(() =>
@@ -61,12 +61,12 @@ const ModuleDataTable = ({
             const matchesSearch = searchTerm === '' ||
                 item.site_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 item.site_name?.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesProvinsi = provinsiFilter === 'all' || item.provinsi === provinsiFilter;
+            const matchesKota = kotaFilter === 'all' || item.kab_kota === kotaFilter;
             const matchesStatus = statusFilter === 'all' || item.install_status === statusFilter;
             const matchesMitra = mitraFilter === 'all' || item.mitra === mitraFilter;
-            return matchesSearch && matchesProvinsi && matchesStatus && matchesMitra;
+            return matchesSearch && matchesKota && matchesStatus && matchesMitra;
         });
-    }, [moduleData, searchTerm, provinsiFilter, statusFilter, mitraFilter]);
+    }, [moduleData, searchTerm, kotaFilter, statusFilter, mitraFilter]);
 
     // Pagination
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -143,14 +143,14 @@ const ModuleDataTable = ({
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
-                        <Select value={provinsiFilter} onValueChange={setProvinsiFilter}>
+                        <Select value={kotaFilter} onValueChange={setKotaFilter}>
                             <SelectTrigger className="w-[150px]">
-                                <SelectValue placeholder="Provinsi" />
+                                <SelectValue placeholder="Kota" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Provinsi</SelectItem>
-                                {provinsiList.map(p => (
-                                    <SelectItem key={p} value={p}>{p}</SelectItem>
+                                <SelectItem value="all">All Kota</SelectItem>
+                                {kotaList.map(k => (
+                                    <SelectItem key={k} value={k}>{k}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
@@ -196,7 +196,7 @@ const ModuleDataTable = ({
                                 <TableRow>
                                     <TableHead className="w-[120px]">Site ID</TableHead>
                                     <TableHead>Site Name</TableHead>
-                                    <TableHead>Provinsi</TableHead>
+                                    <TableHead>Kota</TableHead>
                                     <TableHead>Mitra</TableHead>
                                     <TableHead className="text-center">Qty</TableHead>
                                     <TableHead>Status</TableHead>
@@ -217,7 +217,7 @@ const ModuleDataTable = ({
                                         <TableRow key={item.id}>
                                             <TableCell className="font-mono text-sm">{item.site_id}</TableCell>
                                             <TableCell className="max-w-[200px] truncate">{item.site_name}</TableCell>
-                                            <TableCell>{item.provinsi}</TableCell>
+                                            <TableCell>{item.kab_kota}</TableCell>
                                             <TableCell>{item.mitra}</TableCell>
                                             <TableCell className="text-center">{item.module_qty}</TableCell>
                                             <TableCell>

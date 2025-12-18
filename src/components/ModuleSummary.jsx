@@ -12,12 +12,12 @@ const ModuleSummary = ({ moduleData = [] }) => {
         const pending = total - done;
         const progress = total > 0 ? Math.round((done / total) * 100) : 0;
 
-        // Group by provinsi
-        const byProvinsi = moduleData.reduce((acc, m) => {
-            const prov = m.provinsi || 'Unknown';
-            if (!acc[prov]) acc[prov] = { total: 0, done: 0 };
-            acc[prov].total++;
-            if (m.install_status === 'Done' || m.rfs_status === 'Done') acc[prov].done++;
+        // Group by kab_kota
+        const byKota = moduleData.reduce((acc, m) => {
+            const kota = m.kab_kota || 'Unknown';
+            if (!acc[kota]) acc[kota] = { total: 0, done: 0 };
+            acc[kota].total++;
+            if (m.install_status === 'Done' || m.rfs_status === 'Done') acc[kota].done++;
             return acc;
         }, {});
 
@@ -35,7 +35,7 @@ const ModuleSummary = ({ moduleData = [] }) => {
         const totalModuleQty = moduleData.reduce((sum, m) => sum + (Number(m.module_qty) || 0), 0);
         const totalInstallQty = moduleData.reduce((sum, m) => sum + (Number(m.install_qty) || 0), 0);
 
-        return { total, done, pending, progress, byProvinsi, byMitra, totalGap, totalModuleQty, totalInstallQty };
+        return { total, done, pending, progress, byKota, byMitra, totalGap, totalModuleQty, totalInstallQty };
     }, [moduleData]);
 
     const cards = [
@@ -94,19 +94,19 @@ const ModuleSummary = ({ moduleData = [] }) => {
                         <Progress value={stats.progress} className="h-2" />
                     </div>
 
-                    {/* Progress by Provinsi */}
-                    {Object.keys(stats.byProvinsi).length > 0 && (
+                    {/* Progress by Kota */}
+                    {Object.keys(stats.byKota).length > 0 && (
                         <div className="mt-4 pt-4 border-t">
-                            <p className="text-sm font-medium mb-3">Progress per Provinsi</p>
+                            <p className="text-sm font-medium mb-3">Progress per Kota</p>
                             <div className="space-y-2 max-h-[150px] overflow-y-auto">
-                                {Object.entries(stats.byProvinsi)
+                                {Object.entries(stats.byKota)
                                     .sort((a, b) => b[1].total - a[1].total)
-                                    .slice(0, 5)
-                                    .map(([prov, data]) => {
+                                    .slice(0, 10)
+                                    .map(([kota, data]) => {
                                         const percent = Math.round((data.done / data.total) * 100);
                                         return (
-                                            <div key={prov} className="flex items-center gap-3">
-                                                <span className="text-xs w-[100px] truncate">{prov}</span>
+                                            <div key={kota} className="flex items-center gap-3">
+                                                <span className="text-xs w-[120px] truncate">{kota}</span>
                                                 <Progress value={percent} className="h-2 flex-1" />
                                                 <span className="text-xs text-muted-foreground w-[80px] text-right">
                                                     {data.done}/{data.total} ({percent}%)
