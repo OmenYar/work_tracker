@@ -1,5 +1,5 @@
 import React, { useState, useCallback, memo } from 'react';
-import { LayoutDashboard, TableProperties, Users, LogOut, Contact, Car, StickyNote, Camera, History, FileText, X, PanelLeftClose, PanelLeft, BarChart3, CalendarDays, Trophy } from 'lucide-react';
+import { LayoutDashboard, TableProperties, Users, LogOut, Contact, Car, StickyNote, Camera, History, FileText, X, PanelLeftClose, PanelLeft, BarChart3, CalendarDays, Trophy, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,6 +18,7 @@ const Sidebar = memo(({ activeTab, setActiveTab, onLogout, isOpen, setIsOpen }) 
         { id: 'pic', label: 'Data PIC', icon: Contact },
         { id: 'car', label: 'Data Mobil', icon: Car },
         { id: 'cctv', label: 'Data CCTV', icon: Camera },
+        { id: 'module', label: 'Module DPR2900', icon: Package },
         { id: 'notes', label: 'Notes', icon: StickyNote },
         // Only show User Settings and Logs for Admins
         ...(isAdmin ? [

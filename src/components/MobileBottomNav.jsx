@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { LayoutDashboard, TableProperties, Contact, Car, MoreHorizontal, LogOut, Camera, StickyNote, BarChart3, CalendarDays, Trophy, History, Users, FileText } from 'lucide-react';
+import { LayoutDashboard, TableProperties, Contact, Car, MoreHorizontal, LogOut, Camera, StickyNote, BarChart3, CalendarDays, Trophy, History, Users, FileText, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
     DropdownMenu,
@@ -25,6 +25,7 @@ const MobileBottomNav = memo(({ activeTab, setActiveTab }) => {
     // More items (show in dropdown)
     const moreItems = [
         { id: 'cctv', label: 'CCTV', icon: Camera },
+        { id: 'module', label: 'Module DPR2900', icon: Package },
         { id: 'notes', label: 'Notes', icon: StickyNote },
         { id: 'analytics', label: 'Analytics', icon: BarChart3 },
         { id: 'calendar', label: 'Calendar', icon: CalendarDays },
