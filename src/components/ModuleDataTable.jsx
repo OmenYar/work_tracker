@@ -231,7 +231,7 @@ const ModuleDataTable = ({
                                 {paginatedData.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
-                                            {isLoading ? 'Loading...' : 'No data found'}
+                                            No data found
                                         </TableCell>
                                     </TableRow>
                                 ) : (
