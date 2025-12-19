@@ -59,10 +59,19 @@ const InputModulePage = () => {
     const handleSubmit = async (formData) => {
         setIsLoading(true);
         try {
+            // Sanitize date fields - convert empty strings to null
+            const sanitizedData = { ...formData };
+            const dateFields = ['rfs_date', 'plan_install'];
+            dateFields.forEach(field => {
+                if (!sanitizedData[field] || (typeof sanitizedData[field] === 'string' && sanitizedData[field].trim() === '')) {
+                    sanitizedData[field] = null;
+                }
+            });
+
             if (isEditMode) {
                 const { error } = await supabase
                     .from('module_tracker')
-                    .update(formData)
+                    .update(sanitizedData)
                     .eq('id', id);
 
                 if (error) throw error;
@@ -70,7 +79,7 @@ const InputModulePage = () => {
             } else {
                 const { error } = await supabase
                     .from('module_tracker')
-                    .insert(formData);
+                    .insert(sanitizedData);
 
                 if (error) throw error;
                 toast({ title: 'Berhasil', description: 'Data module berhasil ditambahkan' });
