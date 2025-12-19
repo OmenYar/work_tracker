@@ -10,12 +10,12 @@ const ModuleSummary = ({ moduleData = [] }) => {
         const total = moduleData.length;
         // Done = Closed
         const done = moduleData.filter(m => m.rfs_status === 'Closed').length;
-        // Pending = Waiting Permit OR Hold
-        const pending = moduleData.filter(m => m.rfs_status === 'Waiting Permit' || m.rfs_status === 'Hold').length;
+        // Pending = Hold, Open, Waiting Permit (or null/undefined)
+        const pending = moduleData.filter(m =>
+            !m.rfs_status || m.rfs_status === 'Open' || m.rfs_status === 'Hold' || m.rfs_status === 'Waiting Permit'
+        ).length;
         // Cancel = Cancel
         const cancel = moduleData.filter(m => m.rfs_status === 'Cancel').length;
-        // Open = Open or null/undefined
-        const open = moduleData.filter(m => !m.rfs_status || m.rfs_status === 'Open').length;
 
         const progress = total > 0 ? Math.round((done / total) * 100) : 0;
 
@@ -42,7 +42,7 @@ const ModuleSummary = ({ moduleData = [] }) => {
         const totalModuleQty = moduleData.reduce((sum, m) => sum + (Number(m.module_qty) || 0), 0);
         const totalInstallQty = moduleData.reduce((sum, m) => sum + (Number(m.install_qty) || 0), 0);
 
-        return { total, done, pending, cancel, open, progress, byKota, byMitra, totalGap, totalModuleQty, totalInstallQty };
+        return { total, done, pending, cancel, progress, byKota, byMitra, totalGap, totalModuleQty, totalInstallQty };
     }, [moduleData]);
 
     const cards = [
