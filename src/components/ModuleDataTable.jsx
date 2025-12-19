@@ -97,18 +97,25 @@ const ModuleDataTable = ({
             const installQty = parseInt(editForm.install_qty) || 0;
             const gap = moduleQty - installQty;
 
-            // Handle rfs_date - convert empty string to null
-            const rfsDate = editForm.rfs_date && editForm.rfs_date.trim() !== '' ? editForm.rfs_date : null;
+            // Handle rfs_date - strictly convert empty/invalid to null
+            let rfsDate = null;
+            if (editForm.rfs_date && typeof editForm.rfs_date === 'string' && editForm.rfs_date.trim() !== '') {
+                rfsDate = editForm.rfs_date.trim();
+            }
+
+            const updateData = {
+                install_qty: installQty,
+                pic_name: editForm.pic_name || null,
+                rfs_status: editForm.rfs_status || 'Open',
+                gap: gap,
+            };
+
+            // Only include rfs_date if it has a valid value, otherwise set to null explicitly
+            updateData.rfs_date = rfsDate;
 
             const { error } = await supabase
                 .from('module_tracker')
-                .update({
-                    install_qty: installQty,
-                    pic_name: editForm.pic_name || null,
-                    rfs_date: rfsDate,
-                    rfs_status: editForm.rfs_status || 'Open',
-                    gap: gap,
-                })
+                .update(updateData)
                 .eq('id', editingId);
 
             if (error) throw error;
