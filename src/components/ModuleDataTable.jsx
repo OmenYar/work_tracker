@@ -36,24 +36,12 @@ const ModuleDataTable = ({
 }) => {
     const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState('');
-    const [kotaFilter, setKotaFilter] = useState('all');
     const [statusFilter, setStatusFilter] = useState('all');
-    const [mitraFilter, setMitraFilter] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(20);
     const [editingId, setEditingId] = useState(null);
     const [editForm, setEditForm] = useState({});
     const [deleteDialog, setDeleteDialog] = useState({ open: false, item: null });
-
-    // Get unique values for filters
-    const kotaList = useMemo(() =>
-        [...new Set(moduleData.map(m => m.kab_kota).filter(Boolean))].sort(),
-        [moduleData]
-    );
-    const mitraList = useMemo(() =>
-        [...new Set(moduleData.map(m => m.mitra).filter(Boolean))].sort(),
-        [moduleData]
-    );
 
     // Filter data
     const filteredData = useMemo(() => {
@@ -61,12 +49,10 @@ const ModuleDataTable = ({
             const matchesSearch = searchTerm === '' ||
                 item.site_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 item.site_name?.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesKota = kotaFilter === 'all' || item.kab_kota === kotaFilter;
-            const matchesStatus = statusFilter === 'all' || item.install_status === statusFilter;
-            const matchesMitra = mitraFilter === 'all' || item.mitra === mitraFilter;
-            return matchesSearch && matchesKota && matchesStatus && matchesMitra;
+            const matchesStatus = statusFilter === 'all' || item.rfs_status?.toLowerCase() === statusFilter.toLowerCase();
+            return matchesSearch && matchesStatus;
         });
-    }, [moduleData, searchTerm, kotaFilter, statusFilter, mitraFilter]);
+    }, [moduleData, searchTerm, statusFilter]);
 
     // Pagination
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -79,8 +65,8 @@ const ModuleDataTable = ({
     const handleEdit = (item) => {
         setEditingId(item.id);
         setEditForm({
-            install_status: item.install_status || 'Pending',
-            install_date: item.install_date || '',
+            rfs_status: item.rfs_status || 'Open',
+            rfs_date: item.rfs_date || '',
             pic_name: item.pic_name || '',
             teknisi: item.teknisi || '',
             notes: item.notes || '',
@@ -122,10 +108,11 @@ const ModuleDataTable = ({
     };
 
     const getStatusBadge = (status) => {
-        if (status === 'Done') {
+        const statusLower = String(status || '').toLowerCase();
+        if (statusLower === 'done') {
             return <Badge className="bg-green-500/20 text-green-700">✅ Done</Badge>;
         }
-        return <Badge className="bg-yellow-500/20 text-yellow-700">⏳ Pending</Badge>;
+        return <Badge className="bg-yellow-500/20 text-yellow-700">⏳ Open</Badge>;
     };
 
     return (
@@ -143,36 +130,14 @@ const ModuleDataTable = ({
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
-                        <Select value={kotaFilter} onValueChange={setKotaFilter}>
-                            <SelectTrigger className="w-[150px]">
-                                <SelectValue placeholder="Kota" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Kota</SelectItem>
-                                {kotaList.map(k => (
-                                    <SelectItem key={k} value={k}>{k}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
                             <SelectTrigger className="w-[130px]">
-                                <SelectValue placeholder="Status" />
+                                <SelectValue placeholder="RFS Status" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">All Status</SelectItem>
                                 <SelectItem value="Done">Done</SelectItem>
-                                <SelectItem value="Pending">Pending</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <Select value={mitraFilter} onValueChange={setMitraFilter}>
-                            <SelectTrigger className="w-[120px]">
-                                <SelectValue placeholder="Mitra" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Mitra</SelectItem>
-                                {mitraList.map(m => (
-                                    <SelectItem key={m} value={m}>{m}</SelectItem>
-                                ))}
+                                <SelectItem value="Open">Open</SelectItem>
                             </SelectContent>
                         </Select>
                         <Button variant="outline" size="sm" onClick={onRefresh} disabled={isLoading}>
@@ -196,19 +161,17 @@ const ModuleDataTable = ({
                                 <TableRow>
                                     <TableHead className="w-[120px]">Site ID</TableHead>
                                     <TableHead>Site Name</TableHead>
-                                    <TableHead>Kota</TableHead>
-                                    <TableHead>Mitra</TableHead>
                                     <TableHead className="text-center">Qty</TableHead>
-                                    <TableHead>Status</TableHead>
+                                    <TableHead>RFS Status</TableHead>
                                     <TableHead>PIC</TableHead>
-                                    <TableHead>Install Date</TableHead>
+                                    <TableHead>RFS Date</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {paginatedData.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                                             {isLoading ? 'Loading...' : 'No data found'}
                                         </TableCell>
                                     </TableRow>
@@ -217,25 +180,23 @@ const ModuleDataTable = ({
                                         <TableRow key={item.id}>
                                             <TableCell className="font-mono text-sm">{item.site_id}</TableCell>
                                             <TableCell className="max-w-[200px] truncate">{item.site_name}</TableCell>
-                                            <TableCell>{item.kab_kota}</TableCell>
-                                            <TableCell>{item.mitra}</TableCell>
                                             <TableCell className="text-center">{item.module_qty}</TableCell>
                                             <TableCell>
                                                 {editingId === item.id ? (
                                                     <Select
-                                                        value={editForm.install_status}
-                                                        onValueChange={(v) => setEditForm({ ...editForm, install_status: v })}
+                                                        value={editForm.rfs_status}
+                                                        onValueChange={(v) => setEditForm({ ...editForm, rfs_status: v })}
                                                     >
                                                         <SelectTrigger className="w-[100px] h-8">
                                                             <SelectValue />
                                                         </SelectTrigger>
                                                         <SelectContent>
-                                                            <SelectItem value="Pending">Pending</SelectItem>
+                                                            <SelectItem value="Open">Open</SelectItem>
                                                             <SelectItem value="Done">Done</SelectItem>
                                                         </SelectContent>
                                                     </Select>
                                                 ) : (
-                                                    getStatusBadge(item.install_status)
+                                                    getStatusBadge(item.rfs_status)
                                                 )}
                                             </TableCell>
                                             <TableCell>
@@ -253,12 +214,12 @@ const ModuleDataTable = ({
                                                 {editingId === item.id ? (
                                                     <Input
                                                         type="date"
-                                                        value={editForm.install_date}
-                                                        onChange={(e) => setEditForm({ ...editForm, install_date: e.target.value })}
+                                                        value={editForm.rfs_date}
+                                                        onChange={(e) => setEditForm({ ...editForm, rfs_date: e.target.value })}
                                                         className="h-8 w-[130px]"
                                                     />
                                                 ) : (
-                                                    item.install_date ? new Date(item.install_date).toLocaleDateString('id-ID') : '-'
+                                                    item.rfs_date ? new Date(item.rfs_date).toLocaleDateString('id-ID') : '-'
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-right">
