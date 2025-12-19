@@ -28,7 +28,7 @@ import {
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/customSupabaseClient';
 
-const RFS_STATUS_OPTIONS = ['Open', 'Closed', 'Hold', 'Waiting Permit'];
+const RFS_STATUS_OPTIONS = ['Open', 'Closed', 'Hold', 'Waiting Permit', 'Cancel'];
 const REGIONAL_OPTIONS = [
     { value: 'Jabo Outer 1', label: 'Jabo Outer 1' },
     { value: 'Jabo Outer 2', label: 'Jabo Outer 2' },
@@ -155,8 +155,9 @@ const ModuleDataTable = ({
         const statusColors = {
             'Closed': 'bg-green-500/20 text-green-700',
             'Open': 'bg-yellow-500/20 text-yellow-700',
-            'Hold': 'bg-red-500/20 text-red-700',
+            'Hold': 'bg-orange-500/20 text-orange-700',
             'Waiting Permit': 'bg-blue-500/20 text-blue-700',
+            'Cancel': 'bg-red-500/20 text-red-700',
         };
         return <Badge className={statusColors[status] || 'bg-gray-500/20 text-gray-700'}>{status || 'Open'}</Badge>;
     };

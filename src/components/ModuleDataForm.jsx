@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Package } from 'lucide-react';
 
 // Status options
-const RFS_STATUS_OPTIONS = ['Open', 'Closed', 'Hold', 'Waiting Permit'];
+const RFS_STATUS_OPTIONS = ['Open', 'Closed', 'Hold', 'Waiting Permit', 'Cancel'];
 const REGIONAL_OPTIONS = ['Jabo Outer 1', 'Jabo Outer 2', 'Jabo Outer 3'];
 
 const ModuleDataForm = ({ onSubmit, initialData, onCancel, picData = [] }) => {
