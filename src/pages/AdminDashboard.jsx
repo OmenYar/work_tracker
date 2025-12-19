@@ -1912,6 +1912,7 @@ const AdminDashboard = () => {
                             <ModuleSummary moduleData={moduleData} />
                             <ModuleDataTable
                                 moduleData={moduleData}
+                                picData={picData}
                                 onRefresh={fetchModuleData}
                                 onImportClick={() => setIsModuleImportOpen(true)}
                                 isLoading={isLoadingModule}
