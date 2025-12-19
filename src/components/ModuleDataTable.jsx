@@ -86,6 +86,7 @@ const ModuleDataTable = ({
             install_qty: item.install_qty || 0,
             pic_name: item.pic_name || '',
             rfs_date: item.rfs_date || '',
+            rfs_status: item.rfs_status || 'Open',
         });
     };
 
@@ -105,6 +106,7 @@ const ModuleDataTable = ({
                     install_qty: installQty,
                     pic_name: editForm.pic_name || null,
                     rfs_date: rfsDate,
+                    rfs_status: editForm.rfs_status || 'Open',
                     gap: gap,
                 })
                 .eq('id', editingId);
@@ -249,7 +251,23 @@ const ModuleDataTable = ({
                                                 )}
                                             </TableCell>
                                             <TableCell>
-                                                {getStatusBadge(item.rfs_status)}
+                                                {editingId === item.id ? (
+                                                    <Select
+                                                        value={editForm.rfs_status}
+                                                        onValueChange={(v) => setEditForm({ ...editForm, rfs_status: v })}
+                                                    >
+                                                        <SelectTrigger className="w-[130px] h-8">
+                                                            <SelectValue />
+                                                        </SelectTrigger>
+                                                        <SelectContent>
+                                                            {RFS_STATUS_OPTIONS.map(s => (
+                                                                <SelectItem key={s} value={s}>{s}</SelectItem>
+                                                            ))}
+                                                        </SelectContent>
+                                                    </Select>
+                                                ) : (
+                                                    getStatusBadge(item.rfs_status)
+                                                )}
                                             </TableCell>
                                             <TableCell>
                                                 {editingId === item.id ? (
