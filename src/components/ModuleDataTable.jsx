@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    Search, Upload, Edit, Trash2, Check, X,
-    ChevronLeft, ChevronRight, RefreshCw, Plus
+    Search, Edit, Trash2, Check, X,
+    ChevronLeft, ChevronRight, Plus
 } from 'lucide-react';
+import ExportDropdown from '@/components/ExportDropdown';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -38,9 +39,6 @@ const REGIONAL_OPTIONS = [
 const ModuleDataTable = ({
     moduleData = [],
     picData = [],
-    onRefresh,
-    onImportClick,
-    isLoading = false
 }) => {
     const navigate = useNavigate();
     const { toast } = useToast();
@@ -199,17 +197,13 @@ const ModuleDataTable = ({
                                 ))}
                             </SelectContent>
                         </Select>
-                        <Button variant="outline" size="sm" onClick={onRefresh} disabled={isLoading}>
-                            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                            Refresh
-                        </Button>
-                        <Button size="sm" onClick={onImportClick}>
-                            <Upload className="w-4 h-4 mr-2" />
-                            Import
-                        </Button>
-                        <Button size="sm" onClick={() => navigate('/admin/input-module')}>
-                            <Plus className="w-4 h-4 mr-2" />
-                            Add
+                        <ExportDropdown
+                            data={filteredData}
+                            filename="module_dpr2900"
+                            title="Data Module DPR2900"
+                        />
+                        <Button size="icon" onClick={() => navigate('/admin/input-module')} title="Add New">
+                            <Plus className="w-4 h-4" />
                         </Button>
                     </div>
                 </CardContent>

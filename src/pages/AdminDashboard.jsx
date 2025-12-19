@@ -1913,14 +1913,6 @@ const AdminDashboard = () => {
                             <ModuleDataTable
                                 moduleData={moduleData}
                                 picData={picData}
-                                onRefresh={fetchModuleData}
-                                onImportClick={() => setIsModuleImportOpen(true)}
-                                isLoading={isLoadingModule}
-                            />
-                            <ModuleExcelImport
-                                open={isModuleImportOpen}
-                                onClose={() => setIsModuleImportOpen(false)}
-                                onSuccess={fetchModuleData}
                             />
                         </div>
                     </Suspense>
