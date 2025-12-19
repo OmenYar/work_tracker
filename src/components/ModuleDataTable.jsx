@@ -96,12 +96,15 @@ const ModuleDataTable = ({
             const installQty = parseInt(editForm.install_qty) || 0;
             const gap = moduleQty - installQty;
 
+            // Handle rfs_date - convert empty string to null
+            const rfsDate = editForm.rfs_date && editForm.rfs_date.trim() !== '' ? editForm.rfs_date : null;
+
             const { error } = await supabase
                 .from('module_tracker')
                 .update({
                     install_qty: installQty,
-                    pic_name: editForm.pic_name,
-                    rfs_date: editForm.rfs_date || null,
+                    pic_name: editForm.pic_name || null,
+                    rfs_date: rfsDate,
                     gap: gap,
                 })
                 .eq('id', editingId);
