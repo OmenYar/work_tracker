@@ -1094,30 +1094,99 @@ const AdminDashboard = () => {
                             </CardHeader>
                             <CardContent>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-                                    <div className="p-3 rounded-lg bg-blue-500/10">
-                                        <p className="text-[10px] text-muted-foreground">Total</p>
-                                        <p className="text-xl font-bold text-blue-600">{total}</p>
-                                    </div>
-                                    <div className="p-3 rounded-lg bg-green-500/10">
-                                        <p className="text-[10px] text-muted-foreground">Open</p>
-                                        <p className="text-xl font-bold text-green-600">{onProgress}</p>
-                                    </div>
-                                    <div className="p-3 rounded-lg bg-yellow-500/10">
-                                        <p className="text-[10px] text-muted-foreground">On Hold</p>
-                                        <p className="text-xl font-bold text-yellow-600">{onHold}</p>
-                                    </div>
-                                    <div className="p-3 rounded-lg bg-emerald-500/10">
-                                        <p className="text-[10px] text-muted-foreground">Close</p>
-                                        <p className="text-xl font-bold text-emerald-600">{closedWork}</p>
-                                    </div>
-                                    <div className="p-3 rounded-lg bg-purple-500/10">
-                                        <p className="text-[10px] text-muted-foreground">Need BAST</p>
-                                        <p className="text-xl font-bold text-purple-600">{needCreatedBast}</p>
-                                    </div>
-                                    <div className="p-3 rounded-lg bg-amber-500/10">
-                                        <p className="text-[10px] text-muted-foreground">Waiting BAST</p>
-                                        <p className="text-xl font-bold text-amber-600">{waitingBast}</p>
-                                    </div>
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ delay: 0 }}
+                                        className="p-3 rounded-lg bg-blue-500/10"
+                                    >
+                                        <div className="flex items-start justify-between">
+                                            <div>
+                                                <p className="text-[10px] text-muted-foreground">Total</p>
+                                                <p className="text-xl font-bold text-blue-600">{total}</p>
+                                            </div>
+                                            <Briefcase className="w-4 h-4 text-blue-600 opacity-50" />
+                                        </div>
+                                    </motion.div>
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ delay: 0.05 }}
+                                        className="p-3 rounded-lg bg-green-500/10"
+                                    >
+                                        <div className="flex items-start justify-between">
+                                            <div>
+                                                <p className="text-[10px] text-muted-foreground">Open</p>
+                                                <p className="text-xl font-bold text-green-600">{onProgress}</p>
+                                            </div>
+                                            <PlayCircle className="w-4 h-4 text-green-600 opacity-50" />
+                                        </div>
+                                    </motion.div>
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ delay: 0.1 }}
+                                        className={`relative p-3 rounded-lg bg-yellow-500/10 ${onHold > 0 ? 'ring-2 ring-yellow-500/50' : ''}`}
+                                    >
+                                        <div className="flex items-start justify-between">
+                                            <div>
+                                                <p className="text-[10px] text-muted-foreground">On Hold</p>
+                                                <p className="text-xl font-bold text-yellow-600">{onHold}</p>
+                                            </div>
+                                            <PauseCircle className="w-4 h-4 text-yellow-600 opacity-50" />
+                                        </div>
+                                        {onHold > 0 && (
+                                            <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
+                                        )}
+                                    </motion.div>
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ delay: 0.15 }}
+                                        className="p-3 rounded-lg bg-emerald-500/10"
+                                    >
+                                        <div className="flex items-start justify-between">
+                                            <div>
+                                                <p className="text-[10px] text-muted-foreground">Close</p>
+                                                <p className="text-xl font-bold text-emerald-600">{closedWork}</p>
+                                            </div>
+                                            <CheckCircle className="w-4 h-4 text-emerald-600 opacity-50" />
+                                        </div>
+                                    </motion.div>
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ delay: 0.2 }}
+                                        className={`relative p-3 rounded-lg bg-purple-500/10 ${needCreatedBast > 0 ? 'ring-2 ring-purple-500/50' : ''}`}
+                                    >
+                                        <div className="flex items-start justify-between">
+                                            <div>
+                                                <p className="text-[10px] text-muted-foreground">Need BAST</p>
+                                                <p className="text-xl font-bold text-purple-600">{needCreatedBast}</p>
+                                            </div>
+                                            <FileText className="w-4 h-4 text-purple-600 opacity-50" />
+                                        </div>
+                                        {needCreatedBast > 0 && (
+                                            <div className="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full animate-pulse" />
+                                        )}
+                                    </motion.div>
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.9 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ delay: 0.25 }}
+                                        className={`relative p-3 rounded-lg bg-amber-500/10 ${waitingBast > 0 ? 'ring-2 ring-amber-500/50' : ''}`}
+                                    >
+                                        <div className="flex items-start justify-between">
+                                            <div>
+                                                <p className="text-[10px] text-muted-foreground">Waiting BAST</p>
+                                                <p className="text-xl font-bold text-amber-600">{waitingBast}</p>
+                                            </div>
+                                            <Clock className="w-4 h-4 text-amber-600 opacity-50" />
+                                        </div>
+                                        {waitingBast > 0 && (
+                                            <div className="absolute -top-1 -right-1 w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+                                        )}
+                                    </motion.div>
                                 </div>
 
                                 {/* Waiting BAST per Regional */}
@@ -1573,45 +1642,86 @@ const AdminDashboard = () => {
                     <div className="space-y-6">
                         {canEditCar ? (
                             <>
-                                {/* Summary Stats */}
-                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                                    <div className="bg-card border rounded-xl p-4 shadow-sm relative overflow-hidden">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <p className="text-xs text-muted-foreground uppercase font-bold">Total Kendaraan</p>
-                                                <p className="text-2xl font-bold">{cTotal}</p>
-                                            </div>
-                                            <Truck className="w-5 h-5 text-muted-foreground opacity-50" />
+                                {/* Car Summary Card - Consistent Style */}
+                                <Card className="border-2 border-primary/20">
+                                    <CardHeader className="pb-2">
+                                        <CardTitle className="flex items-center justify-between text-lg">
+                                            <span className="flex items-center gap-2">
+                                                <Truck className="w-5 h-5" />
+                                                Data Kendaraan Summary
+                                            </span>
+                                            <span className="text-sm font-normal text-muted-foreground">
+                                                Total: {cTotal} unit
+                                            </span>
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: 0 }}
+                                                className="p-3 rounded-lg bg-blue-500/10"
+                                            >
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <p className="text-[10px] text-muted-foreground">Total</p>
+                                                        <p className="text-xl font-bold text-blue-600">{cTotal}</p>
+                                                    </div>
+                                                    <Truck className="w-4 h-4 text-blue-600 opacity-50" />
+                                                </div>
+                                            </motion.div>
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: 0.05 }}
+                                                className="p-3 rounded-lg bg-green-500/10"
+                                            >
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <p className="text-[10px] text-muted-foreground">Aktif</p>
+                                                        <p className="text-xl font-bold text-green-600">{cActive}</p>
+                                                    </div>
+                                                    <CheckCircle className="w-4 h-4 text-green-600 opacity-50" />
+                                                </div>
+                                            </motion.div>
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: 0.1 }}
+                                                className={`relative p-3 rounded-lg bg-red-500/10 ${cNeedService > 0 ? 'ring-2 ring-red-500/50' : ''}`}
+                                            >
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <p className="text-[10px] text-muted-foreground">Need Service</p>
+                                                        <p className="text-xl font-bold text-red-600">{cNeedService}</p>
+                                                    </div>
+                                                    <AlertCircle className="w-4 h-4 text-red-600 opacity-50" />
+                                                </div>
+                                                {cNeedService > 0 && (
+                                                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                                                )}
+                                            </motion.div>
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: 0.15 }}
+                                                className={`relative p-3 rounded-lg bg-orange-500/10 ${cExpired > 0 ? 'ring-2 ring-orange-500/50' : ''}`}
+                                            >
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <p className="text-[10px] text-muted-foreground">Dok. Expired</p>
+                                                        <p className="text-xl font-bold text-orange-600">{cExpired}</p>
+                                                    </div>
+                                                    <Clock className="w-4 h-4 text-orange-600 opacity-50" />
+                                                </div>
+                                                {cExpired > 0 && (
+                                                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-orange-500 rounded-full animate-pulse" />
+                                                )}
+                                            </motion.div>
                                         </div>
-                                    </div>
-                                    <div className="bg-card border rounded-xl p-4 shadow-sm relative overflow-hidden">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <p className="text-xs text-muted-foreground uppercase font-bold text-red-600">Need Service</p>
-                                                <p className="text-2xl font-bold">{cNeedService}</p>
-                                            </div>
-                                            <AlertCircle className="w-5 h-5 text-red-600 opacity-50" />
-                                        </div>
-                                    </div>
-                                    <div className="bg-card border rounded-xl p-4 shadow-sm relative overflow-hidden">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <p className="text-xs text-muted-foreground uppercase font-bold text-orange-600">Dokumen Expired</p>
-                                                <p className="text-2xl font-bold">{cExpired}</p>
-                                            </div>
-                                            <Clock className="w-5 h-5 text-orange-600 opacity-50" />
-                                        </div>
-                                    </div>
-                                    <div className="bg-card border rounded-xl p-4 shadow-sm relative overflow-hidden">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <p className="text-xs text-muted-foreground uppercase font-bold text-green-600">Aktif</p>
-                                                <p className="text-2xl font-bold">{cActive}</p>
-                                            </div>
-                                            <CheckCircle className="w-5 h-5 text-green-600 opacity-50" />
-                                        </div>
-                                    </div>
-                                </div>
+                                    </CardContent>
+                                </Card>
 
                                 {/* Car Filters */}
                                 <div className="flex flex-col md:flex-row gap-4 bg-card p-4 rounded-xl border shadow-sm">
@@ -1714,75 +1824,133 @@ const AdminDashboard = () => {
                     <div className="space-y-6">
                         {canEditCctv ? (
                             <>
-                                {/* Summary Stats */}
-                                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                                    <div className="bg-card border rounded-xl p-4 shadow-sm relative overflow-hidden">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <p className="text-xs text-muted-foreground uppercase font-bold">Total CCTV</p>
-                                                <p className="text-2xl font-bold">{cctvTotal}</p>
-                                            </div>
-                                            <Camera className="w-5 h-5 text-muted-foreground opacity-50" />
-                                        </div>
-                                    </div>
-                                    <div className="bg-card border rounded-xl p-4 shadow-sm relative overflow-hidden">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <p className="text-xs text-muted-foreground uppercase font-bold text-green-600">Online</p>
-                                                <p className="text-2xl font-bold">{cctvOnline}</p>
-                                            </div>
-                                            <Wifi className="w-5 h-5 text-green-600 opacity-50" />
-                                        </div>
-                                    </div>
-                                    <div className="bg-card border rounded-xl p-4 shadow-sm relative overflow-hidden">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <p className="text-xs text-muted-foreground uppercase font-bold text-yellow-600">Offline</p>
-                                                <p className="text-2xl font-bold">{cctvOffline}</p>
-                                            </div>
-                                            <WifiOff className="w-5 h-5 text-yellow-600 opacity-50" />
-                                        </div>
-                                    </div>
-                                    <div className="bg-card border rounded-xl p-4 shadow-sm relative overflow-hidden">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <p className="text-xs text-muted-foreground uppercase font-bold text-red-600">Broken</p>
-                                                <p className="text-2xl font-bold">{cctvBroken}</p>
-                                            </div>
-                                            <AlertCircle className="w-5 h-5 text-red-600 opacity-50" />
-                                        </div>
-                                    </div>
-                                    <div className="bg-card border rounded-xl p-4 shadow-sm relative overflow-hidden">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <p className="text-xs text-muted-foreground uppercase font-bold text-purple-600">Stolen</p>
-                                                <p className="text-2xl font-bold">{cctvStolen}</p>
-                                            </div>
-                                            <XCircle className="w-5 h-5 text-purple-600 opacity-50" />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Category Stats */}
-                                <div>
-                                    <h3 className="text-lg font-semibold mb-4">CCTV per Category</h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        {['Jabo Outer 1', 'Jabo Outer 2', 'Jabo Outer 3'].map(reg => {
-                                            const count = cctvData.filter(c => c.regional === reg).length;
-                                            const onlineCount = cctvData.filter(c => c.regional === reg && c.status === 'online').length;
-                                            return (
-                                                <div key={reg} className="bg-card border rounded-lg p-4">
-                                                    <p className="text-sm font-medium text-muted-foreground">{reg}</p>
-                                                    <div className="flex items-baseline gap-2 mt-1">
-                                                        <p className="text-3xl font-bold">{count}</p>
-                                                        <p className="text-xs text-muted-foreground">total</p>
-                                                        <span className="text-xs text-green-600 font-medium">({onlineCount} online)</span>
+                                {/* CCTV Summary Card - Consistent Style */}
+                                <Card className="border-2 border-primary/20">
+                                    <CardHeader className="pb-2">
+                                        <CardTitle className="flex items-center justify-between text-lg">
+                                            <span className="flex items-center gap-2">
+                                                <Camera className="w-5 h-5" />
+                                                CCTV Data Summary
+                                            </span>
+                                            <span className="text-sm font-normal text-muted-foreground">
+                                                Total: {cctvTotal} unit
+                                            </span>
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        {/* Stats Grid */}
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-4">
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: 0 }}
+                                                className="p-3 rounded-lg bg-blue-500/10"
+                                            >
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <p className="text-[10px] text-muted-foreground">Total</p>
+                                                        <p className="text-xl font-bold text-blue-600">{cctvTotal}</p>
                                                     </div>
+                                                    <Camera className="w-4 h-4 text-blue-600 opacity-50" />
                                                 </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
+                                            </motion.div>
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: 0.05 }}
+                                                className="p-3 rounded-lg bg-green-500/10"
+                                            >
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <p className="text-[10px] text-muted-foreground">Online</p>
+                                                        <p className="text-xl font-bold text-green-600">{cctvOnline}</p>
+                                                    </div>
+                                                    <Wifi className="w-4 h-4 text-green-600 opacity-50" />
+                                                </div>
+                                            </motion.div>
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: 0.1 }}
+                                                className={`relative p-3 rounded-lg bg-yellow-500/10 ${cctvOffline > 0 ? 'ring-2 ring-yellow-500/50' : ''}`}
+                                            >
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <p className="text-[10px] text-muted-foreground">Offline</p>
+                                                        <p className="text-xl font-bold text-yellow-600">{cctvOffline}</p>
+                                                    </div>
+                                                    <WifiOff className="w-4 h-4 text-yellow-600 opacity-50" />
+                                                </div>
+                                                {cctvOffline > 0 && (
+                                                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
+                                                )}
+                                            </motion.div>
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: 0.15 }}
+                                                className={`relative p-3 rounded-lg bg-red-500/10 ${cctvBroken > 0 ? 'ring-2 ring-red-500/50' : ''}`}
+                                            >
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <p className="text-[10px] text-muted-foreground">Broken</p>
+                                                        <p className="text-xl font-bold text-red-600">{cctvBroken}</p>
+                                                    </div>
+                                                    <AlertCircle className="w-4 h-4 text-red-600 opacity-50" />
+                                                </div>
+                                                {cctvBroken > 0 && (
+                                                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                                                )}
+                                            </motion.div>
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: 0.2 }}
+                                                className={`relative p-3 rounded-lg bg-purple-500/10 ${cctvStolen > 0 ? 'ring-2 ring-purple-500/50' : ''}`}
+                                            >
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <p className="text-[10px] text-muted-foreground">Stolen</p>
+                                                        <p className="text-xl font-bold text-purple-600">{cctvStolen}</p>
+                                                    </div>
+                                                    <XCircle className="w-4 h-4 text-purple-600 opacity-50" />
+                                                </div>
+                                                {cctvStolen > 0 && (
+                                                    <div className="absolute -top-1 -right-1 w-2 h-2 bg-purple-500 rounded-full animate-pulse" />
+                                                )}
+                                            </motion.div>
+                                        </div>
+
+                                        {/* CCTV per Regional */}
+                                        {!isSPV && (
+                                            <div className="mt-4 pt-4 border-t">
+                                                <p className="text-sm font-medium mb-3 flex items-center gap-2">
+                                                    <Camera className="w-4 h-4 text-blue-600" />
+                                                    CCTV per Regional
+                                                </p>
+                                                <div className="grid grid-cols-3 gap-3">
+                                                    {['Jabo Outer 1', 'Jabo Outer 2', 'Jabo Outer 3'].map((reg, idx) => {
+                                                        const count = cctvData.filter(c => c.regional === reg).length;
+                                                        const onlineCount = cctvData.filter(c => c.regional === reg && c.status === 'online').length;
+                                                        const percent = count > 0 ? Math.round((onlineCount / count) * 100) : 0;
+                                                        return (
+                                                            <div key={reg} className="p-3 rounded-lg bg-blue-500/10 flex justify-between items-center">
+                                                                <div>
+                                                                    <span className="text-xs text-muted-foreground">JO {idx + 1}</span>
+                                                                    <p className="text-lg font-bold text-blue-600">{count}</p>
+                                                                </div>
+                                                                <div className="text-right">
+                                                                    <span className="text-xs text-green-600 font-medium">{onlineCount} online</span>
+                                                                    <p className="text-xs text-muted-foreground">({percent}%)</p>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                </Card>
 
                                 {/* CCTV Filters */}
                                 <div className="flex flex-col md:flex-row gap-4 bg-card p-4 rounded-xl border shadow-sm">
