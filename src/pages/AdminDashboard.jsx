@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Suspense, useMemo, useCallback } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
-import { Plus, Activity, AlertCircle, CheckCircle, Clock, Truck, Users as UsersIcon, Briefcase, PlayCircle, PauseCircle, XCircle, Camera, Wifi, WifiOff, FileText } from 'lucide-react';
+import { Plus, Activity, AlertCircle, CheckCircle, Clock, Truck, Users as UsersIcon, Briefcase, PlayCircle, PauseCircle, XCircle, Camera, Wifi, WifiOff, FileText, MapPin } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
@@ -1405,31 +1405,91 @@ const AdminDashboard = () => {
                                     <CardContent>
                                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
                                             {/* Status Cards */}
-                                            <div className="p-3 rounded-lg bg-blue-500/10">
-                                                <p className="text-[10px] text-muted-foreground">Total PIC</p>
-                                                <p className="text-xl font-bold text-blue-600">{totalPic}</p>
-                                            </div>
-                                            <div className="p-3 rounded-lg bg-green-500/10">
-                                                <p className="text-[10px] text-muted-foreground">Active</p>
-                                                <p className="text-xl font-bold text-green-600">{activePic}</p>
-                                            </div>
-                                            <div className="p-3 rounded-lg bg-red-500/10">
-                                                <p className="text-[10px] text-muted-foreground">Inactive</p>
-                                                <p className="text-xl font-bold text-red-600">{inactivePic}</p>
-                                            </div>
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: 0 }}
+                                                className="p-3 rounded-lg bg-blue-500/10"
+                                            >
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <p className="text-[10px] text-muted-foreground">Total PIC</p>
+                                                        <p className="text-xl font-bold text-blue-600">{totalPic}</p>
+                                                    </div>
+                                                    <UsersIcon className="w-4 h-4 text-blue-600 opacity-50" />
+                                                </div>
+                                            </motion.div>
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: 0.05 }}
+                                                className="p-3 rounded-lg bg-green-500/10"
+                                            >
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <p className="text-[10px] text-muted-foreground">Active</p>
+                                                        <p className="text-xl font-bold text-green-600">{activePic}</p>
+                                                    </div>
+                                                    <CheckCircle className="w-4 h-4 text-green-600 opacity-50" />
+                                                </div>
+                                            </motion.div>
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: 0.1 }}
+                                                className={`relative p-3 rounded-lg bg-red-500/10 ${inactivePic > 0 ? 'ring-2 ring-red-500/50' : ''}`}
+                                            >
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <p className="text-[10px] text-muted-foreground">Inactive</p>
+                                                        <p className="text-xl font-bold text-red-600">{inactivePic}</p>
+                                                    </div>
+                                                    <XCircle className="w-4 h-4 text-red-600 opacity-50" />
+                                                </div>
+                                            </motion.div>
                                             {/* Regional Cards */}
-                                            <div className="p-3 rounded-lg bg-purple-500/10">
-                                                <p className="text-[10px] text-muted-foreground">JO 1 Aktif</p>
-                                                <p className="text-xl font-bold text-purple-600">{regionalCounts['Jabo Outer 1']}</p>
-                                            </div>
-                                            <div className="p-3 rounded-lg bg-amber-500/10">
-                                                <p className="text-[10px] text-muted-foreground">JO 2 Aktif</p>
-                                                <p className="text-xl font-bold text-amber-600">{regionalCounts['Jabo Outer 2']}</p>
-                                            </div>
-                                            <div className="p-3 rounded-lg bg-teal-500/10">
-                                                <p className="text-[10px] text-muted-foreground">JO 3 Aktif</p>
-                                                <p className="text-xl font-bold text-teal-600">{regionalCounts['Jabo Outer 3']}</p>
-                                            </div>
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: 0.15 }}
+                                                className="p-3 rounded-lg bg-purple-500/10"
+                                            >
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <p className="text-[10px] text-muted-foreground">JO 1 Aktif</p>
+                                                        <p className="text-xl font-bold text-purple-600">{regionalCounts['Jabo Outer 1']}</p>
+                                                    </div>
+                                                    <MapPin className="w-4 h-4 text-purple-600 opacity-50" />
+                                                </div>
+                                            </motion.div>
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: 0.2 }}
+                                                className="p-3 rounded-lg bg-amber-500/10"
+                                            >
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <p className="text-[10px] text-muted-foreground">JO 2 Aktif</p>
+                                                        <p className="text-xl font-bold text-amber-600">{regionalCounts['Jabo Outer 2']}</p>
+                                                    </div>
+                                                    <MapPin className="w-4 h-4 text-amber-600 opacity-50" />
+                                                </div>
+                                            </motion.div>
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: 0.25 }}
+                                                className="p-3 rounded-lg bg-teal-500/10"
+                                            >
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <p className="text-[10px] text-muted-foreground">JO 3 Aktif</p>
+                                                        <p className="text-xl font-bold text-teal-600">{regionalCounts['Jabo Outer 3']}</p>
+                                                    </div>
+                                                    <MapPin className="w-4 h-4 text-teal-600 opacity-50" />
+                                                </div>
+                                            </motion.div>
                                         </div>
 
                                         {/* Jabatan Distribution */}
@@ -1616,10 +1676,9 @@ const AdminDashboard = () => {
 
                                         {/* Planned Transitions List */}
                                         {(() => {
-                                            const mbpJabatans = ['CM+MBP', 'MBP', 'Expert Genset'];
+                                            // Filter all PICs with planned transitions (not just MBP)
                                             const plannedTransitions = picData.filter(p =>
-                                                (p.status_transisi === 'Planned Layoff' || p.status_transisi === 'Planned Reloc') &&
-                                                mbpJabatans.some(j => p.jabatan?.includes(j))
+                                                p.status_transisi === 'Planned Layoff' || p.status_transisi === 'Planned Reloc'
                                             );
                                             if (plannedTransitions.length === 0) return null;
                                             return (
@@ -1654,10 +1713,6 @@ const AdminDashboard = () => {
                                                 </div>
                                             );
                                         })()}
-
-                                        <p className="text-xs text-muted-foreground mt-3 italic">
-                                            ⚠️ Note: Data berdasarkan field status_transisi. Jalankan SQL migration terlebih dahulu jika belum ada.
-                                        </p>
                                     </CardContent>
                                 </Card>
 
