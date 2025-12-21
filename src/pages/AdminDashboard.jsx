@@ -1517,224 +1517,222 @@ const AdminDashboard = () => {
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent>
-                                        {/* Helper function for MBP jabatan matching */}
-                                        {/* Target Periode Jan-Mar 2026 */}
-                                        <div className="mb-6">
-                                            <h4 className="text-sm font-semibold text-amber-700 dark:text-amber-500 mb-3">
-                                                Periode Jan - Mar 2026 (Target: 10 PIC MBP)
-                                            </h4>
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                {/* JO 1 */}
-                                                <div className="p-4 rounded-lg bg-white/50 dark:bg-card border">
-                                                    <div className="flex justify-between items-start mb-2">
-                                                        <span className="text-sm font-medium">JO 1</span>
-                                                        <Badge variant="outline" className="text-amber-600">Target: 4</Badge>
-                                                    </div>
-                                                    {(() => {
-                                                        const isMBP = (jabatan) => {
-                                                            if (!jabatan) return false;
-                                                            const j = jabatan.toLowerCase();
-                                                            return j.includes('mbp') || j.includes('expert genset');
-                                                        };
-                                                        const jo1MBP = picData.filter(p =>
-                                                            p.validasi === 'Active' &&
-                                                            p.regional === 'Jabo Outer 1' &&
-                                                            isMBP(p.jabatan)
-                                                        ).length;
-                                                        const plannedLayoff = picData.filter(p =>
-                                                            p.regional === 'Jabo Outer 1' &&
-                                                            p.status_transisi === 'Planned Layoff' &&
-                                                            isMBP(p.jabatan)
-                                                        ).length;
-                                                        const plannedReloc = picData.filter(p =>
-                                                            p.regional === 'Jabo Outer 1' &&
-                                                            p.status_transisi === 'Planned Reloc' &&
-                                                            isMBP(p.jabatan)
-                                                        ).length;
-                                                        return (
-                                                            <>
-                                                                <p className="text-2xl font-bold text-blue-600">{jo1MBP} <span className="text-sm font-normal text-muted-foreground">saat ini</span></p>
-                                                                <div className="mt-2 space-y-1 text-xs">
-                                                                    <p className="text-red-600">🔴 {plannedLayoff} planned layoff</p>
-                                                                    <p className="text-amber-600">🟡 {plannedReloc} planned reloc</p>
-                                                                    <p className="text-muted-foreground">📋 5 proposed → CM</p>
-                                                                </div>
-                                                            </>
-                                                        );
-                                                    })()}
-                                                </div>
-                                                {/* JO 2 */}
-                                                <div className="p-4 rounded-lg bg-white/50 dark:bg-card border">
-                                                    <div className="flex justify-between items-start mb-2">
-                                                        <span className="text-sm font-medium">JO 2</span>
-                                                        <Badge variant="outline" className="text-amber-600">Target: 3</Badge>
-                                                    </div>
-                                                    {(() => {
-                                                        const isMBP = (jabatan) => {
-                                                            if (!jabatan) return false;
-                                                            const j = jabatan.toLowerCase();
-                                                            return j.includes('mbp') || j.includes('expert genset');
-                                                        };
-                                                        const jo2MBP = picData.filter(p =>
-                                                            p.validasi === 'Active' &&
-                                                            p.regional === 'Jabo Outer 2' &&
-                                                            isMBP(p.jabatan)
-                                                        ).length;
-                                                        const plannedLayoff = picData.filter(p =>
-                                                            p.regional === 'Jabo Outer 2' &&
-                                                            p.status_transisi === 'Planned Layoff' &&
-                                                            isMBP(p.jabatan)
-                                                        ).length;
-                                                        const plannedReloc = picData.filter(p =>
-                                                            p.regional === 'Jabo Outer 2' &&
-                                                            p.status_transisi === 'Planned Reloc' &&
-                                                            isMBP(p.jabatan)
-                                                        ).length;
-                                                        return (
-                                                            <>
-                                                                <p className="text-2xl font-bold text-blue-600">{jo2MBP} <span className="text-sm font-normal text-muted-foreground">saat ini</span></p>
-                                                                <div className="mt-2 space-y-1 text-xs">
-                                                                    <p className="text-red-600">🔴 {plannedLayoff} planned layoff</p>
-                                                                    <p className="text-amber-600">🟡 {plannedReloc} planned reloc</p>
-                                                                    <p className="text-muted-foreground">📋 1 proposed → PM/CM, 1 → CM</p>
-                                                                </div>
-                                                            </>
-                                                        );
-                                                    })()}
-                                                </div>
-                                                {/* JO 3 */}
-                                                <div className="p-4 rounded-lg bg-white/50 dark:bg-card border">
-                                                    <div className="flex justify-between items-start mb-2">
-                                                        <span className="text-sm font-medium">JO 3</span>
-                                                        <Badge variant="outline" className="text-amber-600">Target: 3</Badge>
-                                                    </div>
-                                                    {(() => {
-                                                        const isMBP = (jabatan) => {
-                                                            if (!jabatan) return false;
-                                                            const j = jabatan.toLowerCase();
-                                                            return j.includes('mbp') || j.includes('expert genset');
-                                                        };
-                                                        const jo3MBP = picData.filter(p =>
-                                                            p.validasi === 'Active' &&
-                                                            p.regional === 'Jabo Outer 3' &&
-                                                            isMBP(p.jabatan)
-                                                        ).length;
-                                                        const plannedLayoff = picData.filter(p =>
-                                                            p.regional === 'Jabo Outer 3' &&
-                                                            p.status_transisi === 'Planned Layoff' &&
-                                                            isMBP(p.jabatan)
-                                                        ).length;
-                                                        const plannedReloc = picData.filter(p =>
-                                                            p.regional === 'Jabo Outer 3' &&
-                                                            p.status_transisi === 'Planned Reloc' &&
-                                                            isMBP(p.jabatan)
-                                                        ).length;
-                                                        return (
-                                                            <>
-                                                                <p className="text-2xl font-bold text-blue-600">{jo3MBP} <span className="text-sm font-normal text-muted-foreground">saat ini</span></p>
-                                                                <div className="mt-2 space-y-1 text-xs">
-                                                                    <p className="text-red-600">🔴 {plannedLayoff} planned layoff</p>
-                                                                    <p className="text-amber-600">🟡 {plannedReloc} planned reloc</p>
-                                                                    <p className="text-muted-foreground">📋 3 proposed → CM</p>
-                                                                </div>
-                                                            </>
-                                                        );
-                                                    })()}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Summary Progress */}
-                                        <div className="mb-4 p-3 rounded-lg bg-white/70 dark:bg-card border">
-                                            {(() => {
-                                                const isMBP = (jabatan) => {
-                                                    if (!jabatan) return false;
-                                                    const j = jabatan.toLowerCase();
-                                                    return j.includes('mbp') || j.includes('expert genset');
-                                                };
-                                                const totalMBP = picData.filter(p =>
-                                                    p.validasi === 'Active' &&
-                                                    isMBP(p.jabatan)
-                                                ).length;
-                                                const plannedLayoff = picData.filter(p =>
-                                                    p.status_transisi === 'Planned Layoff' &&
-                                                    isMBP(p.jabatan)
-                                                ).length;
-                                                const plannedReloc = picData.filter(p =>
-                                                    p.status_transisi === 'Planned Reloc' &&
-                                                    isMBP(p.jabatan)
-                                                ).length;
-                                                const afterTransition = totalMBP - plannedLayoff - plannedReloc;
-                                                return (
-                                                    <div className="flex flex-wrap gap-4 text-sm">
-                                                        <div>
-                                                            <span className="text-muted-foreground">Total MBP saat ini:</span>
-                                                            <span className="font-bold ml-1">{totalMBP}</span>
-                                                        </div>
-                                                        <div>
-                                                            <span className="text-red-600">Planned Layoff:</span>
-                                                            <span className="font-bold ml-1">{plannedLayoff}</span>
-                                                        </div>
-                                                        <div>
-                                                            <span className="text-amber-600">Planned Reloc:</span>
-                                                            <span className="font-bold ml-1">{plannedReloc}</span>
-                                                        </div>
-                                                        <div>
-                                                            <span className="text-green-600">Setelah transisi:</span>
-                                                            <span className="font-bold ml-1">{afterTransition}</span>
-                                                            <Badge className={afterTransition <= 10 ? 'ml-2 bg-green-500/20 text-green-700' : 'ml-2 bg-red-500/20 text-red-700'}>
-                                                                Target: 10
-                                                            </Badge>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })()}
-                                        </div>
-
-                                        {/* Planned Transitions List */}
+                                        {/* Dynamic Period based on current date */}
                                         {(() => {
-                                            // Helper function for case-insensitive jabatan matching
-                                            const isMBPJabatan = (jabatan) => {
+                                            const now = new Date();
+                                            const isAfterMarch = now.getFullYear() > 2026 || (now.getFullYear() === 2026 && now.getMonth() >= 3);
+                                            const periodLabel = isAfterMarch ? 'Periode Apr - Des 2026' : 'Periode Jan - Mar 2026';
+                                            const targetCount = isAfterMarch ? 7 : 10;
+                                            const joTargets = isAfterMarch ? { jo1: 3, jo2: 2, jo3: 2 } : { jo1: 4, jo2: 3, jo3: 3 };
+
+                                            // Helper function for MBP jabatan matching
+                                            const isMBP = (jabatan) => {
                                                 if (!jabatan) return false;
                                                 const j = jabatan.toLowerCase();
                                                 return j.includes('mbp') || j.includes('expert genset');
                                             };
-                                            // Filter only MBP jabatan PICs with planned transitions
-                                            const plannedTransitions = picData.filter(p =>
-                                                (p.status_transisi === 'Planned Layoff' || p.status_transisi === 'Planned Reloc') &&
-                                                isMBPJabatan(p.jabatan)
-                                            );
-                                            if (plannedTransitions.length === 0) return null;
+
                                             return (
-                                                <div className="mt-4 pt-4 border-t">
-                                                    <p className="text-sm font-medium mb-2 flex items-center gap-2">
-                                                        <Clock className="w-4 h-4 text-amber-600" />
-                                                        PIC dengan Rencana Transisi ({plannedTransitions.length})
-                                                    </p>
-                                                    <div className="max-h-[200px] overflow-y-auto space-y-2">
-                                                        {plannedTransitions.map(p => (
-                                                            <div key={p.id} className="flex items-center justify-between p-2 bg-white/50 dark:bg-card rounded border text-sm">
-                                                                <div>
-                                                                    <span className="font-medium">{p.nama_pic}</span>
-                                                                    <span className="text-xs text-muted-foreground ml-2">({p.jabatan} - {p.regional})</span>
+                                                <>
+                                                    <div className="mb-6">
+                                                        <h4 className="text-sm font-semibold text-amber-700 dark:text-amber-500 mb-3">
+                                                            {periodLabel} (Target: {targetCount} PIC MBP)
+                                                        </h4>
+                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                            {/* JO 1 */}
+                                                            <div className="p-4 rounded-lg bg-white/50 dark:bg-card border">
+                                                                <div className="flex justify-between items-start mb-2">
+                                                                    <span className="text-sm font-medium">JO 1</span>
+                                                                    <Badge variant="outline" className="text-amber-600">Target: {joTargets.jo1}</Badge>
                                                                 </div>
-                                                                <div className="flex items-center gap-2">
-                                                                    <Badge className={p.status_transisi === 'Planned Layoff' ? 'bg-red-500/20 text-red-700' : 'bg-amber-500/20 text-amber-700'}>
-                                                                        {p.status_transisi}
-                                                                    </Badge>
-                                                                    {p.tgl_efektif_transisi && (
-                                                                        <span className="text-xs text-muted-foreground">
-                                                                            📅 {new Date(p.tgl_efektif_transisi).toLocaleDateString('id-ID')}
-                                                                        </span>
-                                                                    )}
-                                                                    {p.proposed_jabatan && (
-                                                                        <span className="text-xs text-green-600">→ {p.proposed_jabatan}</span>
-                                                                    )}
+                                                                {(() => {
+                                                                    const jo1MBP = picData.filter(p =>
+                                                                        p.validasi === 'Active' &&
+                                                                        p.regional === 'Jabo Outer 1' &&
+                                                                        isMBP(p.jabatan)
+                                                                    ).length;
+                                                                    const plannedLayoff = picData.filter(p =>
+                                                                        p.validasi === 'Active' &&
+                                                                        p.regional === 'Jabo Outer 1' &&
+                                                                        p.status_transisi === 'Planned Layoff' &&
+                                                                        isMBP(p.jabatan)
+                                                                    ).length;
+                                                                    const plannedReloc = picData.filter(p =>
+                                                                        p.validasi === 'Active' &&
+                                                                        p.regional === 'Jabo Outer 1' &&
+                                                                        p.status_transisi === 'Planned Reloc' &&
+                                                                        isMBP(p.jabatan)
+                                                                    ).length;
+                                                                    return (
+                                                                        <>
+                                                                            <p className="text-2xl font-bold text-blue-600">{jo1MBP} <span className="text-sm font-normal text-muted-foreground">saat ini</span></p>
+                                                                            <div className="mt-2 space-y-1 text-xs">
+                                                                                <p className="text-red-600">🔴 {plannedLayoff} planned layoff</p>
+                                                                                <p className="text-amber-600">🟡 {plannedReloc} planned reloc</p>
+                                                                            </div>
+                                                                        </>
+                                                                    );
+                                                                })()}
+                                                            </div>
+                                                            {/* JO 2 */}
+                                                            <div className="p-4 rounded-lg bg-white/50 dark:bg-card border">
+                                                                <div className="flex justify-between items-start mb-2">
+                                                                    <span className="text-sm font-medium">JO 2</span>
+                                                                    <Badge variant="outline" className="text-amber-600">Target: {joTargets.jo2}</Badge>
+                                                                </div>
+                                                                {(() => {
+                                                                    const jo2MBP = picData.filter(p =>
+                                                                        p.validasi === 'Active' &&
+                                                                        p.regional === 'Jabo Outer 2' &&
+                                                                        isMBP(p.jabatan)
+                                                                    ).length;
+                                                                    const plannedLayoff = picData.filter(p =>
+                                                                        p.validasi === 'Active' &&
+                                                                        p.regional === 'Jabo Outer 2' &&
+                                                                        p.status_transisi === 'Planned Layoff' &&
+                                                                        isMBP(p.jabatan)
+                                                                    ).length;
+                                                                    const plannedReloc = picData.filter(p =>
+                                                                        p.validasi === 'Active' &&
+                                                                        p.regional === 'Jabo Outer 2' &&
+                                                                        p.status_transisi === 'Planned Reloc' &&
+                                                                        isMBP(p.jabatan)
+                                                                    ).length;
+                                                                    return (
+                                                                        <>
+                                                                            <p className="text-2xl font-bold text-blue-600">{jo2MBP} <span className="text-sm font-normal text-muted-foreground">saat ini</span></p>
+                                                                            <div className="mt-2 space-y-1 text-xs">
+                                                                                <p className="text-red-600">🔴 {plannedLayoff} planned layoff</p>
+                                                                                <p className="text-amber-600">🟡 {plannedReloc} planned reloc</p>
+                                                                            </div>
+                                                                        </>
+                                                                    );
+                                                                })()}
+                                                            </div>
+                                                            {/* JO 3 */}
+                                                            <div className="p-4 rounded-lg bg-white/50 dark:bg-card border">
+                                                                <div className="flex justify-between items-start mb-2">
+                                                                    <span className="text-sm font-medium">JO 3</span>
+                                                                    <Badge variant="outline" className="text-amber-600">Target: {joTargets.jo3}</Badge>
+                                                                </div>
+                                                                {(() => {
+                                                                    const jo3MBP = picData.filter(p =>
+                                                                        p.validasi === 'Active' &&
+                                                                        p.regional === 'Jabo Outer 3' &&
+                                                                        isMBP(p.jabatan)
+                                                                    ).length;
+                                                                    const plannedLayoff = picData.filter(p =>
+                                                                        p.validasi === 'Active' &&
+                                                                        p.regional === 'Jabo Outer 3' &&
+                                                                        p.status_transisi === 'Planned Layoff' &&
+                                                                        isMBP(p.jabatan)
+                                                                    ).length;
+                                                                    const plannedReloc = picData.filter(p =>
+                                                                        p.validasi === 'Active' &&
+                                                                        p.regional === 'Jabo Outer 3' &&
+                                                                        p.status_transisi === 'Planned Reloc' &&
+                                                                        isMBP(p.jabatan)
+                                                                    ).length;
+                                                                    return (
+                                                                        <>
+                                                                            <p className="text-2xl font-bold text-blue-600">{jo3MBP} <span className="text-sm font-normal text-muted-foreground">saat ini</span></p>
+                                                                            <div className="mt-2 space-y-1 text-xs">
+                                                                                <p className="text-red-600">🔴 {plannedLayoff} planned layoff</p>
+                                                                                <p className="text-amber-600">🟡 {plannedReloc} planned reloc</p>
+                                                                            </div>
+                                                                        </>
+                                                                    );
+                                                                })()}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Summary Progress */}
+                                                    <div className="mb-4 p-3 rounded-lg bg-white/70 dark:bg-card border">
+                                                        {(() => {
+                                                            const totalMBP = picData.filter(p =>
+                                                                p.validasi === 'Active' &&
+                                                                isMBP(p.jabatan)
+                                                            ).length;
+                                                            const plannedLayoff = picData.filter(p =>
+                                                                p.validasi === 'Active' &&
+                                                                p.status_transisi === 'Planned Layoff' &&
+                                                                isMBP(p.jabatan)
+                                                            ).length;
+                                                            const plannedReloc = picData.filter(p =>
+                                                                p.validasi === 'Active' &&
+                                                                p.status_transisi === 'Planned Reloc' &&
+                                                                isMBP(p.jabatan)
+                                                            ).length;
+                                                            const afterTransition = totalMBP - plannedLayoff - plannedReloc;
+                                                            return (
+                                                                <div className="flex flex-wrap gap-4 text-sm">
+                                                                    <div>
+                                                                        <span className="text-muted-foreground">Total MBP saat ini:</span>
+                                                                        <span className="font-bold ml-1">{totalMBP}</span>
+                                                                    </div>
+                                                                    <div>
+                                                                        <span className="text-red-600">Planned Layoff:</span>
+                                                                        <span className="font-bold ml-1">{plannedLayoff}</span>
+                                                                    </div>
+                                                                    <div>
+                                                                        <span className="text-amber-600">Planned Reloc:</span>
+                                                                        <span className="font-bold ml-1">{plannedReloc}</span>
+                                                                    </div>
+                                                                    <div>
+                                                                        <span className="text-green-600">Setelah transisi:</span>
+                                                                        <span className="font-bold ml-1">{afterTransition}</span>
+                                                                        <Badge className={afterTransition <= targetCount ? 'ml-2 bg-green-500/20 text-green-700' : 'ml-2 bg-red-500/20 text-red-700'}>
+                                                                            Target: {targetCount}
+                                                                        </Badge>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })()}
+                                                    </div>
+
+                                                    {/* Planned Transitions List */}
+                                                    {(() => {
+                                                        // Filter only MBP jabatan PICs with planned transitions
+                                                        const plannedTransitions = picData.filter(p =>
+                                                            p.validasi === 'Active' &&
+                                                            (p.status_transisi === 'Planned Layoff' || p.status_transisi === 'Planned Reloc') &&
+                                                            isMBP(p.jabatan)
+                                                        );
+                                                        if (plannedTransitions.length === 0) return null;
+                                                        return (
+                                                            <div className="mt-4 pt-4 border-t">
+                                                                <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                                                                    <Clock className="w-4 h-4 text-amber-600" />
+                                                                    PIC dengan Rencana Transisi ({plannedTransitions.length})
+                                                                </p>
+                                                                <div className="max-h-[200px] overflow-y-auto space-y-2">
+                                                                    {plannedTransitions.map(p => (
+                                                                        <div key={p.id} className="flex items-center justify-between p-2 bg-white/50 dark:bg-card rounded border text-sm">
+                                                                            <div>
+                                                                                <span className="font-medium">{p.nama_pic}</span>
+                                                                                <span className="text-xs text-muted-foreground ml-2">({p.jabatan} - {p.regional})</span>
+                                                                            </div>
+                                                                            <div className="flex items-center gap-2">
+                                                                                <Badge className={p.status_transisi === 'Planned Layoff' ? 'bg-red-500/20 text-red-700' : 'bg-amber-500/20 text-amber-700'}>
+                                                                                    {p.status_transisi}
+                                                                                </Badge>
+                                                                                {p.tgl_efektif_transisi && (
+                                                                                    <span className="text-xs text-muted-foreground">
+                                                                                        📅 {new Date(p.tgl_efektif_transisi).toLocaleDateString('id-ID')}
+                                                                                    </span>
+                                                                                )}
+                                                                                {p.proposed_jabatan && (
+                                                                                    <span className="text-xs text-green-600">→ {p.proposed_jabatan}</span>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
                                                                 </div>
                                                             </div>
-                                                        ))}
-                                                    </div>
-                                                </div>
+                                                        );
+                                                    })()}
+                                                </>
                                             );
                                         })()}
                                     </CardContent>
