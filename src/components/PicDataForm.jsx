@@ -4,12 +4,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Phone, Mail, MapPin, CreditCard } from 'lucide-react';
+import { Phone, Mail, MapPin, CreditCard, AlertTriangle, Calendar } from 'lucide-react';
 
 // Dropdown options
 const JABATAN_OPTIONS = ['PM', 'CM', 'PM/CM', 'CM+MBP', 'VERTI & TII', 'Expert Genset', 'MBP'];
 const VALIDASI_OPTIONS = ['Active', 'Inactive'];
 const REGIONAL_OPTIONS = ['Jabo Outer 1', 'Jabo Outer 2', 'Jabo Outer 3'];
+const STATUS_TRANSISI_OPTIONS = ['Active', 'Planned Layoff', 'Planned Reloc', 'Laid Off', 'Relocated'];
 
 const PicDataForm = ({ onSubmit, initialData, onCancel }) => {
     const [formData, setFormData] = useState({
@@ -35,6 +36,12 @@ const PicDataForm = ({ onSubmit, initialData, onCancel }) => {
         email: '',
         alamat_domisili: '',
         no_bpjs: '',
+        // Transition fields 2026
+        status_transisi: 'Active',
+        tgl_efektif_transisi: '',
+        jabatan_sebelumnya: '',
+        alasan_transisi: '',
+        proposed_jabatan: '',
     });
 
     // Update formData when initialData changes (for edit mode)
@@ -63,6 +70,12 @@ const PicDataForm = ({ onSubmit, initialData, onCancel }) => {
                 email: initialData.email || '',
                 alamat_domisili: initialData.alamat_domisili || '',
                 no_bpjs: initialData.no_bpjs || '',
+                // Transition fields 2026
+                status_transisi: initialData.status_transisi || 'Active',
+                tgl_efektif_transisi: initialData.tgl_efektif_transisi || '',
+                jabatan_sebelumnya: initialData.jabatan_sebelumnya || '',
+                alasan_transisi: initialData.alasan_transisi || '',
+                proposed_jabatan: initialData.proposed_jabatan || '',
             });
         }
     }, [initialData]);
@@ -275,6 +288,83 @@ const PicDataForm = ({ onSubmit, initialData, onCancel }) => {
                             onChange={handleChange}
                             placeholder="Catatan tambahan..."
                             rows={3}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* Transition Planning 2026 Section */}
+            <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-amber-600 uppercase tracking-wider border-b border-amber-300 pb-2 flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4" />
+                    Transition Planning 2026
+                </h3>
+                <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="space-y-2">
+                            <Label>Status Transisi</Label>
+                            <Select value={formData.status_transisi} onValueChange={(v) => handleSelectChange('status_transisi', v)}>
+                                <SelectTrigger className={formData.status_transisi === 'Planned Layoff' ? 'border-red-500' : formData.status_transisi === 'Planned Reloc' ? 'border-amber-500' : ''}>
+                                    <SelectValue placeholder="Pilih Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {STATUS_TRANSISI_OPTIONS.map(opt => (
+                                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="flex items-center gap-2">
+                                <Calendar className="w-4 h-4" />
+                                Tgl Efektif Transisi
+                            </Label>
+                            <Input
+                                type="date"
+                                name="tgl_efektif_transisi"
+                                value={formData.tgl_efektif_transisi}
+                                onChange={handleChange}
+                                disabled={formData.status_transisi === 'Active'}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Proposed Jabatan (Reloc)</Label>
+                            <Select
+                                value={formData.proposed_jabatan}
+                                onValueChange={(v) => handleSelectChange('proposed_jabatan', v)}
+                                disabled={formData.status_transisi !== 'Planned Reloc'}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Pilih Jabatan Baru" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {JABATAN_OPTIONS.map(opt => (
+                                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Jabatan Sebelumnya</Label>
+                            <Input
+                                name="jabatan_sebelumnya"
+                                value={formData.jabatan_sebelumnya}
+                                onChange={handleChange}
+                                placeholder="Auto-fill saat relokasi"
+                                disabled
+                            />
+                        </div>
+                    </div>
+                    <div className="mt-4">
+                        <Label>Alasan Transisi</Label>
+                        <Textarea
+                            name="alasan_transisi"
+                            value={formData.alasan_transisi}
+                            onChange={handleChange}
+                            placeholder="Jelaskan alasan layoff/relokasi..."
+                            rows={2}
+                            disabled={formData.status_transisi === 'Active'}
+                            className="mt-2"
                         />
                     </div>
                 </div>
