@@ -1720,6 +1720,37 @@ const AdminDashboard = () => {
                                                 )}
                                             </motion.div>
                                         </div>
+
+                                        {/* Kendaraan per Regional */}
+                                        {!isSPV && (
+                                            <div className="mt-4 pt-4 border-t">
+                                                <p className="text-sm font-medium mb-3 flex items-center gap-2">
+                                                    <Truck className="w-4 h-4 text-blue-600" />
+                                                    Kendaraan per Regional
+                                                </p>
+                                                <div className="grid grid-cols-3 gap-3">
+                                                    {['Jabo Outer 1', 'Jabo Outer 2', 'Jabo Outer 3'].map((reg, idx) => {
+                                                        const count = carData.filter(c => c.area === reg).length;
+                                                        const activeCount = carData.filter(c => c.area === reg && c.status_mobil === 'AKTIF').length;
+                                                        const needServiceCount = carData.filter(c => c.area === reg && c.condition === 'NEED SERVICE').length;
+                                                        return (
+                                                            <div key={reg} className="p-3 rounded-lg bg-blue-500/10">
+                                                                <div className="flex justify-between items-start mb-2">
+                                                                    <span className="text-xs text-muted-foreground">JO {idx + 1}</span>
+                                                                    <span className="text-lg font-bold text-blue-600">{count}</span>
+                                                                </div>
+                                                                <div className="flex justify-between text-xs">
+                                                                    <span className="text-green-600">{activeCount} aktif</span>
+                                                                    {needServiceCount > 0 && (
+                                                                        <span className="text-red-600 font-medium">{needServiceCount} service</span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
                                     </CardContent>
                                 </Card>
 
@@ -1932,16 +1963,31 @@ const AdminDashboard = () => {
                                                     {['Jabo Outer 1', 'Jabo Outer 2', 'Jabo Outer 3'].map((reg, idx) => {
                                                         const count = cctvData.filter(c => c.regional === reg).length;
                                                         const onlineCount = cctvData.filter(c => c.regional === reg && c.status === 'online').length;
+                                                        const brokenCount = cctvData.filter(c => c.regional === reg && c.status === 'broken').length;
+                                                        const stolenCount = cctvData.filter(c => c.regional === reg && c.status === 'stolen').length;
                                                         const percent = count > 0 ? Math.round((onlineCount / count) * 100) : 0;
                                                         return (
-                                                            <div key={reg} className="p-3 rounded-lg bg-blue-500/10 flex justify-between items-center">
-                                                                <div>
+                                                            <div key={reg} className="p-3 rounded-lg bg-blue-500/10">
+                                                                <div className="flex justify-between items-start mb-2">
                                                                     <span className="text-xs text-muted-foreground">JO {idx + 1}</span>
-                                                                    <p className="text-lg font-bold text-blue-600">{count}</p>
+                                                                    <span className="text-lg font-bold text-blue-600">{count}</span>
                                                                 </div>
-                                                                <div className="text-right">
-                                                                    <span className="text-xs text-green-600 font-medium">{onlineCount} online</span>
-                                                                    <p className="text-xs text-muted-foreground">({percent}%)</p>
+                                                                <div className="space-y-1">
+                                                                    <div className="flex justify-between text-xs">
+                                                                        <span className="text-green-600">{onlineCount} online</span>
+                                                                        <span className="text-muted-foreground">({percent}%)</span>
+                                                                    </div>
+                                                                    <div className="flex justify-between text-xs">
+                                                                        {brokenCount > 0 && (
+                                                                            <span className="text-red-600 font-medium">{brokenCount} broken</span>
+                                                                        )}
+                                                                        {stolenCount > 0 && (
+                                                                            <span className="text-purple-600 font-medium">{stolenCount} stolen</span>
+                                                                        )}
+                                                                        {brokenCount === 0 && stolenCount === 0 && (
+                                                                            <span className="text-green-600">✓ OK</span>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         );
