@@ -1517,6 +1517,7 @@ const AdminDashboard = () => {
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent>
+                                        {/* Helper function for MBP jabatan matching */}
                                         {/* Target Periode Jan-Mar 2026 */}
                                         <div className="mb-6">
                                             <h4 className="text-sm font-semibold text-amber-700 dark:text-amber-500 mb-3">
@@ -1530,21 +1531,25 @@ const AdminDashboard = () => {
                                                         <Badge variant="outline" className="text-amber-600">Target: 4</Badge>
                                                     </div>
                                                     {(() => {
-                                                        const mbpJabatans = ['CM+MBP', 'MBP', 'Expert Genset'];
+                                                        const isMBP = (jabatan) => {
+                                                            if (!jabatan) return false;
+                                                            const j = jabatan.toLowerCase();
+                                                            return j.includes('mbp') || j.includes('expert genset');
+                                                        };
                                                         const jo1MBP = picData.filter(p =>
                                                             p.validasi === 'Active' &&
                                                             p.regional === 'Jabo Outer 1' &&
-                                                            mbpJabatans.some(j => p.jabatan?.includes(j))
+                                                            isMBP(p.jabatan)
                                                         ).length;
                                                         const plannedLayoff = picData.filter(p =>
                                                             p.regional === 'Jabo Outer 1' &&
                                                             p.status_transisi === 'Planned Layoff' &&
-                                                            mbpJabatans.some(j => p.jabatan?.includes(j))
+                                                            isMBP(p.jabatan)
                                                         ).length;
                                                         const plannedReloc = picData.filter(p =>
                                                             p.regional === 'Jabo Outer 1' &&
                                                             p.status_transisi === 'Planned Reloc' &&
-                                                            mbpJabatans.some(j => p.jabatan?.includes(j))
+                                                            isMBP(p.jabatan)
                                                         ).length;
                                                         return (
                                                             <>
@@ -1565,21 +1570,25 @@ const AdminDashboard = () => {
                                                         <Badge variant="outline" className="text-amber-600">Target: 3</Badge>
                                                     </div>
                                                     {(() => {
-                                                        const mbpJabatans = ['CM+MBP', 'MBP', 'Expert Genset'];
+                                                        const isMBP = (jabatan) => {
+                                                            if (!jabatan) return false;
+                                                            const j = jabatan.toLowerCase();
+                                                            return j.includes('mbp') || j.includes('expert genset');
+                                                        };
                                                         const jo2MBP = picData.filter(p =>
                                                             p.validasi === 'Active' &&
                                                             p.regional === 'Jabo Outer 2' &&
-                                                            mbpJabatans.some(j => p.jabatan?.includes(j))
+                                                            isMBP(p.jabatan)
                                                         ).length;
                                                         const plannedLayoff = picData.filter(p =>
                                                             p.regional === 'Jabo Outer 2' &&
                                                             p.status_transisi === 'Planned Layoff' &&
-                                                            mbpJabatans.some(j => p.jabatan?.includes(j))
+                                                            isMBP(p.jabatan)
                                                         ).length;
                                                         const plannedReloc = picData.filter(p =>
                                                             p.regional === 'Jabo Outer 2' &&
                                                             p.status_transisi === 'Planned Reloc' &&
-                                                            mbpJabatans.some(j => p.jabatan?.includes(j))
+                                                            isMBP(p.jabatan)
                                                         ).length;
                                                         return (
                                                             <>
@@ -1600,21 +1609,25 @@ const AdminDashboard = () => {
                                                         <Badge variant="outline" className="text-amber-600">Target: 3</Badge>
                                                     </div>
                                                     {(() => {
-                                                        const mbpJabatans = ['CM+MBP', 'MBP', 'Expert Genset'];
+                                                        const isMBP = (jabatan) => {
+                                                            if (!jabatan) return false;
+                                                            const j = jabatan.toLowerCase();
+                                                            return j.includes('mbp') || j.includes('expert genset');
+                                                        };
                                                         const jo3MBP = picData.filter(p =>
                                                             p.validasi === 'Active' &&
                                                             p.regional === 'Jabo Outer 3' &&
-                                                            mbpJabatans.some(j => p.jabatan?.includes(j))
+                                                            isMBP(p.jabatan)
                                                         ).length;
                                                         const plannedLayoff = picData.filter(p =>
                                                             p.regional === 'Jabo Outer 3' &&
                                                             p.status_transisi === 'Planned Layoff' &&
-                                                            mbpJabatans.some(j => p.jabatan?.includes(j))
+                                                            isMBP(p.jabatan)
                                                         ).length;
                                                         const plannedReloc = picData.filter(p =>
                                                             p.regional === 'Jabo Outer 3' &&
                                                             p.status_transisi === 'Planned Reloc' &&
-                                                            mbpJabatans.some(j => p.jabatan?.includes(j))
+                                                            isMBP(p.jabatan)
                                                         ).length;
                                                         return (
                                                             <>
@@ -1634,18 +1647,22 @@ const AdminDashboard = () => {
                                         {/* Summary Progress */}
                                         <div className="mb-4 p-3 rounded-lg bg-white/70 dark:bg-card border">
                                             {(() => {
-                                                const mbpJabatans = ['CM+MBP', 'MBP', 'Expert Genset'];
+                                                const isMBP = (jabatan) => {
+                                                    if (!jabatan) return false;
+                                                    const j = jabatan.toLowerCase();
+                                                    return j.includes('mbp') || j.includes('expert genset');
+                                                };
                                                 const totalMBP = picData.filter(p =>
                                                     p.validasi === 'Active' &&
-                                                    mbpJabatans.some(j => p.jabatan?.includes(j))
+                                                    isMBP(p.jabatan)
                                                 ).length;
                                                 const plannedLayoff = picData.filter(p =>
                                                     p.status_transisi === 'Planned Layoff' &&
-                                                    mbpJabatans.some(j => p.jabatan?.includes(j))
+                                                    isMBP(p.jabatan)
                                                 ).length;
                                                 const plannedReloc = picData.filter(p =>
                                                     p.status_transisi === 'Planned Reloc' &&
-                                                    mbpJabatans.some(j => p.jabatan?.includes(j))
+                                                    isMBP(p.jabatan)
                                                 ).length;
                                                 const afterTransition = totalMBP - plannedLayoff - plannedReloc;
                                                 return (
@@ -1676,9 +1693,16 @@ const AdminDashboard = () => {
 
                                         {/* Planned Transitions List */}
                                         {(() => {
-                                            // Filter all PICs with planned transitions (not just MBP)
+                                            // Helper function for case-insensitive jabatan matching
+                                            const isMBPJabatan = (jabatan) => {
+                                                if (!jabatan) return false;
+                                                const j = jabatan.toLowerCase();
+                                                return j.includes('mbp') || j.includes('expert genset');
+                                            };
+                                            // Filter only MBP jabatan PICs with planned transitions
                                             const plannedTransitions = picData.filter(p =>
-                                                p.status_transisi === 'Planned Layoff' || p.status_transisi === 'Planned Reloc'
+                                                (p.status_transisi === 'Planned Layoff' || p.status_transisi === 'Planned Reloc') &&
+                                                isMBPJabatan(p.jabatan)
                                             );
                                             if (plannedTransitions.length === 0) return null;
                                             return (
