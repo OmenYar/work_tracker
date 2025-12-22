@@ -25,6 +25,7 @@ const AdminLayout = () => {
         if (path.includes('/input-pic') || path.includes('/edit-pic')) return 'pic';
         if (path.includes('/input-car') || path.includes('/edit-car')) return 'car';
         if (path.includes('/input-cctv') || path.includes('/edit-cctv')) return 'cctv';
+        if (path.includes('/input-smartlock') || path.includes('/edit-smartlock')) return 'smartlock';
 
         // Fallback to query param if on root
         return searchParams.get('tab') || 'dashboard';

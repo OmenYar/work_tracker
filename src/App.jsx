@@ -18,6 +18,7 @@ const InputPicPage = lazy(() => import('@/pages/forms/InputPicPage'));
 const InputCarPage = lazy(() => import('@/pages/forms/InputCarPage'));
 const InputCCTVPage = lazy(() => import('@/pages/forms/InputCCTVPage'));
 const InputModulePage = lazy(() => import('@/pages/forms/InputModulePage'));
+const InputSmartLockPage = lazy(() => import('@/pages/forms/InputSmartLockPage'));
 
 // Layout (keep synchronous for better UX)
 import AdminLayout from '@/layouts/AdminLayout';
@@ -65,6 +66,8 @@ function App() {
                                 <Route path="edit-cctv/:id" element={<InputCCTVPage />} />
                                 <Route path="input-module" element={<InputModulePage />} />
                                 <Route path="edit-module/:id" element={<InputModulePage />} />
+                                <Route path="input-smartlock" element={<InputSmartLockPage />} />
+                                <Route path="edit-smartlock/:id" element={<InputSmartLockPage />} />
                             </Route>
 
                             {/* Redirect old routes */}
