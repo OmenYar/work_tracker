@@ -23,6 +23,7 @@ import { supabase } from '@/lib/customSupabaseClient';
 import Docxtemplater from 'docxtemplater';
 import PizZip from 'pizzip';
 import { saveAs } from 'file-saver';
+import jsPDF from 'jspdf';
 
 // Customer/Vendor options
 const CUSTOMERS = [
@@ -253,6 +254,72 @@ const GenerateBAST = () => {
         setError(null);
     };
 
+    // Download as PDF
+    const handleDownloadPDF = async () => {
+        if (!selectedCustomer || !selectedRegional) return;
+
+        setIsGenerating(true);
+        setError(null);
+
+        try {
+            const customer = CUSTOMERS.find(c => c.id === selectedCustomer);
+            const regional = REGIONALS.find(r => r.id === selectedRegional);
+
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.getWidth();
+
+            // Header
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.text('BERITA ACARA SERAH TERIMA', pageWidth / 2, 30, { align: 'center' });
+
+            doc.setFontSize(14);
+            doc.text(`(BAST - ${customer?.name})`, pageWidth / 2, 40, { align: 'center' });
+
+            // Regional info
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Regional: ${regional?.name}`, pageWidth / 2, 50, { align: 'center' });
+
+            // Content
+            let y = 70;
+            const lineHeight = 10;
+            const leftMargin = 20;
+            const labelWidth = 40;
+
+            const drawRow = (label, value) => {
+                doc.setFont('helvetica', 'bold');
+                doc.text(label, leftMargin, y);
+                doc.setFont('helvetica', 'normal');
+                doc.text(': ' + (value || '-'), leftMargin + labelWidth, y);
+                y += lineHeight;
+            };
+
+            drawRow('Site ID', formData.site_id);
+            drawRow('Site Name', formData.site_name);
+            drawRow('Add Work', formData.add_work);
+            drawRow('Tanggal', formData.date_now);
+            drawRow('TT Number', formData.tt_number);
+            drawRow('PO Number', formData.po_number);
+
+            // Footer
+            y += 20;
+            doc.setFontSize(8);
+            doc.setTextColor(128);
+            doc.text(`Generated on ${new Date().toLocaleString('id-ID')}`, leftMargin, y);
+
+            // Save
+            const fileName = `Form BAST Site ${formData.site_id}_${formData.site_name}.pdf`;
+            doc.save(fileName);
+
+        } catch (err) {
+            console.error('PDF Generate error:', err);
+            setError(err.message);
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
     // Render step content
     const renderStep4 = () => {
         const customer = CUSTOMERS.find(c => c.id === selectedCustomer);
@@ -338,24 +405,45 @@ const GenerateBAST = () => {
                                 </div>
                             )}
 
-                            <Button
-                                onClick={handleDownload}
-                                disabled={isGenerating}
-                                className="w-full"
-                                size="lg"
-                            >
-                                {isGenerating ? (
-                                    <>
-                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                                        Generating...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Download className="w-5 h-5 mr-2" />
-                                        Download BAST
-                                    </>
-                                )}
-                            </Button>
+                            <div className="flex gap-3">
+                                <Button
+                                    onClick={handleDownload}
+                                    disabled={isGenerating}
+                                    className="flex-1"
+                                    size="lg"
+                                >
+                                    {isGenerating ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                                            Generating...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Download className="w-5 h-5 mr-2" />
+                                            Download DOCX
+                                        </>
+                                    )}
+                                </Button>
+                                <Button
+                                    onClick={handleDownloadPDF}
+                                    disabled={isGenerating}
+                                    variant="outline"
+                                    className="flex-1"
+                                    size="lg"
+                                >
+                                    {isGenerating ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2" />
+                                            Generating...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FileText className="w-5 h-5 mr-2" />
+                                            Download PDF
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
                         </div>
                     </div>
 

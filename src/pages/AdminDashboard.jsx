@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Suspense, useMemo, useCallback } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
-import { Plus, Activity, AlertCircle, CheckCircle, Clock, Truck, Users as UsersIcon, Briefcase, PlayCircle, PauseCircle, XCircle, Camera, Wifi, WifiOff, FileText, MapPin } from 'lucide-react';
+import { Plus, Activity, AlertCircle, CheckCircle, Clock, Truck, Users as UsersIcon, Briefcase, PlayCircle, PauseCircle, XCircle, Camera, Wifi, WifiOff, FileText, MapPin, Lock, CheckCircle2, Package, RefreshCw, AlertTriangle } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
@@ -617,41 +617,56 @@ const AdminDashboard = () => {
         }
     };
 
-    // Fetch SmartLock data - paginated to handle >1000 records
+    // Fetch SmartLock data - parallel batches for faster loading
     const fetchSmartLockData = async () => {
         setIsLoadingSmartLock(true);
         try {
-            const pageSize = 1000;
-            let allData = [];
-            let page = 0;
-            let hasMore = true;
+            // First, get count to determine total pages needed
+            const { count, error: countError } = await supabase
+                .from('smartlock_data')
+                .select('*', { count: 'exact', head: true });
 
-            while (hasMore) {
-                const from = page * pageSize;
-                const to = from + pageSize - 1;
-
-                const { data, error } = await supabase
-                    .from('smartlock_data')
-                    .select('*')
-                    .order('created_at', { ascending: false })
-                    .range(from, to);
-
-                if (error) {
-                    console.error("Fetch SmartLock Error", error);
-                    break;
-                }
-
-                if (data && data.length > 0) {
-                    allData = [...allData, ...data];
-                    page++;
-                    // If we got less than pageSize, we've reached the end
-                    hasMore = data.length === pageSize;
-                } else {
-                    hasMore = false;
-                }
+            if (countError) {
+                console.error("Count Error", countError);
+                return;
             }
 
-            console.log(`Fetched ${allData.length} SmartLock records`);
+            const totalRecords = count || 0;
+            const pageSize = 1000;
+            const totalPages = Math.ceil(totalRecords / pageSize);
+
+            if (totalPages === 0) {
+                setSmartLockData([]);
+                return;
+            }
+
+            // Fetch all pages in parallel (max 4 concurrent)
+            const batchSize = 4;
+            let allData = [];
+
+            for (let i = 0; i < totalPages; i += batchSize) {
+                const promises = [];
+                for (let j = i; j < Math.min(i + batchSize, totalPages); j++) {
+                    const from = j * pageSize;
+                    const to = from + pageSize - 1;
+                    promises.push(
+                        supabase
+                            .from('smartlock_data')
+                            .select('*')
+                            .order('created_at', { ascending: false })
+                            .range(from, to)
+                    );
+                }
+
+                const results = await Promise.all(promises);
+                results.forEach(({ data, error }) => {
+                    if (!error && data) {
+                        allData = [...allData, ...data];
+                    }
+                });
+            }
+
+            console.log(`Fetched ${allData.length} SmartLock records (parallel)`);
             setSmartLockData(allData);
         } catch (error) {
             console.error('Error:', error);
@@ -2410,48 +2425,90 @@ const AdminDashboard = () => {
                             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                                 <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
                                     <CardContent className="p-4">
-                                        <p className="text-xs text-muted-foreground">Total SmartLock</p>
-                                        <p className="text-2xl font-bold text-blue-600">{smartLockData.length}</p>
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-blue-500/20 rounded-lg">
+                                                <Lock className="w-5 h-5 text-blue-600" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Total SmartLock</p>
+                                                <p className="text-2xl font-bold text-blue-600">{smartLockData.length}</p>
+                                            </div>
+                                        </div>
                                     </CardContent>
                                 </Card>
                                 <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
                                     <CardContent className="p-4">
-                                        <p className="text-xs text-muted-foreground">Installed</p>
-                                        <p className="text-2xl font-bold text-green-600">
-                                            {smartLockData.filter(s => s.status_new === 'INSTALLED').length}
-                                        </p>
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-green-500/20 rounded-lg">
+                                                <CheckCircle2 className="w-5 h-5 text-green-600" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Installed</p>
+                                                <p className="text-2xl font-bold text-green-600">
+                                                    {smartLockData.filter(s => s.status_new === 'INSTALLED').length}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </CardContent>
                                 </Card>
                                 <Card className="bg-gradient-to-br from-amber-500/10 to-amber-500/5 border-amber-500/20">
                                     <CardContent className="p-4">
-                                        <p className="text-xs text-muted-foreground">Need Install</p>
-                                        <p className="text-2xl font-bold text-amber-600">
-                                            {smartLockData.filter(s => s.status_new?.includes('NEED INSTALL')).length}
-                                        </p>
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-amber-500/20 rounded-lg">
+                                                <Package className="w-5 h-5 text-amber-600" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Need Install</p>
+                                                <p className="text-2xl font-bold text-amber-600">
+                                                    {smartLockData.filter(s => s.status_new?.includes('NEED INSTALL')).length}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </CardContent>
                                 </Card>
                                 <Card className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20">
                                     <CardContent className="p-4">
-                                        <p className="text-xs text-muted-foreground">Need Relocated</p>
-                                        <p className="text-2xl font-bold text-purple-600">
-                                            {smartLockData.filter(s => s.status_new === 'NEED RELOCATED').length}
-                                        </p>
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-purple-500/20 rounded-lg">
+                                                <RefreshCw className="w-5 h-5 text-purple-600" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Need Relocated</p>
+                                                <p className="text-2xl font-bold text-purple-600">
+                                                    {smartLockData.filter(s => s.status_new === 'NEED RELOCATED').length}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </CardContent>
                                 </Card>
                                 <Card className="bg-gradient-to-br from-red-500/10 to-red-500/5 border-red-500/20">
                                     <CardContent className="p-4">
-                                        <p className="text-xs text-muted-foreground">Lost/Broken</p>
-                                        <p className="text-2xl font-bold text-red-600">
-                                            {smartLockData.filter(s => s.status_new?.includes('LOST')).length}
-                                        </p>
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-red-500/20 rounded-lg">
+                                                <XCircle className="w-5 h-5 text-red-600" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Lost/Broken</p>
+                                                <p className="text-2xl font-bold text-red-600">
+                                                    {smartLockData.filter(s => s.status_new?.includes('LOST')).length}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </CardContent>
                                 </Card>
                                 <Card className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/20">
                                     <CardContent className="p-4">
-                                        <p className="text-xs text-muted-foreground">Issue Long Aging</p>
-                                        <p className="text-2xl font-bold text-orange-600">
-                                            {smartLockData.filter(s => s.priority === 'Issue Long Aging').length}
-                                        </p>
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-orange-500/20 rounded-lg">
+                                                <AlertTriangle className="w-5 h-5 text-orange-600" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs text-muted-foreground">Issue Long Aging</p>
+                                                <p className="text-2xl font-bold text-orange-600">
+                                                    {smartLockData.filter(s => s.priority === 'Issue Long Aging').length}
+                                                </p>
+                                            </div>
+                                        </div>
                                     </CardContent>
                                 </Card>
                             </div>
