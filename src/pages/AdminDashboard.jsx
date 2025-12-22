@@ -617,20 +617,42 @@ const AdminDashboard = () => {
         }
     };
 
-    // Fetch SmartLock data
+    // Fetch SmartLock data - paginated to handle >1000 records
     const fetchSmartLockData = async () => {
         setIsLoadingSmartLock(true);
         try {
-            const { data, error } = await supabase
-                .from('smartlock_data')
-                .select('*')
-                .order('created_at', { ascending: false });
+            const pageSize = 1000;
+            let allData = [];
+            let page = 0;
+            let hasMore = true;
 
-            if (error) {
-                console.error("Fetch SmartLock Error", error);
-                return;
+            while (hasMore) {
+                const from = page * pageSize;
+                const to = from + pageSize - 1;
+
+                const { data, error } = await supabase
+                    .from('smartlock_data')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .range(from, to);
+
+                if (error) {
+                    console.error("Fetch SmartLock Error", error);
+                    break;
+                }
+
+                if (data && data.length > 0) {
+                    allData = [...allData, ...data];
+                    page++;
+                    // If we got less than pageSize, we've reached the end
+                    hasMore = data.length === pageSize;
+                } else {
+                    hasMore = false;
+                }
             }
-            setSmartLockData(data || []);
+
+            console.log(`Fetched ${allData.length} SmartLock records`);
+            setSmartLockData(allData);
         } catch (error) {
             console.error('Error:', error);
         } finally {
