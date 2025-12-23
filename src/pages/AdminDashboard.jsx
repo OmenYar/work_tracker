@@ -936,12 +936,22 @@ const AdminDashboard = () => {
 
                 return (
                     <div className="space-y-6" data-dashboard-content>
-                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                            <h2 className="text-2xl font-bold">Dashboard Overview</h2>
-                            <div className="flex items-center gap-2">
+                        {/* Enhanced Dashboard Header */}
+                        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/10">
+                                    <Activity className="w-6 h-6 text-blue-600" />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Dashboard Overview</h2>
+                                    <p className="text-sm text-muted-foreground">Ringkasan data dan statistik terkini</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 flex-wrap">
                                 {isSPV && userRegional && (
-                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-primary/10 text-primary">
-                                        Regional: {userRegional}
+                                    <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r from-primary/10 to-primary/5 text-primary border border-primary/20">
+                                        <MapPin className="w-3.5 h-3.5 mr-1.5" />
+                                        {userRegional}
                                     </span>
                                 )}
                                 <DashboardExport
@@ -968,11 +978,20 @@ const AdminDashboard = () => {
                         {/* Summary Card */}
                         <MeetingSummary workTrackers={workTrackers} picData={picData} carData={carData} cctvData={cctvData} />
 
-                        {/* Charts Section - PIC per Regional and CCTV Status */}
+                        {/* Charts Section - Enhanced with hover effects */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {/* PIC Aktif per Regional - Donut Chart */}
-                            <div className="bg-card border rounded-xl p-6 shadow-sm">
-                                <h3 className="text-lg font-semibold mb-4">PIC Aktif per Regional</h3>
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="group bg-card border rounded-xl p-6 shadow-sm hover:shadow-md hover:border-purple-500/30 transition-all duration-300"
+                            >
+                                <div className="flex items-center gap-2 mb-4">
+                                    <div className="p-1.5 rounded-lg bg-purple-500/10">
+                                        <UsersIcon className="w-4 h-4 text-purple-500" />
+                                    </div>
+                                    <h3 className="text-lg font-semibold">PIC Aktif per Regional</h3>
+                                </div>
                                 <div className="h-[280px] min-w-0">
                                     <ResponsiveContainer width="100%" height="100%" minWidth={200}>
                                         <PieChart>
@@ -1004,17 +1023,27 @@ const AdminDashboard = () => {
                                 </div>
                                 <div className="flex justify-center gap-6 mt-2">
                                     {picPerRegionalData.map((item, idx) => (
-                                        <div key={idx} className="text-center">
-                                            <p className="text-2xl font-bold" style={{ color: item.fill }}>{item.value}</p>
-                                            <p className="text-xs text-muted-foreground">{item.name}</p>
+                                        <div key={idx} className="text-center group/item cursor-default" title={item.name}>
+                                            <p className="text-2xl font-bold transition-transform group-hover/item:scale-110" style={{ color: item.fill }}>{item.value}</p>
+                                            <p className="text-xs text-muted-foreground">{item.name.replace('Jabo Outer ', 'JO ')}</p>
                                         </div>
                                     ))}
                                 </div>
-                            </div>
+                            </motion.div>
 
                             {/* CCTV Status - Bar Chart */}
-                            <div className="bg-card border rounded-xl p-6 shadow-sm">
-                                <h3 className="text-lg font-semibold mb-4">Status CCTV</h3>
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1 }}
+                                className="group bg-card border rounded-xl p-6 shadow-sm hover:shadow-md hover:border-green-500/30 transition-all duration-300"
+                            >
+                                <div className="flex items-center gap-2 mb-4">
+                                    <div className="p-1.5 rounded-lg bg-green-500/10">
+                                        <Camera className="w-4 h-4 text-green-500" />
+                                    </div>
+                                    <h3 className="text-lg font-semibold">Status CCTV</h3>
+                                </div>
                                 <div className="h-[280px] min-w-0">
                                     <ResponsiveContainer width="100%" height="100%" minWidth={200}>
                                         <BarChart data={cctvStatusData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
@@ -1038,27 +1067,41 @@ const AdminDashboard = () => {
                                 </div>
                                 <div className="flex justify-center gap-4 mt-2 flex-wrap">
                                     {cctvStatusData.map((item, idx) => (
-                                        <div key={idx} className="flex items-center gap-2">
-                                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.fill }}></div>
+                                        <div key={idx} className="flex items-center gap-2 cursor-default group/item" title={`${item.name}: ${item.value}`}>
+                                            <div className="w-3 h-3 rounded-full transition-transform group-hover/item:scale-125" style={{ backgroundColor: item.fill }}></div>
                                             <span className="text-sm">{item.name}: <span className="font-bold">{item.value}</span></span>
                                         </div>
                                     ))}
                                 </div>
-                            </div>
+                            </motion.div>
                         </div>
 
 
 
-                        {/* Active Jobs Table - Full Width */}
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-xl border bg-card shadow overflow-hidden">
-                            <div className="p-6 border-b flex justify-between items-center">
-                                <h3 className="text-lg font-semibold">
-                                    Active Jobs (Waiting Approve BAST/On Hold/Open) <span className="text-sm font-normal text-muted-foreground ml-2">({dashFilteredTrackers.length} records)</span>
-                                </h3>
+                        {/* Active Jobs Table - Full Width - Enhanced */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="rounded-xl border bg-card shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+                        >
+                            <div className="p-6 border-b bg-gradient-to-r from-orange-500/5 to-transparent flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-orange-500/10">
+                                        <Briefcase className="w-5 h-5 text-orange-500" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-semibold">Active Jobs</h3>
+                                        <p className="text-xs text-muted-foreground">Waiting Approve BAST / On Hold / Open</p>
+                                    </div>
+                                </div>
+                                <Badge variant="secondary" className="text-xs">
+                                    {dashFilteredTrackers.length} records
+                                </Badge>
                             </div>
 
-                            {/* Dashboard Filters - Same style as Tracker Data */}
-                            <div className="flex flex-col xl:flex-row gap-4 justify-between items-start xl:items-center bg-card p-4 border-b">
+                            {/* Dashboard Filters - Enhanced styling */}
+                            <div className="flex flex-col xl:flex-row gap-4 justify-between items-start xl:items-center bg-muted/30 p-4 border-b">
                                 <div className="flex flex-col md:flex-row gap-2 w-full xl:w-auto flex-1 flex-wrap">
                                     <Input
                                         placeholder="Search Site ID or Name..."
