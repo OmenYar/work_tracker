@@ -40,6 +40,7 @@
         "lucide-react": "^0.561.0",
         "pizzip": "^3.2.0",
         "react": "^18.3.1",
+        "react-day-picker": "^9.13.0",
         "react-dom": "^18.3.1",
         "react-helmet": "^6.1.0",
         "react-router-dom": "^6.16.0",

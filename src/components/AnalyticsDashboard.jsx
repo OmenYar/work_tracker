@@ -1,15 +1,17 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { getYear, subYears, startOfYear, endOfYear, parseISO, isWithinInterval } from 'date-fns';
 import {
     BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
     XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart
 } from 'recharts';
 import {
     TrendingUp, TrendingDown, Clock, CheckCircle, AlertTriangle,
-    Calendar, Target, Activity, Percent, BarChart3
+    Calendar, Target, Activity, Percent, BarChart3, ArrowUpRight, ArrowDownRight
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 const COLORS = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 const REGIONAL_COLORS = {
@@ -21,6 +23,109 @@ const REGIONAL_COLORS = {
 
 const AnalyticsDashboard = ({ workTrackers = [], picData = [], carData = [], cctvData = [] }) => {
     const [timeRange, setTimeRange] = React.useState('month');
+    const [selectedYear, setSelectedYear] = React.useState(getYear(new Date()));
+
+    // Available years for selection (current year and up to 3 previous years)
+    const availableYears = useMemo(() => {
+        const currentYear = getYear(new Date());
+        return [currentYear, currentYear - 1, currentYear - 2];
+    }, []);
+
+    // Year-over-Year comparison data
+    const yoyData = useMemo(() => {
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        const currentYear = selectedYear;
+        const previousYear = selectedYear - 1;
+
+        return monthNames.map((month, monthIndex) => {
+            // Current year data
+            const currentYearStart = new Date(currentYear, monthIndex, 1);
+            const currentYearEnd = new Date(currentYear, monthIndex + 1, 0);
+
+            const currentCreated = workTrackers.filter(t => {
+                if (!t.created_at) return false;
+                try {
+                    const date = parseISO(t.created_at);
+                    return isWithinInterval(date, { start: currentYearStart, end: currentYearEnd });
+                } catch { return false; }
+            }).length;
+
+            const currentCompleted = workTrackers.filter(t => {
+                if (!t.bast_approve_date) return false;
+                try {
+                    const date = parseISO(t.bast_approve_date);
+                    return isWithinInterval(date, { start: currentYearStart, end: currentYearEnd });
+                } catch { return false; }
+            }).length;
+
+            // Previous year data
+            const prevYearStart = new Date(previousYear, monthIndex, 1);
+            const prevYearEnd = new Date(previousYear, monthIndex + 1, 0);
+
+            const prevCreated = workTrackers.filter(t => {
+                if (!t.created_at) return false;
+                try {
+                    const date = parseISO(t.created_at);
+                    return isWithinInterval(date, { start: prevYearStart, end: prevYearEnd });
+                } catch { return false; }
+            }).length;
+
+            const prevCompleted = workTrackers.filter(t => {
+                if (!t.bast_approve_date) return false;
+                try {
+                    const date = parseISO(t.bast_approve_date);
+                    return isWithinInterval(date, { start: prevYearStart, end: prevYearEnd });
+                } catch { return false; }
+            }).length;
+
+            // Calculate growth percentages
+            const createdGrowth = prevCreated > 0
+                ? Math.round(((currentCreated - prevCreated) / prevCreated) * 100)
+                : currentCreated > 0 ? 100 : 0;
+            const completedGrowth = prevCompleted > 0
+                ? Math.round(((currentCompleted - prevCompleted) / prevCompleted) * 100)
+                : currentCompleted > 0 ? 100 : 0;
+
+            return {
+                month,
+                [`${currentYear}`]: currentCreated,
+                [`${previousYear}`]: prevCreated,
+                currentCompleted,
+                prevCompleted,
+                createdGrowth,
+                completedGrowth,
+            };
+        });
+    }, [workTrackers, selectedYear]);
+
+    // YoY summary
+    const yoySummary = useMemo(() => {
+        const currentYear = selectedYear;
+        const previousYear = selectedYear - 1;
+
+        const totalCurrent = yoyData.reduce((sum, d) => sum + (d[`${currentYear}`] || 0), 0);
+        const totalPrevious = yoyData.reduce((sum, d) => sum + (d[`${previousYear}`] || 0), 0);
+        const totalCurrentCompleted = yoyData.reduce((sum, d) => sum + d.currentCompleted, 0);
+        const totalPrevCompleted = yoyData.reduce((sum, d) => sum + d.prevCompleted, 0);
+
+        const createdGrowth = totalPrevious > 0
+            ? Math.round(((totalCurrent - totalPrevious) / totalPrevious) * 100)
+            : 0;
+        const completedGrowth = totalPrevCompleted > 0
+            ? Math.round(((totalCurrentCompleted - totalPrevCompleted) / totalPrevCompleted) * 100)
+            : 0;
+
+        return {
+            currentYear,
+            previousYear,
+            totalCurrent,
+            totalPrevious,
+            totalCurrentCompleted,
+            totalPrevCompleted,
+            createdGrowth,
+            completedGrowth,
+        };
+    }, [yoyData, selectedYear]);
 
     // Calculate KPIs
     const kpis = useMemo(() => {
@@ -361,6 +466,146 @@ const AnalyticsDashboard = ({ workTrackers = [], picData = [], carData = [], cct
                     </Card>
                 </motion.div>
             </div>
+
+            {/* Year-over-Year Comparison Section */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
+                <Card className="border-indigo-500/30">
+                    <CardHeader>
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Calendar className="w-5 h-5 text-indigo-500" />
+                                    Year-over-Year Comparison
+                                </CardTitle>
+                                <CardDescription>Perbandingan performa {yoySummary.currentYear} vs {yoySummary.previousYear}</CardDescription>
+                            </div>
+                            <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
+                                <SelectTrigger className="w-[120px]">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {availableYears.map(year => (
+                                        <SelectItem key={year} value={String(year)}>{year}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        {/* YoY Summary Cards */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                                <p className="text-xs text-muted-foreground">Dibuat {yoySummary.currentYear}</p>
+                                <p className="text-2xl font-bold text-blue-600">{yoySummary.totalCurrent}</p>
+                                <div className="flex items-center gap-1 text-xs mt-1">
+                                    {yoySummary.createdGrowth >= 0 ? (
+                                        <ArrowUpRight className="w-3 h-3 text-green-500" />
+                                    ) : (
+                                        <ArrowDownRight className="w-3 h-3 text-red-500" />
+                                    )}
+                                    <span className={yoySummary.createdGrowth >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                        {yoySummary.createdGrowth > 0 ? '+' : ''}{yoySummary.createdGrowth}%
+                                    </span>
+                                    <span className="text-muted-foreground">vs {yoySummary.previousYear}</span>
+                                </div>
+                            </div>
+                            <div className="p-4 rounded-lg bg-gray-500/10 border border-gray-500/20">
+                                <p className="text-xs text-muted-foreground">Dibuat {yoySummary.previousYear}</p>
+                                <p className="text-2xl font-bold text-gray-600">{yoySummary.totalPrevious}</p>
+                            </div>
+                            <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+                                <p className="text-xs text-muted-foreground">Selesai {yoySummary.currentYear}</p>
+                                <p className="text-2xl font-bold text-green-600">{yoySummary.totalCurrentCompleted}</p>
+                                <div className="flex items-center gap-1 text-xs mt-1">
+                                    {yoySummary.completedGrowth >= 0 ? (
+                                        <ArrowUpRight className="w-3 h-3 text-green-500" />
+                                    ) : (
+                                        <ArrowDownRight className="w-3 h-3 text-red-500" />
+                                    )}
+                                    <span className={yoySummary.completedGrowth >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                        {yoySummary.completedGrowth > 0 ? '+' : ''}{yoySummary.completedGrowth}%
+                                    </span>
+                                    <span className="text-muted-foreground">vs {yoySummary.previousYear}</span>
+                                </div>
+                            </div>
+                            <div className="p-4 rounded-lg bg-gray-500/10 border border-gray-500/20">
+                                <p className="text-xs text-muted-foreground">Selesai {yoySummary.previousYear}</p>
+                                <p className="text-2xl font-bold text-gray-600">{yoySummary.totalPrevCompleted}</p>
+                            </div>
+                        </div>
+
+                        {/* YoY Line Chart */}
+                        <div className="h-[300px]">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <LineChart data={yoyData}>
+                                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                                    <XAxis dataKey="month" className="text-xs" />
+                                    <YAxis className="text-xs" />
+                                    <Tooltip
+                                        contentStyle={{
+                                            backgroundColor: 'hsl(var(--card))',
+                                            border: '1px solid hsl(var(--border))',
+                                            borderRadius: '8px'
+                                        }}
+                                    />
+                                    <Legend />
+                                    <Line
+                                        type="monotone"
+                                        dataKey={`${selectedYear}`}
+                                        name={`${selectedYear}`}
+                                        stroke="#3b82f6"
+                                        strokeWidth={3}
+                                        dot={{ fill: '#3b82f6', strokeWidth: 2 }}
+                                    />
+                                    <Line
+                                        type="monotone"
+                                        dataKey={`${selectedYear - 1}`}
+                                        name={`${selectedYear - 1}`}
+                                        stroke="#94a3b8"
+                                        strokeWidth={2}
+                                        strokeDasharray="5 5"
+                                        dot={{ fill: '#94a3b8', strokeWidth: 2 }}
+                                    />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
+
+                        {/* Monthly Breakdown Table */}
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="border-b">
+                                        <th className="py-2 text-left font-medium">Bulan</th>
+                                        <th className="py-2 text-center font-medium">{selectedYear}</th>
+                                        <th className="py-2 text-center font-medium">{selectedYear - 1}</th>
+                                        <th className="py-2 text-center font-medium">Growth</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {yoyData.slice(0, new Date().getMonth() + 1).map((row) => (
+                                        <tr key={row.month} className="border-b hover:bg-muted/50">
+                                            <td className="py-2 font-medium">{row.month}</td>
+                                            <td className="py-2 text-center text-blue-600 font-semibold">{row[`${selectedYear}`]}</td>
+                                            <td className="py-2 text-center text-gray-500">{row[`${selectedYear - 1}`]}</td>
+                                            <td className="py-2 text-center">
+                                                <Badge
+                                                    variant="outline"
+                                                    className={row.createdGrowth >= 0
+                                                        ? 'bg-green-500/10 text-green-600 border-green-500/50'
+                                                        : 'bg-red-500/10 text-red-600 border-red-500/50'
+                                                    }
+                                                >
+                                                    {row.createdGrowth > 0 ? '+' : ''}{row.createdGrowth}%
+                                                </Badge>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </CardContent>
+                </Card>
+            </motion.div>
 
             {/* Charts Row 2 */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

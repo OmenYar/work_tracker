@@ -1,13 +1,19 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
+import { format, subDays, startOfYear, startOfMonth, endOfMonth, isWithinInterval, parseISO } from 'date-fns';
+import { id } from 'date-fns/locale';
 import {
     Trophy, TrendingUp, TrendingDown, Target, Clock, CheckCircle,
-    Award, Star, Medal, ChevronUp, ChevronDown, Minus, BarChart3
+    Award, Star, Medal, ChevronUp, ChevronDown, Minus, BarChart3,
+    Calendar as CalendarIcon, Flag, Crosshair
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
     RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar
@@ -25,11 +31,107 @@ const SLA_CONFIG = {
     targetBastApprovalRate: 85, // Target BAST approval %
 };
 
+// KPI Targets Configuration - Monthly targets per regional
+const KPI_TARGETS = {
+    monthlyCompletion: {
+        'Jabo Outer 1': 50,
+        'Jabo Outer 2': 45,
+        'Jabo Outer 3': 40,
+        'total': 135, // Combined target
+    },
+    bastApprovalDays: 14,
+    completionRate: 90,
+    bastApprovalRate: 85,
+};
+
+// Date range presets
+const DATE_PRESETS = [
+    { label: '7 Hari', value: '7d', days: 7 },
+    { label: '30 Hari', value: '30d', days: 30 },
+    { label: '90 Hari', value: '90d', days: 90 },
+    { label: 'Bulan Ini', value: 'mtd', days: null },
+    { label: 'YTD', value: 'ytd', days: null },
+    { label: 'Semua', value: 'all', days: null },
+];
+
 const PerformanceMonitoring = ({ workTrackers = [], picData = [] }) => {
-    const [timeRange, setTimeRange] = useState('month');
+    const [datePreset, setDatePreset] = useState('30d');
+    const [dateRange, setDateRange] = useState({
+        from: subDays(new Date(), 30),
+        to: new Date()
+    });
     const [sortBy, setSortBy] = useState('score');
 
-    // Calculate SLA metrics
+    // Handle date preset change
+    const handlePresetChange = (preset) => {
+        setDatePreset(preset);
+        const today = new Date();
+
+        if (preset === '7d') {
+            setDateRange({ from: subDays(today, 7), to: today });
+        } else if (preset === '30d') {
+            setDateRange({ from: subDays(today, 30), to: today });
+        } else if (preset === '90d') {
+            setDateRange({ from: subDays(today, 90), to: today });
+        } else if (preset === 'mtd') {
+            setDateRange({ from: startOfMonth(today), to: today });
+        } else if (preset === 'ytd') {
+            setDateRange({ from: startOfYear(today), to: today });
+        } else if (preset === 'all') {
+            setDateRange({ from: null, to: null });
+        }
+    };
+
+    // Filter workTrackers based on date range
+    const filteredTrackers = useMemo(() => {
+        if (!dateRange.from || !dateRange.to) return workTrackers;
+
+        return workTrackers.filter(t => {
+            // Use created_at or bast_submit_date for filtering
+            const dateField = t.bast_submit_date || t.created_at;
+            if (!dateField) return true; // Include if no date
+
+            try {
+                const date = parseISO(dateField);
+                return isWithinInterval(date, { start: dateRange.from, end: dateRange.to });
+            } catch {
+                return true;
+            }
+        });
+    }, [workTrackers, dateRange]);
+
+    // KPI Metrics calculation
+    const kpiMetrics = useMemo(() => {
+        const regionals = ['Jabo Outer 1', 'Jabo Outer 2', 'Jabo Outer 3'];
+
+        const regionalKPI = regionals.map(regional => {
+            const regionalData = filteredTrackers.filter(t => t.regional === regional);
+            const completed = regionalData.filter(t => t.status_pekerjaan === 'Close').length;
+            const target = KPI_TARGETS.monthlyCompletion[regional] || 40;
+            const achievement = target > 0 ? Math.round((completed / target) * 100) : 0;
+
+            return {
+                regional,
+                shortName: regional.replace('Jabo Outer ', 'JO '),
+                completed,
+                target,
+                achievement: Math.min(achievement, 150), // Cap at 150%
+                status: achievement >= 100 ? 'achieved' : achievement >= 80 ? 'close' : 'behind'
+            };
+        });
+
+        const totalCompleted = filteredTrackers.filter(t => t.status_pekerjaan === 'Close').length;
+        const totalTarget = KPI_TARGETS.monthlyCompletion.total;
+
+        return {
+            regionalKPI,
+            totalCompleted,
+            totalTarget,
+            totalAchievement: totalTarget > 0 ? Math.round((totalCompleted / totalTarget) * 100) : 0
+        };
+    }, [filteredTrackers]);
+
+    // Calculate SLA metrics (using filtered data)
     const slaMetrics = useMemo(() => {
         const totalJobs = workTrackers.length;
         const openJobs = workTrackers.filter(t => t.status_pekerjaan === 'Open').length;
@@ -189,27 +291,130 @@ const PerformanceMonitoring = ({ workTrackers = [], picData = [] }) => {
 
     return (
         <div className="space-y-6">
-            {/* Header */}
+            {/* Header with Date Range Picker */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 className="text-2xl font-bold flex items-center gap-2">
                         <BarChart3 className="w-6 h-6" />
                         Performance Monitoring
                     </h2>
-                    <p className="text-muted-foreground">SLA tracking, scores, dan leaderboard</p>
+                    <p className="text-muted-foreground">SLA tracking, KPI targets, scores, dan leaderboard</p>
                 </div>
-                <Select value={timeRange} onValueChange={setTimeRange}>
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Periode" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="week">7 Hari Terakhir</SelectItem>
-                        <SelectItem value="month">30 Hari Terakhir</SelectItem>
-                        <SelectItem value="quarter">3 Bulan Terakhir</SelectItem>
-                        <SelectItem value="year">1 Tahun</SelectItem>
-                    </SelectContent>
-                </Select>
+                <div className="flex flex-wrap items-center gap-2">
+                    {/* Preset Buttons */}
+                    {DATE_PRESETS.map((preset) => (
+                        <Button
+                            key={preset.value}
+                            variant={datePreset === preset.value ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => handlePresetChange(preset.value)}
+                            className="text-xs"
+                        >
+                            {preset.label}
+                        </Button>
+                    ))}
+                    {/* Custom Date Picker */}
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button variant="outline" size="sm" className="gap-2">
+                                <CalendarIcon className="h-4 w-4" />
+                                {dateRange.from && dateRange.to ? (
+                                    <span className="text-xs">
+                                        {format(dateRange.from, 'dd MMM', { locale: id })} - {format(dateRange.to, 'dd MMM yy', { locale: id })}
+                                    </span>
+                                ) : (
+                                    <span className="text-xs">Custom</span>
+                                )}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="end">
+                            <Calendar
+                                mode="range"
+                                selected={dateRange}
+                                onSelect={(range) => {
+                                    if (range?.from && range?.to) {
+                                        setDateRange(range);
+                                        setDatePreset('custom');
+                                    }
+                                }}
+                                numberOfMonths={2}
+                                locale={id}
+                            />
+                        </PopoverContent>
+                    </Popover>
+                </div>
             </div>
+
+            {/* KPI Targets Section */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+                <Card className="border-purple-500/30">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                            <Flag className="w-5 h-5 text-purple-500" />
+                            KPI Targets - Periode: {dateRange.from && dateRange.to ? `${format(dateRange.from, 'dd MMM', { locale: id })} - ${format(dateRange.to, 'dd MMM yy', { locale: id })}` : 'Semua Data'}
+                        </CardTitle>
+                        <CardDescription>Target penyelesaian pekerjaan per regional</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            {/* Regional KPIs */}
+                            {kpiMetrics.regionalKPI.map((kpi, idx) => (
+                                <div key={kpi.regional} className="space-y-2 p-3 rounded-lg bg-muted/30">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-sm font-medium">{kpi.shortName}</span>
+                                        <Badge
+                                            variant="outline"
+                                            className={
+                                                kpi.status === 'achieved'
+                                                    ? 'bg-green-500/10 text-green-600 border-green-500/50'
+                                                    : kpi.status === 'close'
+                                                        ? 'bg-yellow-500/10 text-yellow-600 border-yellow-500/50'
+                                                        : 'bg-red-500/10 text-red-600 border-red-500/50'
+                                            }
+                                        >
+                                            {kpi.achievement}%
+                                        </Badge>
+                                    </div>
+                                    <Progress
+                                        value={Math.min(kpi.achievement, 100)}
+                                        className={`h-2 ${kpi.status === 'achieved' ? '[&>div]:bg-green-500' : kpi.status === 'close' ? '[&>div]:bg-yellow-500' : '[&>div]:bg-red-500'}`}
+                                    />
+                                    <div className="flex justify-between text-xs text-muted-foreground">
+                                        <span>Actual: {kpi.completed}</span>
+                                        <span>Target: {kpi.target}</span>
+                                    </div>
+                                </div>
+                            ))}
+                            {/* Total KPI */}
+                            <div className="space-y-2 p-3 rounded-lg bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/20">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-sm font-bold">Total</span>
+                                    <Badge
+                                        className={
+                                            kpiMetrics.totalAchievement >= 100
+                                                ? 'bg-green-500 text-white'
+                                                : kpiMetrics.totalAchievement >= 80
+                                                    ? 'bg-yellow-500 text-white'
+                                                    : 'bg-red-500 text-white'
+                                        }
+                                    >
+                                        <Crosshair className="w-3 h-3 mr-1" />
+                                        {kpiMetrics.totalAchievement}%
+                                    </Badge>
+                                </div>
+                                <Progress
+                                    value={Math.min(kpiMetrics.totalAchievement, 100)}
+                                    className="h-3 [&>div]:bg-gradient-to-r [&>div]:from-purple-500 [&>div]:to-blue-500"
+                                />
+                                <div className="flex justify-between text-xs text-muted-foreground">
+                                    <span>Completed: {kpiMetrics.totalCompleted}</span>
+                                    <span>Target: {kpiMetrics.totalTarget}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </motion.div>
 
             {/* SLA Overview Cards */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
