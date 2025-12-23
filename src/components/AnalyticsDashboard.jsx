@@ -467,20 +467,29 @@ const AnalyticsDashboard = ({ workTrackers = [], picData = [], carData = [], cct
                 </motion.div>
             </div>
 
-            {/* Year-over-Year Comparison Section */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
-                <Card className="border-indigo-500/30">
-                    <CardHeader>
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                            <div>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Calendar className="w-5 h-5 text-indigo-500" />
+            {/* Year-over-Year Comparison Section - Enhanced UX/UI */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.45, type: "spring", stiffness: 100 }}
+            >
+                <Card className="border-indigo-500/30 overflow-hidden">
+                    <CardHeader className="bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-transparent">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                            <div className="space-y-1">
+                                <CardTitle className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-indigo-500/10">
+                                        <Calendar className="w-5 h-5 text-indigo-500" />
+                                    </div>
                                     Year-over-Year Comparison
                                 </CardTitle>
-                                <CardDescription>Perbandingan performa {yoySummary.currentYear} vs {yoySummary.previousYear}</CardDescription>
+                                <CardDescription>
+                                    Perbandingan performa <span className="font-medium text-foreground">{yoySummary.currentYear}</span> vs <span className="font-medium text-foreground">{yoySummary.previousYear}</span>
+                                </CardDescription>
                             </div>
                             <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
-                                <SelectTrigger className="w-[120px]">
+                                <SelectTrigger className="w-[130px] bg-background/50 hover:bg-background transition-colors">
+                                    <Calendar className="w-4 h-4 mr-2 text-muted-foreground" />
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -491,47 +500,80 @@ const AnalyticsDashboard = ({ workTrackers = [], picData = [], carData = [], cct
                             </Select>
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-6">
-                        {/* YoY Summary Cards */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                                <p className="text-xs text-muted-foreground">Dibuat {yoySummary.currentYear}</p>
-                                <p className="text-2xl font-bold text-blue-600">{yoySummary.totalCurrent}</p>
-                                <div className="flex items-center gap-1 text-xs mt-1">
-                                    {yoySummary.createdGrowth >= 0 ? (
-                                        <ArrowUpRight className="w-3 h-3 text-green-500" />
-                                    ) : (
-                                        <ArrowDownRight className="w-3 h-3 text-red-500" />
-                                    )}
-                                    <span className={yoySummary.createdGrowth >= 0 ? 'text-green-600' : 'text-red-600'}>
+                    <CardContent className="space-y-6 pt-6">
+                        {/* YoY Summary Cards - Enhanced with hover effects */}
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                            {/* Current Year Created */}
+                            <motion.div
+                                whileHover={{ scale: 1.02 }}
+                                className="group p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 hover:border-blue-500/40 hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300 cursor-default"
+                                title={`Total pekerjaan dibuat tahun ${yoySummary.currentYear}`}
+                            >
+                                <p className="text-xs text-muted-foreground mb-1">Dibuat {yoySummary.currentYear}</p>
+                                <p className="text-2xl md:text-3xl font-bold text-blue-600">{yoySummary.totalCurrent}</p>
+                                <div className="flex items-center gap-1.5 text-xs mt-2">
+                                    <div className={`p-0.5 rounded ${yoySummary.createdGrowth >= 0 ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
+                                        {yoySummary.createdGrowth >= 0 ? (
+                                            <ArrowUpRight className="w-3 h-3 text-green-600" />
+                                        ) : (
+                                            <ArrowDownRight className="w-3 h-3 text-red-600" />
+                                        )}
+                                    </div>
+                                    <span className={`font-semibold ${yoySummary.createdGrowth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                         {yoySummary.createdGrowth > 0 ? '+' : ''}{yoySummary.createdGrowth}%
                                     </span>
-                                    <span className="text-muted-foreground">vs {yoySummary.previousYear}</span>
+                                    <span className="text-muted-foreground hidden sm:inline">vs {yoySummary.previousYear}</span>
                                 </div>
-                            </div>
-                            <div className="p-4 rounded-lg bg-gray-500/10 border border-gray-500/20">
-                                <p className="text-xs text-muted-foreground">Dibuat {yoySummary.previousYear}</p>
-                                <p className="text-2xl font-bold text-gray-600">{yoySummary.totalPrevious}</p>
-                            </div>
-                            <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
-                                <p className="text-xs text-muted-foreground">Selesai {yoySummary.currentYear}</p>
-                                <p className="text-2xl font-bold text-green-600">{yoySummary.totalCurrentCompleted}</p>
-                                <div className="flex items-center gap-1 text-xs mt-1">
-                                    {yoySummary.completedGrowth >= 0 ? (
-                                        <ArrowUpRight className="w-3 h-3 text-green-500" />
-                                    ) : (
-                                        <ArrowDownRight className="w-3 h-3 text-red-500" />
-                                    )}
-                                    <span className={yoySummary.completedGrowth >= 0 ? 'text-green-600' : 'text-red-600'}>
+                            </motion.div>
+
+                            {/* Previous Year Created */}
+                            <motion.div
+                                whileHover={{ scale: 1.02 }}
+                                className="group p-4 rounded-xl bg-gray-500/10 border border-gray-500/20 hover:border-gray-500/40 hover:shadow-lg transition-all duration-300 cursor-default"
+                                title={`Total pekerjaan dibuat tahun ${yoySummary.previousYear}`}
+                            >
+                                <p className="text-xs text-muted-foreground mb-1">Dibuat {yoySummary.previousYear}</p>
+                                <p className="text-2xl md:text-3xl font-bold text-gray-500">{yoySummary.totalPrevious}</p>
+                                <p className="text-xs text-muted-foreground mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    Data tahun sebelumnya
+                                </p>
+                            </motion.div>
+
+                            {/* Current Year Completed */}
+                            <motion.div
+                                whileHover={{ scale: 1.02 }}
+                                className="group p-4 rounded-xl bg-green-500/10 border border-green-500/20 hover:border-green-500/40 hover:shadow-lg hover:shadow-green-500/5 transition-all duration-300 cursor-default"
+                                title={`Total pekerjaan selesai tahun ${yoySummary.currentYear}`}
+                            >
+                                <p className="text-xs text-muted-foreground mb-1">Selesai {yoySummary.currentYear}</p>
+                                <p className="text-2xl md:text-3xl font-bold text-green-600">{yoySummary.totalCurrentCompleted}</p>
+                                <div className="flex items-center gap-1.5 text-xs mt-2">
+                                    <div className={`p-0.5 rounded ${yoySummary.completedGrowth >= 0 ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
+                                        {yoySummary.completedGrowth >= 0 ? (
+                                            <ArrowUpRight className="w-3 h-3 text-green-600" />
+                                        ) : (
+                                            <ArrowDownRight className="w-3 h-3 text-red-600" />
+                                        )}
+                                    </div>
+                                    <span className={`font-semibold ${yoySummary.completedGrowth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                         {yoySummary.completedGrowth > 0 ? '+' : ''}{yoySummary.completedGrowth}%
                                     </span>
-                                    <span className="text-muted-foreground">vs {yoySummary.previousYear}</span>
+                                    <span className="text-muted-foreground hidden sm:inline">vs {yoySummary.previousYear}</span>
                                 </div>
-                            </div>
-                            <div className="p-4 rounded-lg bg-gray-500/10 border border-gray-500/20">
-                                <p className="text-xs text-muted-foreground">Selesai {yoySummary.previousYear}</p>
-                                <p className="text-2xl font-bold text-gray-600">{yoySummary.totalPrevCompleted}</p>
-                            </div>
+                            </motion.div>
+
+                            {/* Previous Year Completed */}
+                            <motion.div
+                                whileHover={{ scale: 1.02 }}
+                                className="group p-4 rounded-xl bg-gray-500/10 border border-gray-500/20 hover:border-gray-500/40 hover:shadow-lg transition-all duration-300 cursor-default"
+                                title={`Total pekerjaan selesai tahun ${yoySummary.previousYear}`}
+                            >
+                                <p className="text-xs text-muted-foreground mb-1">Selesai {yoySummary.previousYear}</p>
+                                <p className="text-2xl md:text-3xl font-bold text-gray-500">{yoySummary.totalPrevCompleted}</p>
+                                <p className="text-xs text-muted-foreground mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    Data tahun sebelumnya
+                                </p>
+                            </motion.div>
                         </div>
 
                         {/* YoY Line Chart */}

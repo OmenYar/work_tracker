@@ -291,43 +291,69 @@ const PerformanceMonitoring = ({ workTrackers = [], picData = [] }) => {
 
     return (
         <div className="space-y-6">
-            {/* Header with Date Range Picker */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div>
-                    <h2 className="text-2xl font-bold flex items-center gap-2">
-                        <BarChart3 className="w-6 h-6" />
+            {/* Header with Date Range Picker - Enhanced UX */}
+            <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 pb-4 border-b"
+            >
+                <div className="space-y-1">
+                    <h2 className="text-2xl md:text-3xl font-bold flex items-center gap-3 tracking-tight">
+                        <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20">
+                            <BarChart3 className="w-6 h-6 text-blue-600" />
+                        </div>
                         Performance Monitoring
                     </h2>
-                    <p className="text-muted-foreground">SLA tracking, KPI targets, scores, dan leaderboard</p>
+                    <p className="text-muted-foreground text-sm md:text-base">
+                        SLA tracking, KPI targets, scores, dan leaderboard
+                    </p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                    {/* Preset Buttons */}
-                    {DATE_PRESETS.map((preset) => (
-                        <Button
-                            key={preset.value}
-                            variant={datePreset === preset.value ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => handlePresetChange(preset.value)}
-                            className="text-xs"
-                        >
-                            {preset.label}
-                        </Button>
-                    ))}
-                    {/* Custom Date Picker */}
+
+                {/* Date Range Controls - Responsive & Interactive */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full lg:w-auto">
+                    {/* Quick Presets - Pill Style */}
+                    <div className="flex flex-wrap items-center gap-1.5 p-1 bg-muted/50 rounded-lg">
+                        {DATE_PRESETS.map((preset) => (
+                            <Button
+                                key={preset.value}
+                                variant={datePreset === preset.value ? 'default' : 'ghost'}
+                                size="sm"
+                                onClick={() => handlePresetChange(preset.value)}
+                                className={`text-xs h-8 px-3 transition-all duration-200 ${datePreset === preset.value
+                                        ? 'shadow-md'
+                                        : 'hover:bg-background/80'
+                                    }`}
+                                title={`Filter data ${preset.label.toLowerCase()}`}
+                            >
+                                {preset.label}
+                            </Button>
+                        ))}
+                    </div>
+
+                    {/* Custom Date Picker - Enhanced */}
                     <Popover>
                         <PopoverTrigger asChild>
-                            <Button variant="outline" size="sm" className="gap-2">
-                                <CalendarIcon className="h-4 w-4" />
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-2 h-8 border-dashed hover:border-solid hover:border-primary/50 transition-all duration-200"
+                                title="Pilih tanggal custom"
+                            >
+                                <CalendarIcon className="h-4 w-4 text-muted-foreground" />
                                 {dateRange.from && dateRange.to ? (
-                                    <span className="text-xs">
+                                    <span className="text-xs font-medium">
                                         {format(dateRange.from, 'dd MMM', { locale: id })} - {format(dateRange.to, 'dd MMM yy', { locale: id })}
                                     </span>
                                 ) : (
-                                    <span className="text-xs">Custom</span>
+                                    <span className="text-xs text-muted-foreground">Custom Range</span>
                                 )}
                             </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="end">
+                        <PopoverContent className="w-auto p-0 shadow-xl" align="end">
+                            <div className="p-3 border-b bg-muted/30">
+                                <p className="text-sm font-medium">Pilih Rentang Tanggal</p>
+                                <p className="text-xs text-muted-foreground">Klik tanggal mulai dan akhir</p>
+                            </div>
                             <Calendar
                                 mode="range"
                                 selected={dateRange}
@@ -339,64 +365,107 @@ const PerformanceMonitoring = ({ workTrackers = [], picData = [] }) => {
                                 }}
                                 numberOfMonths={2}
                                 locale={id}
+                                className="p-3"
                             />
                         </PopoverContent>
                     </Popover>
                 </div>
-            </div>
+            </motion.div>
 
-            {/* KPI Targets Section */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-                <Card className="border-purple-500/30">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="flex items-center gap-2 text-lg">
-                            <Flag className="w-5 h-5 text-purple-500" />
-                            KPI Targets - Periode: {dateRange.from && dateRange.to ? `${format(dateRange.from, 'dd MMM', { locale: id })} - ${format(dateRange.to, 'dd MMM yy', { locale: id })}` : 'Semua Data'}
-                        </CardTitle>
+            {/* KPI Targets Section - Enhanced Interactivity */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.05, type: "spring", stiffness: 100 }}
+            >
+                <Card className="border-purple-500/30 overflow-hidden">
+                    <CardHeader className="pb-3 bg-gradient-to-r from-purple-500/5 to-transparent">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                            <CardTitle className="flex items-center gap-2 text-lg">
+                                <div className="p-1.5 rounded-md bg-purple-500/10">
+                                    <Flag className="w-4 h-4 text-purple-500" />
+                                </div>
+                                KPI Targets
+                            </CardTitle>
+                            <Badge variant="outline" className="w-fit text-xs bg-background">
+                                {dateRange.from && dateRange.to
+                                    ? `${format(dateRange.from, 'dd MMM', { locale: id })} - ${format(dateRange.to, 'dd MMM yy', { locale: id })}`
+                                    : 'Semua Data'}
+                            </Badge>
+                        </div>
                         <CardDescription>Target penyelesaian pekerjaan per regional</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            {/* Regional KPIs */}
+                    <CardContent className="pt-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {/* Regional KPIs - Enhanced Cards */}
                             {kpiMetrics.regionalKPI.map((kpi, idx) => (
-                                <div key={kpi.regional} className="space-y-2 p-3 rounded-lg bg-muted/30">
+                                <motion.div
+                                    key={kpi.regional}
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: idx * 0.1 }}
+                                    className="group relative space-y-3 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 border border-transparent hover:border-muted-foreground/10 transition-all duration-300 cursor-default"
+                                    title={`${kpi.regional}: ${kpi.completed} dari ${kpi.target} target (${kpi.achievement}%)`}
+                                >
                                     <div className="flex justify-between items-center">
-                                        <span className="text-sm font-medium">{kpi.shortName}</span>
+                                        <span className="text-sm font-semibold">{kpi.shortName}</span>
                                         <Badge
                                             variant="outline"
-                                            className={
-                                                kpi.status === 'achieved'
-                                                    ? 'bg-green-500/10 text-green-600 border-green-500/50'
+                                            className={`transition-all duration-300 ${kpi.status === 'achieved'
+                                                    ? 'bg-green-500/10 text-green-600 border-green-500/50 group-hover:bg-green-500/20'
                                                     : kpi.status === 'close'
-                                                        ? 'bg-yellow-500/10 text-yellow-600 border-yellow-500/50'
-                                                        : 'bg-red-500/10 text-red-600 border-red-500/50'
-                                            }
+                                                        ? 'bg-yellow-500/10 text-yellow-600 border-yellow-500/50 group-hover:bg-yellow-500/20'
+                                                        : 'bg-red-500/10 text-red-600 border-red-500/50 group-hover:bg-red-500/20'
+                                                }`}
                                         >
+                                            {kpi.status === 'achieved' && '✓ '}
                                             {kpi.achievement}%
                                         </Badge>
                                     </div>
-                                    <Progress
-                                        value={Math.min(kpi.achievement, 100)}
-                                        className={`h-2 ${kpi.status === 'achieved' ? '[&>div]:bg-green-500' : kpi.status === 'close' ? '[&>div]:bg-yellow-500' : '[&>div]:bg-red-500'}`}
-                                    />
-                                    <div className="flex justify-between text-xs text-muted-foreground">
-                                        <span>Actual: {kpi.completed}</span>
-                                        <span>Target: {kpi.target}</span>
+                                    <div className="relative">
+                                        <Progress
+                                            value={Math.min(kpi.achievement, 100)}
+                                            className={`h-2.5 transition-all duration-500 ${kpi.status === 'achieved' ? '[&>div]:bg-green-500'
+                                                    : kpi.status === 'close' ? '[&>div]:bg-yellow-500'
+                                                        : '[&>div]:bg-red-500'
+                                                }`}
+                                        />
+                                        {kpi.achievement > 100 && (
+                                            <div className="absolute -top-1 right-0 text-[10px] text-green-600 font-bold">
+                                                +{kpi.achievement - 100}%
+                                            </div>
+                                        )}
                                     </div>
-                                </div>
+                                    <div className="flex justify-between text-xs text-muted-foreground">
+                                        <span className="flex items-center gap-1">
+                                            <span className="w-2 h-2 rounded-full bg-current opacity-50"></span>
+                                            Actual: <span className="font-medium text-foreground">{kpi.completed}</span>
+                                        </span>
+                                        <span>Target: <span className="font-medium text-foreground">{kpi.target}</span></span>
+                                    </div>
+                                </motion.div>
                             ))}
-                            {/* Total KPI */}
-                            <div className="space-y-2 p-3 rounded-lg bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/20">
+
+                            {/* Total KPI - Featured Card */}
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: 0.3 }}
+                                className="group relative space-y-3 p-4 rounded-xl bg-gradient-to-br from-purple-500/10 via-blue-500/5 to-transparent border border-purple-500/20 hover:border-purple-500/40 transition-all duration-300 cursor-default"
+                                title={`Total: ${kpiMetrics.totalCompleted} dari ${kpiMetrics.totalTarget} target (${kpiMetrics.totalAchievement}%)`}
+                            >
                                 <div className="flex justify-between items-center">
-                                    <span className="text-sm font-bold">Total</span>
+                                    <span className="text-sm font-bold flex items-center gap-2">
+                                        Total
+                                        <span className="text-[10px] text-muted-foreground font-normal">(All Regional)</span>
+                                    </span>
                                     <Badge
-                                        className={
-                                            kpiMetrics.totalAchievement >= 100
-                                                ? 'bg-green-500 text-white'
+                                        className={`transition-all duration-300 ${kpiMetrics.totalAchievement >= 100
+                                                ? 'bg-green-500 text-white shadow-green-500/25 shadow-lg'
                                                 : kpiMetrics.totalAchievement >= 80
-                                                    ? 'bg-yellow-500 text-white'
-                                                    : 'bg-red-500 text-white'
-                                        }
+                                                    ? 'bg-yellow-500 text-white shadow-yellow-500/25 shadow-lg'
+                                                    : 'bg-red-500 text-white shadow-red-500/25 shadow-lg'
+                                            }`}
                                     >
                                         <Crosshair className="w-3 h-3 mr-1" />
                                         {kpiMetrics.totalAchievement}%
@@ -404,13 +473,13 @@ const PerformanceMonitoring = ({ workTrackers = [], picData = [] }) => {
                                 </div>
                                 <Progress
                                     value={Math.min(kpiMetrics.totalAchievement, 100)}
-                                    className="h-3 [&>div]:bg-gradient-to-r [&>div]:from-purple-500 [&>div]:to-blue-500"
+                                    className="h-3 [&>div]:bg-gradient-to-r [&>div]:from-purple-500 [&>div]:to-blue-500 [&>div]:transition-all [&>div]:duration-500"
                                 />
                                 <div className="flex justify-between text-xs text-muted-foreground">
-                                    <span>Completed: {kpiMetrics.totalCompleted}</span>
-                                    <span>Target: {kpiMetrics.totalTarget}</span>
+                                    <span>Completed: <span className="font-semibold text-foreground">{kpiMetrics.totalCompleted}</span></span>
+                                    <span>Target: <span className="font-semibold text-foreground">{kpiMetrics.totalTarget}</span></span>
                                 </div>
-                            </div>
+                            </motion.div>
                         </div>
                     </CardContent>
                 </Card>
