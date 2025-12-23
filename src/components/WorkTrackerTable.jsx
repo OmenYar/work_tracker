@@ -26,6 +26,26 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { logInlineEdit } from '@/lib/activityLogger';
 import { cn } from '@/lib/utils';
 
+// Helper function to calculate aging days in real-time
+const calculateAgingDays = (submitDate, approveDate) => {
+    if (!submitDate) return null;
+
+    const submit = new Date(submitDate);
+    let diffTime;
+
+    if (approveDate) {
+        // If approved, calculate from submit to approve date (fixed)
+        const approve = new Date(approveDate);
+        diffTime = approve - submit;
+    } else {
+        // If not approved, calculate from submit to today (dynamic)
+        const today = new Date();
+        diffTime = today - submit;
+    }
+
+    return Math.floor(diffTime / (1000 * 60 * 60 * 24));
+};
+
 // Status options for inline edit
 const STATUS_PEKERJAAN_OPTIONS = [
     { value: 'Open', label: 'Open' },
@@ -379,9 +399,10 @@ const WorkTrackerTable = ({
                                         </span>
                                     </td>
                                     <td className="py-2 px-3 text-xs">
-                                        {tracker.aging_days !== null && tracker.aging_days !== undefined && tracker.aging_days !== ''
-                                            ? `${tracker.aging_days}d`
-                                            : '-'}
+                                        {(() => {
+                                            const agingDays = calculateAgingDays(tracker.bast_submit_date, tracker.bast_approve_date);
+                                            return agingDays !== null ? `${agingDays}d` : '-';
+                                        })()}
                                     </td>
                                     <td className="py-2 px-3">
                                         {renderTextCell(tracker, 'remark', tracker.remark, 'Add remark...')}
