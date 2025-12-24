@@ -47,6 +47,7 @@ const ModuleExcelImport = React.lazy(() => import('@/components/ModuleExcelImpor
 
 // SmartLock components
 const SmartLockDataTable = React.lazy(() => import('@/components/SmartLockDataTable'));
+const SmartLockSummary = React.lazy(() => import('@/components/SmartLockSummary'));
 
 // Loading fallback for lazy components
 const ComponentLoader = () => (
@@ -2464,141 +2465,14 @@ const AdminDashboard = () => {
                 return (
                     <Suspense fallback={<ComponentLoader />}>
                         <div className="space-y-6">
-                            {/* SmartLock Summary Cards */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                                <Card className="bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
-                                    <CardContent className="p-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-blue-500/20 rounded-lg">
-                                                <Lock className="w-5 h-5 text-blue-600" />
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-muted-foreground">Total SmartLock</p>
-                                                <p className="text-2xl font-bold text-blue-600">{smartLockData.length}</p>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                                <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
-                                    <CardContent className="p-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-green-500/20 rounded-lg">
-                                                <CheckCircle2 className="w-5 h-5 text-green-600" />
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-muted-foreground">Installed</p>
-                                                <p className="text-2xl font-bold text-green-600">
-                                                    {smartLockData.filter(s => s.status_new === 'INSTALLED').length}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                                <Card className="bg-gradient-to-br from-amber-500/10 to-amber-500/5 border-amber-500/20">
-                                    <CardContent className="p-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-amber-500/20 rounded-lg">
-                                                <Package className="w-5 h-5 text-amber-600" />
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-muted-foreground">Need Install</p>
-                                                <p className="text-2xl font-bold text-amber-600">
-                                                    {smartLockData.filter(s => s.status_new?.includes('NEED INSTALL')).length}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                                <Card className="bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20">
-                                    <CardContent className="p-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-purple-500/20 rounded-lg">
-                                                <RefreshCw className="w-5 h-5 text-purple-600" />
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-muted-foreground">Need Relocated</p>
-                                                <p className="text-2xl font-bold text-purple-600">
-                                                    {smartLockData.filter(s => s.status_new === 'NEED RELOCATED').length}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                                <Card className="bg-gradient-to-br from-red-500/10 to-red-500/5 border-red-500/20">
-                                    <CardContent className="p-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-red-500/20 rounded-lg">
-                                                <XCircle className="w-5 h-5 text-red-600" />
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-muted-foreground">Lost/Broken</p>
-                                                <p className="text-2xl font-bold text-red-600">
-                                                    {smartLockData.filter(s => s.status_new?.includes('LOST')).length}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                                <Card className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/20">
-                                    <CardContent className="p-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-orange-500/20 rounded-lg">
-                                                <AlertTriangle className="w-5 h-5 text-orange-600" />
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-muted-foreground">Issue Long Aging</p>
-                                                <p className="text-2xl font-bold text-orange-600">
-                                                    {smartLockData.filter(s => s.priority === 'Issue Long Aging').length}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </div>
-
-                            {/* Regional Breakdown */}
-                            <Card>
-                                <CardHeader className="pb-2">
-                                    <div className="flex justify-between items-center">
-                                        <CardTitle className="text-lg">SmartLock by Region</CardTitle>
-                                        <Button onClick={() => navigate('/admin/input-smartlock')}>
-                                            <Plus className="w-4 h-4 mr-2" /> Add SmartLock
-                                        </Button>
-                                    </div>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                                        {['Jabo Outer 1', 'Jabo Outer 2', 'Jabo Outer 3'].map(region => {
-                                            const regionData = smartLockData.filter(s => s.pti_reg === region);
-                                            const installed = regionData.filter(s => s.status_new === 'INSTALLED').length;
-                                            const needInstall = regionData.filter(s => s.status_new?.includes('NEED INSTALL')).length;
-                                            return (
-                                                <div key={region} className="p-4 rounded-lg border bg-muted/30">
-                                                    <p className="font-semibold mb-2">{region}</p>
-                                                    <div className="space-y-1 text-sm">
-                                                        <p>Total: <span className="font-bold">{regionData.length}</span></p>
-                                                        <p className="text-green-600">Installed: {installed}</p>
-                                                        <p className="text-amber-600">Need Install: {needInstall}</p>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </CardContent>
-                            </Card>
+                            {/* SmartLock Summary - Consistent with ModuleSummary design */}
+                            <SmartLockSummary smartLockData={smartLockData} />
 
                             {/* SmartLock Table */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>SmartLock Data</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <SmartLockDataTable
-                                        data={smartLockData}
-                                        onRefresh={fetchSmartLockData}
-                                    />
-                                </CardContent>
-                            </Card>
+                            <SmartLockDataTable
+                                data={smartLockData}
+                                onRefresh={fetchSmartLockData}
+                            />
                         </div>
                     </Suspense>
                 );
