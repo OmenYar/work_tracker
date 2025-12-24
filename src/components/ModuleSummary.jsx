@@ -10,10 +10,12 @@ const ModuleSummary = ({ moduleData = [] }) => {
         const total = moduleData.length;
         // Done = Closed
         const done = moduleData.filter(m => m.rfs_status === 'Closed').length;
-        // Pending = Hold, Open, Waiting Permit (or null/undefined)
-        const pending = moduleData.filter(m =>
-            !m.rfs_status || m.rfs_status === 'Open' || m.rfs_status === 'Hold' || m.rfs_status === 'Waiting Permit'
-        ).length;
+        // Hold count
+        const hold = moduleData.filter(m => m.rfs_status === 'Hold').length;
+        // Waiting Permit count
+        const waitingPermit = moduleData.filter(m => m.rfs_status === 'Waiting Permit').length;
+        // Open count
+        const open = moduleData.filter(m => !m.rfs_status || m.rfs_status === 'Open').length;
         // Cancel = Cancel
         const cancel = moduleData.filter(m => m.rfs_status === 'Cancel').length;
 
@@ -37,21 +39,16 @@ const ModuleSummary = ({ moduleData = [] }) => {
             return acc;
         }, {});
 
-        // Calculate gap
-        const totalGap = moduleData.reduce((sum, m) => sum + (Number(m.gap) || 0), 0);
-        const totalModuleQty = moduleData.reduce((sum, m) => sum + (Number(m.module_qty) || 0), 0);
-        const totalInstallQty = moduleData.reduce((sum, m) => sum + (Number(m.install_qty) || 0), 0);
-
-        return { total, done, pending, cancel, progress, byKota, byMitra, totalGap, totalModuleQty, totalInstallQty };
+        return { total, done, hold, waitingPermit, open, cancel, progress, byKota, byMitra };
     }, [moduleData]);
 
     const cards = [
-        { title: 'Total Module', value: stats.total, color: 'text-blue-600', bg: 'bg-blue-500/10', icon: Package },
+        { title: 'Total Site', value: stats.total, color: 'text-blue-600', bg: 'bg-blue-500/10', icon: Package },
         { title: 'Done', value: stats.done, color: 'text-green-600', bg: 'bg-green-500/10', icon: CheckCircle },
-        { title: 'Pending', value: stats.pending, color: 'text-yellow-600', bg: 'bg-yellow-500/10', icon: Clock, alert: stats.pending > 0 },
+        { title: 'Hold', value: stats.hold, color: 'text-orange-600', bg: 'bg-orange-500/10', icon: Clock, alert: stats.hold > 0 },
+        { title: 'Waiting Permit', value: stats.waitingPermit, color: 'text-yellow-600', bg: 'bg-yellow-500/10', icon: AlertTriangle, alert: stats.waitingPermit > 0 },
         { title: 'Cancel', value: stats.cancel, color: 'text-red-600', bg: 'bg-red-500/10', icon: XCircle },
         { title: 'Progress', value: `${stats.progress}%`, color: 'text-purple-600', bg: 'bg-purple-500/10', icon: TrendingUp },
-        { title: 'Gap', value: stats.totalGap, color: stats.totalGap < 0 ? 'text-red-600' : 'text-green-600', bg: stats.totalGap < 0 ? 'bg-red-500/10' : 'bg-green-500/10', icon: AlertTriangle },
     ];
 
     return (

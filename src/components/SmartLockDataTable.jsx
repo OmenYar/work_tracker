@@ -6,7 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Trash2, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { Edit, Trash2, ChevronLeft, ChevronRight, Search, Plus, MoreHorizontal } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import ExportDropdown from '@/components/ExportDropdown';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -81,178 +89,184 @@ const SmartLockDataTable = ({ data, onRefresh }) => {
     return (
         <div className="space-y-4">
             {/* Filters */}
-            <div className="flex flex-wrap gap-3">
-                <div className="relative flex-1 min-w-[200px]">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Search Site ID, Site Name, SN..."
-                        value={search}
-                        onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-                        className="pl-10"
-                    />
-                </div>
-                <Select value={filterRegion} onValueChange={(v) => { setFilterRegion(v); setCurrentPage(1); }}>
-                    <SelectTrigger className="w-[150px]">
-                        <SelectValue placeholder="Region" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Regions</SelectItem>
-                        <SelectItem value="Jabo Outer 1">Jabo Outer 1</SelectItem>
-                        <SelectItem value="Jabo Outer 2">Jabo Outer 2</SelectItem>
-                        <SelectItem value="Jabo Outer 3">Jabo Outer 3</SelectItem>
-                    </SelectContent>
-                </Select>
-                <Select value={filterStatus} onValueChange={(v) => { setFilterStatus(v); setCurrentPage(1); }}>
-                    <SelectTrigger className="w-[160px]">
-                        <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Status</SelectItem>
-                        <SelectItem value="INSTALLED">INSTALLED</SelectItem>
-                        <SelectItem value="NEED INSTALL">NEED INSTALL</SelectItem>
-                        <SelectItem value="NEED INSTALL NORMAL">NEED INSTALL NORMAL</SelectItem>
-                        <SelectItem value="NEED RELOCATED">NEED RELOCATED</SelectItem>
-                        <SelectItem value="NEED SEND TO PTI">NEED SEND TO PTI</SelectItem>
-                        <SelectItem value="LOST BMG">LOST BMG</SelectItem>
-                        <SelectItem value="LOST PTI">LOST PTI</SelectItem>
-                        <SelectItem value="RETURNED TO PTI">RETURNED TO PTI</SelectItem>
-                    </SelectContent>
-                </Select>
-                <Select value={filterPriority} onValueChange={(v) => { setFilterPriority(v); setCurrentPage(1); }}>
-                    <SelectTrigger className="w-[150px]">
-                        <SelectValue placeholder="Priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Priority</SelectItem>
-                        <SelectItem value="Issue Long Aging">Issue Long Aging</SelectItem>
-                        <SelectItem value="Normal">Normal</SelectItem>
-                    </SelectContent>
-                </Select>
-                <Select value={filterAging} onValueChange={(v) => { setFilterAging(v); setCurrentPage(1); }}>
-                    <SelectTrigger className="w-[140px]">
-                        <SelectValue placeholder="Aging" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">All Aging</SelectItem>
-                        <SelectItem value="< 2 Month">&lt; 2 Month</SelectItem>
-                        <SelectItem value="≤ 6 Month">≤ 6 Month</SelectItem>
-                        <SelectItem value="> 6 Month">&gt; 6 Month</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
+            <Card>
+                <CardContent className="pt-4">
+                    <div className="flex flex-wrap gap-3 items-center">
+                        <div className="relative flex-1 min-w-[200px]">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Search Site ID, Site Name, SN..."
+                                value={search}
+                                onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+                                className="pl-10"
+                            />
+                        </div>
+                        <Select value={filterRegion} onValueChange={(v) => { setFilterRegion(v); setCurrentPage(1); }}>
+                            <SelectTrigger className="w-[150px]">
+                                <SelectValue placeholder="Region" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Regions</SelectItem>
+                                <SelectItem value="Jabo Outer 1">Jabo Outer 1</SelectItem>
+                                <SelectItem value="Jabo Outer 2">Jabo Outer 2</SelectItem>
+                                <SelectItem value="Jabo Outer 3">Jabo Outer 3</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Select value={filterStatus} onValueChange={(v) => { setFilterStatus(v); setCurrentPage(1); }}>
+                            <SelectTrigger className="w-[160px]">
+                                <SelectValue placeholder="Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Status</SelectItem>
+                                <SelectItem value="INSTALLED">INSTALLED</SelectItem>
+                                <SelectItem value="NEED INSTALL">NEED INSTALL</SelectItem>
+                                <SelectItem value="NEED INSTALL NORMAL">NEED INSTALL NORMAL</SelectItem>
+                                <SelectItem value="NEED RELOCATED">NEED RELOCATED</SelectItem>
+                                <SelectItem value="NEED SEND TO PTI">NEED SEND TO PTI</SelectItem>
+                                <SelectItem value="LOST BMG">LOST BMG</SelectItem>
+                                <SelectItem value="LOST PTI">LOST PTI</SelectItem>
+                                <SelectItem value="RETURNED TO PTI">RETURNED TO PTI</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Select value={filterPriority} onValueChange={(v) => { setFilterPriority(v); setCurrentPage(1); }}>
+                            <SelectTrigger className="w-[150px]">
+                                <SelectValue placeholder="Priority" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Priority</SelectItem>
+                                <SelectItem value="Issue Long Aging">Issue Long Aging</SelectItem>
+                                <SelectItem value="Normal">Normal</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <ExportDropdown
+                            data={filteredData}
+                            filename="smartlock_data"
+                            title="SmartLock Data"
+                        />
+                        <Button size="icon" onClick={() => navigate('/admin/input-smartlock')} title="Add New">
+                            <Plus className="w-4 h-4" />
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
 
             {/* Table */}
-            <div className="rounded-md border overflow-x-auto">
-                <Table>
-                    <TableHeader>
-                        <TableRow className="bg-muted/50">
-                            <TableHead className="w-[50px]">#</TableHead>
-                            <TableHead>Site ID 2</TableHead>
-                            <TableHead>Site ID PTI</TableHead>
-                            <TableHead>Site Name</TableHead>
-                            <TableHead>SN WM Lock</TableHead>
-                            <TableHead>PTI Regional</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Priority</TableHead>
-                            <TableHead>Aging</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {paginatedData.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
-                                    No data found
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            paginatedData.map((item, idx) => (
-                                <TableRow key={item.id} className="hover:bg-muted/30">
-                                    <TableCell className="font-medium">
-                                        {(currentPage - 1) * pageSize + idx + 1}
-                                    </TableCell>
-                                    <TableCell className="font-mono text-xs">{item.site_id_2}</TableCell>
-                                    <TableCell className="font-mono text-xs">{item.site_id_pti}</TableCell>
-                                    <TableCell className="max-w-[200px] truncate">{item.site_name}</TableCell>
-                                    <TableCell className="font-mono text-xs">{item.sn_id_wm_lock}</TableCell>
-                                    <TableCell>{item.pti_reg}</TableCell>
-                                    <TableCell>
-                                        <Badge className={statusColors[item.status_new] || 'bg-gray-500/20'}>
-                                            {item.status_new}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell>
-                                        {item.priority === 'Issue Long Aging' && (
-                                            <Badge className="bg-orange-500/20 text-orange-700">
-                                                {item.priority}
-                                            </Badge>
-                                        )}
-                                    </TableCell>
-                                    <TableCell>{item.aging_last_access}</TableCell>
-                                    <TableCell className="text-right">
-                                        <div className="flex justify-end gap-1">
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                onClick={() => navigate(`/admin/edit-smartlock/${item.id}`)}
-                                            >
-                                                <Edit className="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                className="text-red-600 hover:text-red-700"
-                                                onClick={() => setDeleteId(item.id)}
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
-                                        </div>
-                                    </TableCell>
+            <Card>
+                <CardContent className="p-0">
+                    <div className="rounded-md border-0 overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="bg-muted/50">
+                                    <TableHead className="w-[50px]">#</TableHead>
+                                    <TableHead>Site ID 2</TableHead>
+                                    <TableHead>Site ID PTI</TableHead>
+                                    <TableHead>Site Name</TableHead>
+                                    <TableHead>SN WM Lock</TableHead>
+                                    <TableHead>PTI Regional</TableHead>
+                                    <TableHead>Status</TableHead>
+                                    <TableHead>Priority</TableHead>
+                                    <TableHead>Aging</TableHead>
+                                    <TableHead className="text-right w-12">Act</TableHead>
                                 </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
+                            </TableHeader>
+                            <TableBody>
+                                {paginatedData.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                                            No data found
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    paginatedData.map((item, idx) => (
+                                        <TableRow key={item.id} className="hover:bg-muted/30">
+                                            <TableCell className="font-medium">
+                                                {(currentPage - 1) * pageSize + idx + 1}
+                                            </TableCell>
+                                            <TableCell className="font-mono text-xs">{item.site_id_2}</TableCell>
+                                            <TableCell className="font-mono text-xs">{item.site_id_pti}</TableCell>
+                                            <TableCell className="max-w-[200px] truncate">{item.site_name}</TableCell>
+                                            <TableCell className="font-mono text-xs">{item.sn_id_wm_lock}</TableCell>
+                                            <TableCell>{item.pti_reg}</TableCell>
+                                            <TableCell>
+                                                <Badge className={statusColors[item.status_new] || 'bg-gray-500/20'}>
+                                                    {item.status_new}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                {item.priority === 'Issue Long Aging' && (
+                                                    <Badge className="bg-orange-500/20 text-orange-700">
+                                                        {item.priority}
+                                                    </Badge>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>{item.aging_last_access}</TableCell>
+                                            <TableCell className="text-right">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                                                            <MoreHorizontal className="h-4 w-4" />
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onClick={() => navigate(`/admin/edit-smartlock/${item.id}`)}>
+                                                            <Edit className="mr-2 h-4 w-4" />
+                                                            Edit
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            onClick={() => setDeleteId(item.id)}
+                                                            className="text-destructive focus:text-destructive"
+                                                        >
+                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                            Delete
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
 
-            {/* Pagination */}
-            <div className="flex items-center justify-between">
-                <div className="text-sm text-muted-foreground">
-                    Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, filteredData.length)} of {filteredData.length} entries
-                </div>
-                <div className="flex items-center gap-2">
-                    <Select value={pageSize.toString()} onValueChange={(v) => { setPageSize(parseInt(v)); setCurrentPage(1); }}>
-                        <SelectTrigger className="w-[80px]">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="10">10</SelectItem>
-                            <SelectItem value="20">20</SelectItem>
-                            <SelectItem value="50">50</SelectItem>
-                            <SelectItem value="100">100</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                        disabled={currentPage === 1}
-                    >
-                        <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                    <span className="text-sm">
-                        Page {currentPage} of {totalPages || 1}
-                    </span>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                        disabled={currentPage >= totalPages}
-                    >
-                        <ChevronRight className="w-4 h-4" />
-                    </Button>
-                </div>
-            </div>
+                    {/* Pagination */}
+                    <div className="flex items-center justify-between px-4 py-3 border-t">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span>Showing {paginatedData.length} of {filteredData.length}</span>
+                            <Select value={pageSize.toString()} onValueChange={(v) => { setPageSize(parseInt(v)); setCurrentPage(1); }}>
+                                <SelectTrigger className="w-[70px] h-8">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="10">10</SelectItem>
+                                    <SelectItem value="20">20</SelectItem>
+                                    <SelectItem value="50">50</SelectItem>
+                                    <SelectItem value="100">100</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                            </Button>
+                            <span className="text-sm">Page {currentPage} of {totalPages || 1}</span>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage >= totalPages}
+                            >
+                                <ChevronRight className="w-4 h-4" />
+                            </Button>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
 
             {/* Delete Confirmation */}
             <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>

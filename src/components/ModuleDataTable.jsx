@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    Search, Edit, Trash2, Check, X,
+    Search, Edit, Trash2, MoreHorizontal,
     ChevronLeft, ChevronRight, Plus
 } from 'lucide-react';
 import ExportDropdown from '@/components/ExportDropdown';
@@ -27,6 +27,12 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from '@/components/ui/use-toast';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { supabase } from '@/lib/customSupabaseClient';
 
 const RFS_STATUS_OPTIONS = ['Open', 'Closed', 'Hold', 'Waiting Permit', 'Cancel'];
@@ -47,22 +53,17 @@ const ModuleDataTable = ({
     const [regionalFilter, setRegionalFilter] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(20);
-    const [editingId, setEditingId] = useState(null);
-    const [editForm, setEditForm] = useState({});
     const [deleteDialog, setDeleteDialog] = useState({ open: false, item: null });
 
-    // Get active PICs for dropdown
-    const activePics = useMemo(() =>
-        picData.filter(p => p.validasi === 'Active').sort((a, b) => a.nama_pic?.localeCompare(b.nama_pic)),
-        [picData]
-    );
+
 
     // Filter data
     const filteredData = useMemo(() => {
         return moduleData.filter(item => {
             const matchesSearch = searchTerm === '' ||
                 item.site_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                item.site_name?.toLowerCase().includes(searchTerm.toLowerCase());
+                item.site_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                item.kab_kota?.toLowerCase().includes(searchTerm.toLowerCase());
             const matchesStatus = statusFilter === 'all' || item.rfs_status === statusFilter;
             const matchesRegional = regionalFilter === 'all' || item.regional === regionalFilter;
             return matchesSearch && matchesStatus && matchesRegional;
@@ -76,55 +77,6 @@ const ModuleDataTable = ({
         currentPage * itemsPerPage
     );
     const startIndex = (currentPage - 1) * itemsPerPage;
-
-    // Inline edit handlers
-    const handleInlineEdit = (item) => {
-        setEditingId(item.id);
-        setEditForm({
-            install_qty: item.install_qty || 0,
-            pic_name: item.pic_name || '',
-            rfs_date: item.rfs_date || '',
-            rfs_status: item.rfs_status || 'Open',
-        });
-    };
-
-    const handleSaveInlineEdit = async () => {
-        try {
-            const currentItem = moduleData.find(m => m.id === editingId);
-            const moduleQty = currentItem?.module_qty || 0;
-            const installQty = parseInt(editForm.install_qty) || 0;
-            const gap = moduleQty - installQty;
-
-            // Handle rfs_date - strictly convert empty/invalid to null
-            let rfsDate = null;
-            if (editForm.rfs_date && typeof editForm.rfs_date === 'string' && editForm.rfs_date.trim() !== '') {
-                rfsDate = editForm.rfs_date.trim();
-            }
-
-            const updateData = {
-                install_qty: installQty,
-                pic_name: editForm.pic_name || null,
-                rfs_status: editForm.rfs_status || 'Open',
-                gap: gap,
-            };
-
-            // Only include rfs_date if it has a valid value, otherwise set to null explicitly
-            updateData.rfs_date = rfsDate;
-
-            const { error } = await supabase
-                .from('module_tracker')
-                .update(updateData)
-                .eq('id', editingId);
-
-            if (error) throw error;
-
-            toast({ title: 'Berhasil', description: 'Data berhasil diupdate' });
-            setEditingId(null);
-            onRefresh?.();
-        } catch (error) {
-            toast({ title: 'Error', description: error.message, variant: 'destructive' });
-        }
-    };
 
     const handleDelete = async () => {
         try {
@@ -219,12 +171,12 @@ const ModuleDataTable = ({
                                     <TableHead className="w-[50px]">No</TableHead>
                                     <TableHead className="w-[120px]">Site ID</TableHead>
                                     <TableHead>Site Name</TableHead>
-                                    <TableHead className="text-center">Qty Install</TableHead>
+                                    <TableHead>Kab/Kota</TableHead>
                                     <TableHead>RFS Status</TableHead>
                                     <TableHead>PIC</TableHead>
                                     <TableHead>RFS Date</TableHead>
                                     <TableHead>Regional</TableHead>
-                                    <TableHead className="text-right">Actions</TableHead>
+                                    <TableHead className="text-right w-12">Act</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -240,93 +192,38 @@ const ModuleDataTable = ({
                                             <TableCell className="text-muted-foreground">{startIndex + index + 1}</TableCell>
                                             <TableCell className="font-mono text-sm">{item.site_id}</TableCell>
                                             <TableCell className="max-w-[200px] truncate">{item.site_name}</TableCell>
-                                            <TableCell className="text-center">
-                                                {editingId === item.id ? (
-                                                    <Input
-                                                        type="number"
-                                                        value={editForm.install_qty}
-                                                        onChange={(e) => setEditForm({ ...editForm, install_qty: e.target.value })}
-                                                        className="h-8 w-[70px]"
-                                                    />
-                                                ) : (
-                                                    item.install_qty || 0
-                                                )}
+                                            <TableCell>{item.kab_kota || '-'}</TableCell>
+                                            <TableCell>
+                                                {getStatusBadge(item.rfs_status)}
                                             </TableCell>
                                             <TableCell>
-                                                {editingId === item.id ? (
-                                                    <Select
-                                                        value={editForm.rfs_status}
-                                                        onValueChange={(v) => setEditForm({ ...editForm, rfs_status: v })}
-                                                    >
-                                                        <SelectTrigger className="w-[130px] h-8">
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {RFS_STATUS_OPTIONS.map(s => (
-                                                                <SelectItem key={s} value={s}>{s}</SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                ) : (
-                                                    getStatusBadge(item.rfs_status)
-                                                )}
+                                                {getPicDisplay(item.pic_name)}
                                             </TableCell>
                                             <TableCell>
-                                                {editingId === item.id ? (
-                                                    <Select
-                                                        value={editForm.pic_name || 'none'}
-                                                        onValueChange={(v) => setEditForm({ ...editForm, pic_name: v === 'none' ? '' : v })}
-                                                    >
-                                                        <SelectTrigger className="w-[130px] h-8">
-                                                            <SelectValue placeholder="Select PIC" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            <SelectItem value="none">N/A</SelectItem>
-                                                            {activePics.map(p => (
-                                                                <SelectItem key={p.id} value={p.nama_pic}>{p.nama_pic}</SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                ) : (
-                                                    getPicDisplay(item.pic_name)
-                                                )}
-                                            </TableCell>
-                                            <TableCell>
-                                                {editingId === item.id ? (
-                                                    <Input
-                                                        type="date"
-                                                        value={editForm.rfs_date}
-                                                        onChange={(e) => setEditForm({ ...editForm, rfs_date: e.target.value })}
-                                                        className="h-8 w-[130px]"
-                                                    />
-                                                ) : (
-                                                    item.rfs_date ? new Date(item.rfs_date).toLocaleDateString('id-ID') : '-'
-                                                )}
+                                                {item.rfs_date ? new Date(item.rfs_date).toLocaleDateString('id-ID') : '-'}
                                             </TableCell>
                                             <TableCell>{item.regional || '-'}</TableCell>
                                             <TableCell className="text-right">
-                                                {editingId === item.id ? (
-                                                    <div className="flex gap-1 justify-end">
-                                                        <Button size="sm" variant="ghost" onClick={handleSaveInlineEdit}>
-                                                            <Check className="w-4 h-4 text-green-600" />
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                                                            <MoreHorizontal className="h-4 w-4" />
                                                         </Button>
-                                                        <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>
-                                                            <X className="w-4 h-4 text-red-600" />
-                                                        </Button>
-                                                    </div>
-                                                ) : (
-                                                    <div className="flex gap-1 justify-end">
-                                                        <Button size="sm" variant="ghost" onClick={() => handleInlineEdit(item)} title="Quick Edit">
-                                                            <Edit className="w-4 h-4" />
-                                                        </Button>
-                                                        <Button size="sm" variant="outline" onClick={() => navigate(`/admin/edit-module/${item.id}`)} title="Full Edit">
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onClick={() => navigate(`/admin/edit-module/${item.id}`)}>
+                                                            <Edit className="mr-2 h-4 w-4" />
                                                             Edit
-                                                        </Button>
-                                                        <Button size="sm" variant="ghost" onClick={() => setDeleteDialog({ open: true, item })}>
-                                                            <Trash2 className="w-4 h-4 text-red-600" />
-                                                        </Button>
-                                                    </div>
-                                                )}
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem
+                                                            onClick={() => setDeleteDialog({ open: true, item })}
+                                                            className="text-destructive focus:text-destructive"
+                                                        >
+                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                            Delete
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
                                             </TableCell>
                                         </TableRow>
                                     ))
