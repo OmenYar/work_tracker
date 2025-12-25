@@ -30,6 +30,7 @@ const AnalyticsDashboard = React.lazy(() => import('@/components/AnalyticsDashbo
 const CalendarView = React.lazy(() => import('@/components/CalendarView'));
 const PerformanceMonitoring = React.lazy(() => import('@/components/PerformanceMonitoring'));
 const BulkOperations = React.lazy(() => import('@/components/BulkOperations'));
+const ReportBuilder = React.lazy(() => import('@/components/ReportBuilder'));
 
 // Non-lazy (small components)
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -2547,6 +2548,8 @@ const AdminDashboard = () => {
                 );
             case 'notes':
                 return <StickyNotes />;
+            case 'reports':
+                return <ReportBuilder />;
             case 'analytics':
                 return (
                     <AnalyticsDashboard

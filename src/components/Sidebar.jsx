@@ -1,5 +1,5 @@
 import React, { useState, useCallback, memo } from 'react';
-import { LayoutDashboard, TableProperties, Users, LogOut, Contact, Car, StickyNote, Camera, History, FileText, X, PanelLeftClose, PanelLeft, BarChart3, CalendarDays, Trophy, Package, Lock } from 'lucide-react';
+import { LayoutDashboard, TableProperties, Users, LogOut, Contact, Car, StickyNote, Camera, History, FileText, X, PanelLeftClose, PanelLeft, BarChart3, CalendarDays, Trophy, Package, Lock, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,18 +23,19 @@ const Sidebar = memo(({ activeTab, setActiveTab, onLogout, isOpen, setIsOpen }) 
         {
             label: 'Data Management',
             items: [
-                { id: 'tracker', label: 'Data Tracker', icon: TableProperties, color: 'text-cyan-500' },
+                { id: 'tracker', label: 'Tracker BAST', icon: TableProperties, color: 'text-cyan-500' },
                 { id: 'pic', label: 'Data PIC', icon: Contact, color: 'text-orange-500' },
                 { id: 'car', label: 'Data Mobil', icon: Car, color: 'text-red-500' },
                 { id: 'cctv', label: 'Data CCTV', icon: Camera, color: 'text-pink-500' },
                 { id: 'module', label: 'Module DPR2900', icon: Package, color: 'text-indigo-500' },
-                { id: 'smartlock', label: 'SmartLock', icon: Lock, color: 'text-emerald-500' },
+                { id: 'smartlock', label: 'SmartLock WM', icon: Lock, color: 'text-emerald-500' },
             ]
         },
         {
             label: 'Tools',
             items: [
                 { id: 'notes', label: 'Notes', icon: StickyNote, color: 'text-amber-500' },
+                { id: 'reports', label: 'Report Builder', icon: FileSpreadsheet, color: 'text-emerald-500' },
                 ...(isAdmin ? [
                     { id: 'logs', label: 'Activity Logs', icon: History, color: 'text-slate-500' },
                     { id: 'generate-bast', label: 'Generate BAST', icon: FileText, color: 'text-teal-500' },
