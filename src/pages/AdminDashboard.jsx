@@ -2084,6 +2084,136 @@ const AdminDashboard = () => {
                                     </CardContent>
                                 </Card>
 
+                                {/* Car Transition Planning 2026 */}
+                                <Card className="border-2 border-amber-500/30 bg-amber-50/50 dark:bg-amber-900/10">
+                                    <CardHeader className="pb-2">
+                                        <CardTitle className="flex items-center justify-between text-lg">
+                                            <span className="flex items-center gap-2 text-amber-700 dark:text-amber-500">
+                                                <AlertCircle className="w-5 h-5" />
+                                                🚗 Transition Planning Kendaraan 2026
+                                            </span>
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        {(() => {
+                                            const now = new Date();
+                                            const isAfterMarch = now.getFullYear() > 2026 || (now.getFullYear() === 2026 && now.getMonth() >= 3);
+                                            const periodLabel = isAfterMarch ? 'Periode Apr - Des 2026' : 'Periode Jan - Mar 2026';
+                                            const statusField = isAfterMarch ? 'status_transisi_q2_q4' : 'status_transisi_q1';
+                                            const remarkField = isAfterMarch ? 'remark_transisi_q2_q4' : 'remark_transisi_q1';
+
+                                            // Count per status
+                                            const utilizeCount = carData.filter(c => c[statusField] === 'Utilize' || !c[statusField]).length;
+                                            const takeOutCount = carData.filter(c => c[statusField] === 'Take Out').length;
+                                            const tbdCount = carData.filter(c => c[statusField] === 'TBD').length;
+
+                                            // Per regional
+                                            const getRegionalStats = (regional) => {
+                                                const cars = carData.filter(c => c.area === regional);
+                                                return {
+                                                    total: cars.length,
+                                                    utilize: cars.filter(c => c[statusField] === 'Utilize' || !c[statusField]).length,
+                                                    takeOut: cars.filter(c => c[statusField] === 'Take Out').length,
+                                                    tbd: cars.filter(c => c[statusField] === 'TBD').length,
+                                                };
+                                            };
+
+                                            return (
+                                                <>
+                                                    <div className="mb-4">
+                                                        <h4 className="text-sm font-semibold text-amber-700 dark:text-amber-500 mb-3">
+                                                            {periodLabel}
+                                                        </h4>
+                                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                            {['Jabo Outer 1', 'Jabo Outer 2', 'Jabo Outer 3'].map((regional, idx) => {
+                                                                const stats = getRegionalStats(regional);
+                                                                return (
+                                                                    <div key={regional} className="p-4 rounded-lg bg-white/50 dark:bg-card border">
+                                                                        <div className="flex justify-between items-start mb-2">
+                                                                            <span className="text-sm font-medium">JO {idx + 1}</span>
+                                                                            <Badge variant="outline" className="text-blue-600">Total: {stats.total}</Badge>
+                                                                        </div>
+                                                                        <div className="mt-2 space-y-1 text-xs">
+                                                                            <p className="text-green-600">🟢 {stats.utilize} Utilize</p>
+                                                                            <p className="text-red-600">🔴 {stats.takeOut} Take Out</p>
+                                                                            {stats.tbd > 0 && <p className="text-gray-500">⚪ {stats.tbd} TBD</p>}
+                                                                        </div>
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Summary */}
+                                                    <div className="mb-4 p-3 rounded-lg bg-white/70 dark:bg-card border">
+                                                        <div className="flex flex-wrap gap-4 text-sm">
+                                                            <div>
+                                                                <span className="text-muted-foreground">Total Kendaraan:</span>
+                                                                <span className="font-bold ml-1">{carData.length}</span>
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-green-600">Utilize:</span>
+                                                                <span className="font-bold ml-1">{utilizeCount}</span>
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-red-600">Take Out:</span>
+                                                                <span className="font-bold ml-1">{takeOutCount}</span>
+                                                            </div>
+                                                            {tbdCount > 0 && (
+                                                                <div>
+                                                                    <span className="text-gray-500">TBD:</span>
+                                                                    <span className="font-bold ml-1">{tbdCount}</span>
+                                                                </div>
+                                                            )}
+                                                            <div>
+                                                                <span className="text-blue-600">Setelah transisi:</span>
+                                                                <span className="font-bold ml-1">{utilizeCount}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Planned Take Out List */}
+                                                    {(() => {
+                                                        const takeOutCars = carData.filter(c => c[statusField] === 'Take Out');
+                                                        if (takeOutCars.length === 0) return null;
+                                                        return (
+                                                            <div className="mt-4 pt-4 border-t">
+                                                                <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                                                                    <Clock className="w-4 h-4 text-amber-600" />
+                                                                    Kendaraan dengan Rencana Take Out ({takeOutCars.length})
+                                                                </p>
+                                                                <div className="max-h-[200px] overflow-y-auto space-y-2">
+                                                                    {takeOutCars.map(c => (
+                                                                        <div key={c.id} className="flex items-center justify-between p-2 bg-white/50 dark:bg-card rounded border text-sm">
+                                                                            <div>
+                                                                                <span className="font-medium font-mono">{c.nomor_polisi}</span>
+                                                                                <span className="text-xs text-muted-foreground ml-2">({c.area})</span>
+                                                                            </div>
+                                                                            <div className="flex items-center gap-2">
+                                                                                <Badge className="bg-red-500/20 text-red-700">Take Out</Badge>
+                                                                                {c.tgl_efektif_transisi && (
+                                                                                    <span className="text-xs text-muted-foreground">
+                                                                                        📅 {new Date(c.tgl_efektif_transisi).toLocaleDateString('id-ID')}
+                                                                                    </span>
+                                                                                )}
+                                                                                {c[remarkField] && (
+                                                                                    <span className="text-xs text-gray-500 truncate max-w-[120px]" title={c[remarkField]}>
+                                                                                        {c[remarkField]}
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })()}
+                                                </>
+                                            );
+                                        })()}
+                                    </CardContent>
+                                </Card>
+
                                 {/* Car Filters */}
                                 <div className="flex flex-col md:flex-row gap-4 bg-card p-4 rounded-xl border shadow-sm">
                                     <Input
