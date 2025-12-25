@@ -3,15 +3,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/lib/customSupabaseClient';
+import { AlertTriangle, Calendar } from 'lucide-react';
 
-// Service options with scores
 const SERVICE_OPTIONS = [
     { id: 'elektrikal', label: 'Elektrikal', score: 1 },
     { id: 'rem', label: 'Rem', score: 2 },
     { id: 'ban_kaki', label: 'Ban & Kaki-kaki', score: 1.5 },
     { id: 'mesin', label: 'Mesin & Performa', score: 2 },
 ];
+
+// Transition status options for 2026 planning
+const TRANSISI_STATUS_OPTIONS = ['Utilize', 'Take Out'];
+const TRANSISI_Q2Q4_OPTIONS = ['TBD', 'Utilize', 'Take Out'];
 
 // Calculate priority based on total score
 const calculatePriority = (selectedServices) => {
@@ -69,6 +74,12 @@ const CarDataForm = ({ onSubmit, initialData, onCancel }) => {
         nominal_service: '',
         plan_next_service: '',
         pic_id: '',
+        // Transition Planning 2026
+        status_transisi_q1: 'Utilize',
+        remark_transisi_q1: '',
+        status_transisi_q2_q4: 'TBD',
+        remark_transisi_q2_q4: '',
+        tgl_efektif_transisi: '',
     });
 
     const [selectedServices, setSelectedServices] = useState([]);
@@ -119,6 +130,12 @@ const CarDataForm = ({ onSubmit, initialData, onCancel }) => {
                 // Convert pic_id to string for Select component compatibility
                 pic_id: initialData.pic_id ? String(initialData.pic_id) : '',
                 priority: initialData.priority || calculatePriority(serviceIds),
+                // Transition Planning 2026
+                status_transisi_q1: initialData.status_transisi_q1 || 'Utilize',
+                remark_transisi_q1: initialData.remark_transisi_q1 || '',
+                status_transisi_q2_q4: initialData.status_transisi_q2_q4 || 'TBD',
+                remark_transisi_q2_q4: initialData.remark_transisi_q2_q4 || '',
+                tgl_efektif_transisi: initialData.tgl_efektif_transisi || '',
             });
         }
     }, [initialData]);
@@ -368,6 +385,86 @@ const CarDataForm = ({ onSubmit, initialData, onCancel }) => {
             <div className="space-y-2">
                 <Label>Remark</Label>
                 <Input name="remark" value={formData.remark} onChange={handleChange} placeholder="" />
+            </div>
+
+            {/* Transition Planning 2026 Section */}
+            <div className="space-y-4 border-t pt-4">
+                <h3 className="text-sm font-semibold text-amber-600 uppercase tracking-wider border-b border-amber-300 pb-2 flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4" />
+                    Transition Planning 2026
+                </h3>
+                <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {/* Q1: Jan-Mar 2026 */}
+                        <div className="space-y-2">
+                            <Label>Status Transisi Q1 (Jan-Mar 2026)</Label>
+                            <Select value={formData.status_transisi_q1} onValueChange={(v) => handleSelectChange('status_transisi_q1', v)}>
+                                <SelectTrigger className={formData.status_transisi_q1 === 'Take Out' ? 'border-red-500' : 'border-green-500'}>
+                                    <SelectValue placeholder="Pilih Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {TRANSISI_STATUS_OPTIONS.map(opt => (
+                                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2 md:col-span-2 lg:col-span-2">
+                            <Label>Remark Q1</Label>
+                            <Input
+                                name="remark_transisi_q1"
+                                value={formData.remark_transisi_q1}
+                                onChange={handleChange}
+                                placeholder="e.g. Return to BMG, Pindah ke PIC lain..."
+                            />
+                        </div>
+
+                        {/* Q2-Q4: Apr-Dec 2026 */}
+                        <div className="space-y-2">
+                            <Label>Status Transisi Q2-Q4 (Apr-Des 2026)</Label>
+                            <Select value={formData.status_transisi_q2_q4} onValueChange={(v) => handleSelectChange('status_transisi_q2_q4', v)}>
+                                <SelectTrigger className={
+                                    formData.status_transisi_q2_q4 === 'Take Out' ? 'border-red-500' :
+                                        formData.status_transisi_q2_q4 === 'TBD' ? 'border-gray-400' : 'border-green-500'
+                                }>
+                                    <SelectValue placeholder="Pilih Status" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {TRANSISI_Q2Q4_OPTIONS.map(opt => (
+                                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2 md:col-span-2 lg:col-span-2">
+                            <Label>Remark Q2-Q4</Label>
+                            <Input
+                                name="remark_transisi_q2_q4"
+                                value={formData.remark_transisi_q2_q4}
+                                onChange={handleChange}
+                                placeholder="Catatan untuk periode Apr-Des 2026..."
+                            />
+                        </div>
+
+                        {/* Effective Date */}
+                        <div className="space-y-2">
+                            <Label className="flex items-center gap-2">
+                                <Calendar className="w-4 h-4" />
+                                Tgl Efektif Transisi
+                            </Label>
+                            <Input
+                                type="date"
+                                name="tgl_efektif_transisi"
+                                value={formData.tgl_efektif_transisi}
+                                onChange={handleChange}
+                                disabled={formData.status_transisi_q1 === 'Utilize' && formData.status_transisi_q2_q4 !== 'Take Out'}
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                Aktif jika ada status Take Out
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div className="flex gap-4 pt-4 justify-end">

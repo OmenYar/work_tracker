@@ -57,6 +57,16 @@ const getPriorityBadge = (priority) => {
     }
 };
 
+// Helper for transition status badge
+const getTransitionBadge = (status) => {
+    switch (status) {
+        case 'Utilize': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+        case 'Take Out': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+        case 'TBD': return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
+        default: return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
+    }
+};
+
 const CarDataTable = ({ data, onEdit, onDelete, isReadOnly = false, picData = [] }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(20);
@@ -99,6 +109,8 @@ const CarDataTable = ({ data, onEdit, onDelete, isReadOnly = false, picData = []
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status KIR</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Condition</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Priority</th>
+                            <th className="text-left py-3 px-4 font-medium text-amber-600 dark:text-amber-400">Transisi Q1</th>
+                            <th className="text-left py-3 px-4 font-medium text-amber-600 dark:text-amber-400">Transisi Q2-Q4</th>
                             {!isReadOnly && <th className="text-right py-3 px-4 font-medium text-muted-foreground">Actions</th>}
                         </tr>
                     </thead>
@@ -142,6 +154,32 @@ const CarDataTable = ({ data, onEdit, onDelete, isReadOnly = false, picData = []
                                         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getPriorityBadge(car.priority)}`}>
                                             {car.priority || '-'}
                                         </span>
+                                    </td>
+                                    {/* Transition Q1 */}
+                                    <td className="py-3 px-4">
+                                        <div className="flex flex-col gap-1">
+                                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getTransitionBadge(car.status_transisi_q1)}`}>
+                                                {car.status_transisi_q1 || 'Utilize'}
+                                            </span>
+                                            {car.remark_transisi_q1 && (
+                                                <span className="text-xs text-muted-foreground truncate max-w-[100px]" title={car.remark_transisi_q1}>
+                                                    {car.remark_transisi_q1}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </td>
+                                    {/* Transition Q2-Q4 */}
+                                    <td className="py-3 px-4">
+                                        <div className="flex flex-col gap-1">
+                                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getTransitionBadge(car.status_transisi_q2_q4)}`}>
+                                                {car.status_transisi_q2_q4 || 'TBD'}
+                                            </span>
+                                            {car.remark_transisi_q2_q4 && (
+                                                <span className="text-xs text-muted-foreground truncate max-w-[100px]" title={car.remark_transisi_q2_q4}>
+                                                    {car.remark_transisi_q2_q4}
+                                                </span>
+                                            )}
+                                        </div>
                                     </td>
                                     {!isReadOnly && (
                                         <td className="py-3 px-4 text-right">
