@@ -57,13 +57,11 @@ const getPriorityBadge = (priority) => {
     }
 };
 
-// Helper for transition status badge
-const getTransitionBadge = (status) => {
+const getStatusMobilBadge = (status) => {
     switch (status) {
-        case 'Utilize': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
-        case 'Take Out': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
-        case 'TBD': return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
-        default: return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
+        case 'AKTIF': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+        case 'NON AKTIF': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+        default: return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
     }
 };
 
@@ -109,8 +107,8 @@ const CarDataTable = ({ data, onEdit, onDelete, isReadOnly = false, picData = []
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status KIR</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Condition</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Priority</th>
-                            <th className="text-left py-3 px-4 font-medium text-amber-600 dark:text-amber-400">Transisi Q1</th>
-                            <th className="text-left py-3 px-4 font-medium text-amber-600 dark:text-amber-400">Transisi Q2-Q4</th>
+                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status Mobil</th>
+                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Remark</th>
                             {!isReadOnly && <th className="text-right py-3 px-4 font-medium text-muted-foreground">Actions</th>}
                         </tr>
                     </thead>
@@ -155,31 +153,17 @@ const CarDataTable = ({ data, onEdit, onDelete, isReadOnly = false, picData = []
                                             {car.priority || '-'}
                                         </span>
                                     </td>
-                                    {/* Transition Q1 */}
+                                    {/* Status Mobil */}
                                     <td className="py-3 px-4">
-                                        <div className="flex flex-col gap-1">
-                                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getTransitionBadge(car.status_transisi_q1)}`}>
-                                                {car.status_transisi_q1 || 'Utilize'}
-                                            </span>
-                                            {car.remark_transisi_q1 && (
-                                                <span className="text-xs text-muted-foreground truncate max-w-[100px]" title={car.remark_transisi_q1}>
-                                                    {car.remark_transisi_q1}
-                                                </span>
-                                            )}
-                                        </div>
+                                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusMobilBadge(car.status_mobil)}`}>
+                                            {car.status_mobil || 'AKTIF'}
+                                        </span>
                                     </td>
-                                    {/* Transition Q2-Q4 */}
+                                    {/* Remark */}
                                     <td className="py-3 px-4">
-                                        <div className="flex flex-col gap-1">
-                                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getTransitionBadge(car.status_transisi_q2_q4)}`}>
-                                                {car.status_transisi_q2_q4 || 'TBD'}
-                                            </span>
-                                            {car.remark_transisi_q2_q4 && (
-                                                <span className="text-xs text-muted-foreground truncate max-w-[100px]" title={car.remark_transisi_q2_q4}>
-                                                    {car.remark_transisi_q2_q4}
-                                                </span>
-                                            )}
-                                        </div>
+                                        <span className="text-xs text-muted-foreground truncate max-w-[150px]" title={car.remark}>
+                                            {car.remark || '-'}
+                                        </span>
                                     </td>
                                     {!isReadOnly && (
                                         <td className="py-3 px-4 text-right">
