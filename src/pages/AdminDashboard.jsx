@@ -1482,8 +1482,8 @@ const AdminDashboard = () => {
                 const activePic = picData.filter(p => p.validasi === 'Active').length;
                 const inactivePic = picData.filter(p => p.validasi === 'Inactive').length;
 
-                // Count per jabatan
-                const jabatanCounts = picData.reduce((acc, p) => {
+                // Count per jabatan - only count Active PICs
+                const jabatanCounts = picData.filter(p => p.validasi === 'Active').reduce((acc, p) => {
                     const jabatan = p.jabatan || 'Unknown';
                     acc[jabatan] = (acc[jabatan] || 0) + 1;
                     return acc;
@@ -1630,11 +1630,10 @@ const AdminDashboard = () => {
                                     <CardContent>
                                         {/* Dynamic Period based on current date */}
                                         {(() => {
-                                            const now = new Date();
-                                            const isAfterMarch = now.getFullYear() > 2026 || (now.getFullYear() === 2026 && now.getMonth() >= 3);
-                                            const periodLabel = isAfterMarch ? 'Periode Apr - Des 2026' : 'Periode Jan - Mar 2026';
-                                            const targetCount = isAfterMarch ? 7 : 10;
-                                            const joTargets = isAfterMarch ? { jo1: 3, jo2: 2, jo3: 2 } : { jo1: 4, jo2: 3, jo3: 3 };
+                                            // Period Jan-Mar 2026 has been completed, now showing Apr-Dec 2026
+                                            const periodLabel = 'Periode Apr - Des 2026';
+                                            const targetCount = 7;
+                                            const joTargets = { jo1: 3, jo2: 2, jo3: 2 };
 
                                             // Helper function for MBP jabatan matching
                                             const isMBP = (jabatan) => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     FileText,
@@ -24,6 +24,8 @@ import Docxtemplater from 'docxtemplater';
 import PizZip from 'pizzip';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
+import { renderAsync } from 'docx-preview';
+import html2canvas from 'html2canvas';
 
 // Customer/Vendor options
 const CUSTOMERS = [
@@ -254,7 +256,7 @@ const GenerateBAST = () => {
         setError(null);
     };
 
-    // Download as PDF
+    // Download as PDF - uses same template as DOCX
     const handleDownloadPDF = async () => {
         if (!selectedCustomer || !selectedRegional) return;
 
@@ -262,55 +264,105 @@ const GenerateBAST = () => {
         setError(null);
 
         try {
-            const customer = CUSTOMERS.find(c => c.id === selectedCustomer);
-            const regional = REGIONALS.find(r => r.id === selectedRegional);
+            const templateFilename = getTemplateFilename();
 
-            const doc = new jsPDF();
-            const pageWidth = doc.internal.pageSize.getWidth();
+            // Fetch template from Supabase Storage
+            const { data: templateBlob, error: downloadError } = await supabase
+                .storage
+                .from('templates')
+                .download(templateFilename);
 
-            // Header
-            doc.setFontSize(18);
-            doc.setFont('helvetica', 'bold');
-            doc.text('BERITA ACARA SERAH TERIMA', pageWidth / 2, 30, { align: 'center' });
+            if (downloadError) {
+                console.error('Download error:', downloadError);
+                throw new Error(`Gagal mengambil template ${templateFilename} dari server. Pastikan file template sudah ada.`);
+            }
 
-            doc.setFontSize(14);
-            doc.text(`(BAST - ${customer?.name})`, pageWidth / 2, 40, { align: 'center' });
+            const templateArrayBuffer = await templateBlob.arrayBuffer();
+            const zip = new PizZip(templateArrayBuffer);
+            const doc = new Docxtemplater(zip, {
+                paragraphLoop: true,
+                linebreaks: true,
+                delimiters: { start: '{', end: '}' }
+            });
 
-            // Regional info
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`Regional: ${regional?.name}`, pageWidth / 2, 50, { align: 'center' });
+            // Replace placeholders
+            doc.render({
+                site_id: formData.site_id,
+                site_name: formData.site_name,
+                add_work: formData.add_work,
+                date_now: formData.date_now,
+                tt_number: formData.tt_number || '',
+                po_number: formData.po_number || '',
+            });
 
-            // Content
-            let y = 70;
-            const lineHeight = 10;
-            const leftMargin = 20;
-            const labelWidth = 40;
+            // Generate DOCX blob
+            const docxBlob = doc.getZip().generate({
+                type: 'blob',
+                mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            });
 
-            const drawRow = (label, value) => {
-                doc.setFont('helvetica', 'bold');
-                doc.text(label, leftMargin, y);
-                doc.setFont('helvetica', 'normal');
-                doc.text(': ' + (value || '-'), leftMargin + labelWidth, y);
-                y += lineHeight;
-            };
+            // Create a hidden container for rendering
+            const container = document.createElement('div');
+            container.style.cssText = 'position: fixed; left: -9999px; top: 0; width: 794px; background: white; padding: 40px;';
+            document.body.appendChild(container);
 
-            drawRow('Site ID', formData.site_id);
-            drawRow('Site Name', formData.site_name);
-            drawRow('Add Work', formData.add_work);
-            drawRow('Tanggal', formData.date_now);
-            drawRow('TT Number', formData.tt_number);
-            drawRow('PO Number', formData.po_number);
+            // Render DOCX to HTML using docx-preview
+            await renderAsync(docxBlob, container, null, {
+                className: 'docx-preview',
+                inWrapper: true,
+                ignoreWidth: false,
+                ignoreHeight: false,
+                ignoreFonts: false,
+                breakPages: true,
+                ignoreLastRenderedPageBreak: true,
+                experimental: false,
+                trimXmlDeclaration: true,
+                useBase64URL: true,
+            });
 
-            // Footer
-            y += 20;
-            doc.setFontSize(8);
-            doc.setTextColor(128);
-            doc.text(`Generated on ${new Date().toLocaleString('id-ID')}`, leftMargin, y);
+            // Wait for rendering to complete
+            await new Promise(resolve => setTimeout(resolve, 500));
 
-            // Save
+            // Convert to canvas
+            const canvas = await html2canvas(container, {
+                scale: 2,
+                useCORS: true,
+                logging: false,
+                backgroundColor: '#ffffff',
+            });
+
+            // Create PDF from canvas
+            const imgData = canvas.toDataURL('image/png');
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4',
+            });
+
+            const imgWidth = 210; // A4 width in mm
+            const pageHeight = 297; // A4 height in mm
+            const imgHeight = (canvas.height * imgWidth) / canvas.width;
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            // Add first page
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+
+            // Add additional pages if needed
+            while (heightLeft > 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+            }
+
+            // Cleanup
+            document.body.removeChild(container);
+
+            // Save PDF
             const fileName = `Form BAST Site ${formData.site_id}_${formData.site_name}.pdf`;
-            doc.save(fileName);
+            pdf.save(fileName);
 
         } catch (err) {
             console.error('PDF Generate error:', err);
