@@ -110,7 +110,7 @@ const BulkOperations = ({
 
                 const { error } = await supabase
                     .from(tableName)
-                    .update({ jabatan: newJabatan, updated_at: new Date().toISOString() })
+                    .update({ jabatan: newJabatan })
                     .in('id', batch);
 
                 if (error) {
