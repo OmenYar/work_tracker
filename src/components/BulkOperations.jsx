@@ -101,16 +101,29 @@ const BulkOperations = ({
 
         setIsProcessing(true);
         try {
-            const { error } = await supabase
-                .from(tableName)
-                .update({ jabatan: newJabatan, updated_at: new Date().toISOString() })
-                .in('id', selectedIds);
+            // Process in batches of 20 to avoid timeout
+            const batchSize = 20;
+            let successCount = 0;
 
-            if (error) throw error;
+            for (let i = 0; i < selectedIds.length; i += batchSize) {
+                const batch = selectedIds.slice(i, i + batchSize);
+
+                const { error } = await supabase
+                    .from(tableName)
+                    .update({ jabatan: newJabatan, updated_at: new Date().toISOString() })
+                    .in('id', batch);
+
+                if (error) {
+                    console.error('Batch update error:', error);
+                    throw error;
+                }
+
+                successCount += batch.length;
+            }
 
             toast({
                 title: 'Bulk Update Successful',
-                description: `${selectedIds.length} PIC jabatan updated to "${newJabatan}"`,
+                description: `${successCount} PIC jabatan updated to "${newJabatan}"`,
             });
 
             onSelectionChange([]);
@@ -119,7 +132,7 @@ const BulkOperations = ({
             console.error('Bulk update jabatan error:', error);
             toast({
                 title: 'Error',
-                description: 'Failed to update jabatan. Please try again.',
+                description: error.message || 'Failed to update jabatan. Please try again.',
                 variant: 'destructive',
             });
         } finally {
