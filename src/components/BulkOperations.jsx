@@ -66,7 +66,8 @@ const BulkOperations = ({
 
         setIsProcessing(true);
         try {
-            const updateField = type === 'tracker' ? 'status_pekerjaan' : 'status';
+            // For PIC, update 'validasi' field; for tracker, update 'status_pekerjaan'
+            const updateField = type === 'pic' ? 'validasi' : (type === 'tracker' ? 'status_pekerjaan' : 'status');
 
             const { error } = await supabase
                 .from(tableName)
@@ -87,6 +88,38 @@ const BulkOperations = ({
             toast({
                 title: 'Error',
                 description: 'Failed to update items. Please try again.',
+                variant: 'destructive',
+            });
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    // Bulk update jabatan (for PIC)
+    const handleBulkUpdateJabatan = async (newJabatan) => {
+        if (!hasSelection || !newJabatan || type !== 'pic') return;
+
+        setIsProcessing(true);
+        try {
+            const { error } = await supabase
+                .from(tableName)
+                .update({ jabatan: newJabatan, updated_at: new Date().toISOString() })
+                .in('id', selectedIds);
+
+            if (error) throw error;
+
+            toast({
+                title: 'Bulk Update Successful',
+                description: `${selectedIds.length} PIC jabatan updated to "${newJabatan}"`,
+            });
+
+            onSelectionChange([]);
+            if (onRefresh) onRefresh();
+        } catch (error) {
+            console.error('Bulk update jabatan error:', error);
+            toast({
+                title: 'Error',
+                description: 'Failed to update jabatan. Please try again.',
                 variant: 'destructive',
             });
         } finally {
@@ -342,6 +375,35 @@ const BulkOperations = ({
                             </>
                         )}
 
+                        {type === 'pic' && (
+                            <>
+                                <Select onValueChange={handleBulkUpdateStatus} disabled={isProcessing}>
+                                    <SelectTrigger className="w-[130px] h-8">
+                                        <SelectValue placeholder="Update Status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Active">Active</SelectItem>
+                                        <SelectItem value="Inactive">Inactive</SelectItem>
+                                    </SelectContent>
+                                </Select>
+
+                                <Select onValueChange={handleBulkUpdateJabatan} disabled={isProcessing}>
+                                    <SelectTrigger className="w-[150px] h-8">
+                                        <SelectValue placeholder="Update Jabatan" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="PM">PM</SelectItem>
+                                        <SelectItem value="CM">CM</SelectItem>
+                                        <SelectItem value="PM/CM">PM/CM</SelectItem>
+                                        <SelectItem value="CM+MBP">CM+MBP</SelectItem>
+                                        <SelectItem value="VERTI & TII">VERTI & TII</SelectItem>
+                                        <SelectItem value="Expert Genset">Expert Genset</SelectItem>
+                                        <SelectItem value="MBP">MBP</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </>
+                        )}
+
                         <Button
                             variant="outline"
                             size="sm"
@@ -511,8 +573,8 @@ export const SelectionCheckbox = ({ checked, onChange, className }) => (
             onChange(!checked);
         }}
         className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${checked
-                ? 'bg-primary border-primary text-primary-foreground'
-                : 'border-input hover:border-primary'
+            ? 'bg-primary border-primary text-primary-foreground'
+            : 'border-input hover:border-primary'
             } ${className}`}
     >
         {checked && <CheckSquare className="w-3.5 h-3.5" />}
