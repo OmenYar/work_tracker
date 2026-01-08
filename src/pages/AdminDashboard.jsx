@@ -116,6 +116,7 @@ const AdminDashboard = () => {
 
     // Selection state for bulk operations
     const [selectedTrackerIds, setSelectedTrackerIds] = useState([]);
+    const [selectedPicIds, setSelectedPicIds] = useState([]);
 
     // Tracker Filters - Initialize from URL params
     const [searchTerm, setSearchTerm] = useState(searchParams.get('trackerSearch') || '');
@@ -751,6 +752,7 @@ const AdminDashboard = () => {
                 ...data,
                 tgl_join: data.tgl_join || null,
                 tgl_berakhir: data.tgl_berakhir || null,
+                tgl_efektif_transisi: data.tgl_efektif_transisi || null,
             };
 
             let error;
@@ -1514,26 +1516,12 @@ const AdminDashboard = () => {
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent>
-                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-                                            {/* Status Cards */}
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                            {/* Active Card */}
                                             <motion.div
                                                 initial={{ opacity: 0, scale: 0.9 }}
                                                 animate={{ opacity: 1, scale: 1 }}
                                                 transition={{ delay: 0 }}
-                                                className="p-3 rounded-lg bg-blue-500/10"
-                                            >
-                                                <div className="flex items-start justify-between">
-                                                    <div>
-                                                        <p className="text-[10px] text-muted-foreground">Total PIC</p>
-                                                        <p className="text-xl font-bold text-blue-600">{totalPic}</p>
-                                                    </div>
-                                                    <UsersIcon className="w-4 h-4 text-blue-600 opacity-50" />
-                                                </div>
-                                            </motion.div>
-                                            <motion.div
-                                                initial={{ opacity: 0, scale: 0.9 }}
-                                                animate={{ opacity: 1, scale: 1 }}
-                                                transition={{ delay: 0.05 }}
                                                 className="p-3 rounded-lg bg-green-500/10"
                                             >
                                                 <div className="flex items-start justify-between">
@@ -1544,25 +1532,11 @@ const AdminDashboard = () => {
                                                     <CheckCircle className="w-4 h-4 text-green-600 opacity-50" />
                                                 </div>
                                             </motion.div>
-                                            <motion.div
-                                                initial={{ opacity: 0, scale: 0.9 }}
-                                                animate={{ opacity: 1, scale: 1 }}
-                                                transition={{ delay: 0.1 }}
-                                                className={`relative p-3 rounded-lg bg-red-500/10 ${inactivePic > 0 ? 'ring-2 ring-red-500/50' : ''}`}
-                                            >
-                                                <div className="flex items-start justify-between">
-                                                    <div>
-                                                        <p className="text-[10px] text-muted-foreground">Inactive</p>
-                                                        <p className="text-xl font-bold text-red-600">{inactivePic}</p>
-                                                    </div>
-                                                    <XCircle className="w-4 h-4 text-red-600 opacity-50" />
-                                                </div>
-                                            </motion.div>
                                             {/* Regional Cards */}
                                             <motion.div
                                                 initial={{ opacity: 0, scale: 0.9 }}
                                                 animate={{ opacity: 1, scale: 1 }}
-                                                transition={{ delay: 0.15 }}
+                                                transition={{ delay: 0.05 }}
                                                 className="p-3 rounded-lg bg-purple-500/10"
                                             >
                                                 <div className="flex items-start justify-between">
@@ -1576,7 +1550,7 @@ const AdminDashboard = () => {
                                             <motion.div
                                                 initial={{ opacity: 0, scale: 0.9 }}
                                                 animate={{ opacity: 1, scale: 1 }}
-                                                transition={{ delay: 0.2 }}
+                                                transition={{ delay: 0.1 }}
                                                 className="p-3 rounded-lg bg-amber-500/10"
                                             >
                                                 <div className="flex items-start justify-between">
@@ -1590,7 +1564,7 @@ const AdminDashboard = () => {
                                             <motion.div
                                                 initial={{ opacity: 0, scale: 0.9 }}
                                                 animate={{ opacity: 1, scale: 1 }}
-                                                transition={{ delay: 0.25 }}
+                                                transition={{ delay: 0.15 }}
                                                 className="p-3 rounded-lg bg-teal-500/10"
                                             >
                                                 <div className="flex items-start justify-between">
@@ -1928,6 +1902,42 @@ const AdminDashboard = () => {
                                     </div>
                                 </div>
 
+                                {/* Bulk Operations for PIC */}
+                                {selectedPicIds.length > 0 && (
+                                    <div className="mb-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm font-medium">
+                                                {selectedPicIds.length} item(s) selected
+                                            </span>
+                                            <div className="flex gap-2">
+                                                <Suspense fallback={<ComponentLoader />}>
+                                                    <BulkOperations
+                                                        selectedIds={selectedPicIds}
+                                                        tableName="pic_data"
+                                                        type="pic"
+                                                        onComplete={() => {
+                                                            setSelectedPicIds([]);
+                                                            fetchPicData();
+                                                        }}
+                                                        data={filteredPicData}
+                                                        statusOptions={[
+                                                            { value: 'Active', label: 'Active' },
+                                                            { value: 'Inactive', label: 'Inactive' }
+                                                        ]}
+                                                    />
+                                                </Suspense>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => setSelectedPicIds([])}
+                                                >
+                                                    Clear Selection
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-xl border bg-card shadow">
                                     <div className="p-6 border-b">
                                         <h2 className="text-lg font-semibold">
@@ -1941,6 +1951,9 @@ const AdminDashboard = () => {
                                             onDelete={handlePicDelete}
                                             onRefresh={fetchPicData}
                                             isReadOnly={false}
+                                            enableSelection={canEditPic}
+                                            selectedIds={selectedPicIds}
+                                            onSelectionChange={setSelectedPicIds}
                                         />
                                     </div>
                                 </motion.div>
@@ -1949,8 +1962,9 @@ const AdminDashboard = () => {
                             <div className="text-center py-10 bg-card rounded-xl border">
                                 <p className="text-muted-foreground">You do not have permission to access PIC Data.</p>
                             </div>
-                        )}
-                    </div>
+                        )
+                        }
+                    </div >
                 );
             case 'users':
                 return canManageUsers ? <UserManagement /> : <div className="p-4">Access Denied</div>;

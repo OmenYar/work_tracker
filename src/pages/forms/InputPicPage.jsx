@@ -50,6 +50,7 @@ const InputPicPage = () => {
                 ...data,
                 tgl_join: data.tgl_join || null,
                 tgl_berakhir: data.tgl_berakhir || null,
+                tgl_efektif_transisi: data.tgl_efektif_transisi || null,
             };
 
             let error;

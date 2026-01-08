@@ -3,6 +3,7 @@ import { Edit, Trash2, MoreHorizontal, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -48,7 +49,16 @@ const VALIDASI_OPTIONS = [
     { value: 'Inactive', label: 'Inactive' },
 ];
 
-const PicDataTable = ({ data, onEdit, onDelete, onRefresh, isReadOnly = false }) => {
+const PicDataTable = ({
+    data,
+    onEdit,
+    onDelete,
+    onRefresh,
+    isReadOnly = false,
+    enableSelection = false,
+    selectedIds = [],
+    onSelectionChange
+}) => {
     const { toast } = useToast();
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(20);
@@ -238,6 +248,29 @@ const PicDataTable = ({ data, onEdit, onDelete, onRefresh, isReadOnly = false })
         );
     };
 
+    // Selection handlers
+    const handleSelectAll = useCallback((checked) => {
+        if (!onSelectionChange) return;
+        if (checked) {
+            const allIds = data.map(pic => pic.id);
+            onSelectionChange(allIds);
+        } else {
+            onSelectionChange([]);
+        }
+    }, [data, onSelectionChange]);
+
+    const handleSelectRow = useCallback((id, checked) => {
+        if (!onSelectionChange) return;
+        if (checked) {
+            onSelectionChange([...selectedIds, id]);
+        } else {
+            onSelectionChange(selectedIds.filter(i => i !== id));
+        }
+    }, [selectedIds, onSelectionChange]);
+
+    const isAllSelected = data.length > 0 && selectedIds.length === data.length;
+    const isPartiallySelected = selectedIds.length > 0 && selectedIds.length < data.length;
+
     if (data.length === 0) {
         return (
             <div className="text-center py-12 text-muted-foreground">
@@ -252,6 +285,16 @@ const PicDataTable = ({ data, onEdit, onDelete, onRefresh, isReadOnly = false })
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b bg-muted/50">
+                            {enableSelection && (
+                                <th className="py-3 px-4 w-12">
+                                    <Checkbox
+                                        checked={isAllSelected}
+                                        onCheckedChange={handleSelectAll}
+                                        aria-label="Select all"
+                                        className={isPartiallySelected ? 'data-[state=checked]:bg-primary/50' : ''}
+                                    />
+                                </th>
+                            )}
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground w-12">No</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Nama PIC</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Jabatan</th>
@@ -265,7 +308,19 @@ const PicDataTable = ({ data, onEdit, onDelete, onRefresh, isReadOnly = false })
                     </thead>
                     <tbody>
                         {paginatedData.map((pic, index) => (
-                            <tr key={pic.id} className="border-b hover:bg-muted/50 transition-colors">
+                            <tr key={pic.id} className={cn(
+                                "border-b hover:bg-muted/50 transition-colors",
+                                selectedIds.includes(pic.id) && "bg-primary/5"
+                            )}>
+                                {enableSelection && (
+                                    <td className="py-3 px-4">
+                                        <Checkbox
+                                            checked={selectedIds.includes(pic.id)}
+                                            onCheckedChange={(checked) => handleSelectRow(pic.id, checked)}
+                                            aria-label={`Select ${pic.nama_pic}`}
+                                        />
+                                    </td>
+                                )}
                                 <td className="py-3 px-4 text-muted-foreground">{startIndex + index + 1}</td>
                                 <td className="py-3 px-4 font-medium">
                                     {renderTextCell(pic, 'nama_pic', pic.nama_pic)}
