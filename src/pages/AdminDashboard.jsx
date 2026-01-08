@@ -1915,10 +1915,8 @@ const AdminDashboard = () => {
                                                         selectedIds={selectedPicIds}
                                                         tableName="pic_data"
                                                         type="pic"
-                                                        onComplete={() => {
-                                                            setSelectedPicIds([]);
-                                                            fetchPicData();
-                                                        }}
+                                                        onRefresh={fetchPicData}
+                                                        onSelectionChange={setSelectedPicIds}
                                                         data={filteredPicData}
                                                         statusOptions={[
                                                             { value: 'Active', label: 'Active' },
