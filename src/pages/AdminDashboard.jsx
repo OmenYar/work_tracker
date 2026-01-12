@@ -1577,15 +1577,59 @@ const AdminDashboard = () => {
                                             </motion.div>
                                         </div>
 
-                                        {/* Jabatan Distribution */}
+                                        {/* Jabatan Distribution - Count Cards Grid */}
                                         <div className="mt-4 pt-4 border-t">
-                                            <p className="text-sm font-medium mb-2">Distribusi Jabatan</p>
-                                            <div className="flex flex-wrap gap-2">
-                                                {Object.entries(jabatanCounts).sort((a, b) => b[1] - a[1]).map(([jabatan, count]) => (
-                                                    <Badge key={jabatan} variant="secondary" className="text-xs">
-                                                        {jabatan}: {count}
-                                                    </Badge>
-                                                ))}
+                                            <p className="text-sm font-medium mb-3 flex items-center gap-2">
+                                                <Briefcase className="w-4 h-4 text-indigo-600" />
+                                                Distribusi Jabatan (Active PIC)
+                                            </p>
+                                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                                                {Object.entries(jabatanCounts).sort((a, b) => b[1] - a[1]).map(([jabatan, count], idx) => {
+                                                    // Calculate per regional for this jabatan
+                                                    const jo1 = picData.filter(p => p.validasi === 'Active' && p.jabatan === jabatan && p.regional === 'Jabo Outer 1').length;
+                                                    const jo2 = picData.filter(p => p.validasi === 'Active' && p.jabatan === jabatan && p.regional === 'Jabo Outer 2').length;
+                                                    const jo3 = picData.filter(p => p.validasi === 'Active' && p.jabatan === jabatan && p.regional === 'Jabo Outer 3').length;
+                                                    
+                                                    const colorClasses = [
+                                                        'bg-indigo-500/10 text-indigo-600',
+                                                        'bg-blue-500/10 text-blue-600',
+                                                        'bg-cyan-500/10 text-cyan-600',
+                                                        'bg-violet-500/10 text-violet-600',
+                                                        'bg-fuchsia-500/10 text-fuchsia-600',
+                                                        'bg-pink-500/10 text-pink-600',
+                                                        'bg-rose-500/10 text-rose-600',
+                                                    ];
+                                                    const colorClass = colorClasses[idx % colorClasses.length];
+                                                    
+                                                    return (
+                                                        <motion.div
+                                                            key={jabatan}
+                                                            initial={{ opacity: 0, scale: 0.9 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            transition={{ delay: idx * 0.03 }}
+                                                            className={`p-3 rounded-lg ${colorClass.split(' ')[0]}`}
+                                                        >
+                                                            <div className="flex flex-col">
+                                                                <p className={`text-2xl font-bold ${colorClass.split(' ')[1]}`}>{count}</p>
+                                                                <p className="text-xs font-medium text-muted-foreground truncate" title={jabatan}>{jabatan}</p>
+                                                                <div className="mt-2 pt-2 border-t border-current/10 grid grid-cols-3 gap-1 text-[10px]">
+                                                                    <div className="text-center">
+                                                                        <p className="font-semibold">{jo1}</p>
+                                                                        <p className="text-muted-foreground">JO1</p>
+                                                                    </div>
+                                                                    <div className="text-center">
+                                                                        <p className="font-semibold">{jo2}</p>
+                                                                        <p className="text-muted-foreground">JO2</p>
+                                                                    </div>
+                                                                    <div className="text-center">
+                                                                        <p className="font-semibold">{jo3}</p>
+                                                                        <p className="text-muted-foreground">JO3</p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </motion.div>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
                                     </CardContent>

@@ -65,6 +65,15 @@ const getStatusMobilBadge = (status) => {
     }
 };
 
+const getStatusTakeoutBadge = (status) => {
+    switch (status) {
+        case 'Belum Dikembalikan': return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+        case 'Proses Pengembalian': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
+        case 'Sudah Dikembalikan': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
+        default: return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
+    }
+};
+
 const CarDataTable = ({ data, onEdit, onDelete, isReadOnly = false, picData = [] }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(20);
@@ -108,6 +117,7 @@ const CarDataTable = ({ data, onEdit, onDelete, isReadOnly = false, picData = []
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Condition</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Priority</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status Mobil</th>
+                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Takeout</th>
                             <th className="text-left py-3 px-4 font-medium text-muted-foreground">Remark</th>
                             {!isReadOnly && <th className="text-right py-3 px-4 font-medium text-muted-foreground">Actions</th>}
                         </tr>
@@ -158,6 +168,16 @@ const CarDataTable = ({ data, onEdit, onDelete, isReadOnly = false, picData = []
                                         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusMobilBadge(car.status_mobil)}`}>
                                             {car.status_mobil || 'AKTIF'}
                                         </span>
+                                    </td>
+                                    {/* Status Takeout */}
+                                    <td className="py-3 px-4">
+                                        {(car.status_transisi_q1 === 'Take Out' || car.status_transisi_q2_q4 === 'Take Out') ? (
+                                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusTakeoutBadge(car.status_takeout)}`}>
+                                                {car.status_takeout || 'Belum Diset'}
+                                            </span>
+                                        ) : (
+                                            <span className="text-xs text-muted-foreground">-</span>
+                                        )}
                                     </td>
                                     {/* Remark */}
                                     <td className="py-3 px-4">

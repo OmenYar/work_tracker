@@ -5,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/lib/customSupabaseClient';
-import { AlertTriangle, Calendar } from 'lucide-react';
+import { AlertTriangle, Calendar, MapPin, Package, FileCheck } from 'lucide-react';
 
 const SERVICE_OPTIONS = [
     { id: 'elektrikal', label: 'Elektrikal', score: 1 },
@@ -80,6 +80,16 @@ const CarDataForm = ({ onSubmit, initialData, onCancel }) => {
         status_transisi_q2_q4: 'TBD',
         remark_transisi_q2_q4: '',
         tgl_efektif_transisi: '',
+        // Takeout Tracking
+        status_takeout: '',
+        lokasi_kendaraan: '',
+        tanggal_target_kembali: '',
+        tanggal_aktual_kembali: '',
+        kelengkapan_surat: false,
+        kelengkapan_kunci: false,
+        kelengkapan_spion: false,
+        kelengkapan_toolkit: false,
+        catatan_pengembalian: '',
     });
 
     const [selectedServices, setSelectedServices] = useState([]);
@@ -136,6 +146,16 @@ const CarDataForm = ({ onSubmit, initialData, onCancel }) => {
                 status_transisi_q2_q4: initialData.status_transisi_q2_q4 || 'TBD',
                 remark_transisi_q2_q4: initialData.remark_transisi_q2_q4 || '',
                 tgl_efektif_transisi: initialData.tgl_efektif_transisi || '',
+                // Takeout Tracking
+                status_takeout: initialData.status_takeout || '',
+                lokasi_kendaraan: initialData.lokasi_kendaraan || '',
+                tanggal_target_kembali: initialData.tanggal_target_kembali || '',
+                tanggal_aktual_kembali: initialData.tanggal_aktual_kembali || '',
+                kelengkapan_surat: initialData.kelengkapan_surat || false,
+                kelengkapan_kunci: initialData.kelengkapan_kunci || false,
+                kelengkapan_spion: initialData.kelengkapan_spion || false,
+                kelengkapan_toolkit: initialData.kelengkapan_toolkit || false,
+                catatan_pengembalian: initialData.catatan_pengembalian || '',
             });
         }
     }, [initialData]);
@@ -466,6 +486,84 @@ const CarDataForm = ({ onSubmit, initialData, onCancel }) => {
                     </div>
                 </div>
             </div>
+
+            {/* Takeout Tracking Section */}
+            {(formData.status_transisi_q1 === 'Take Out' || formData.status_transisi_q2_q4 === 'Take Out') && (
+                <div className="space-y-4 border-t pt-4">
+                    <h3 className="text-sm font-semibold text-red-600 uppercase tracking-wider border-b border-red-300 pb-2 flex items-center gap-2">
+                        <Package className="w-4 h-4" />
+                        Tracking Pengembalian Kendaraan
+                    </h3>
+                    <div className="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className="space-y-2">
+                                <Label className="flex items-center gap-2">
+                                    <FileCheck className="w-4 h-4" />
+                                    Status Pengembalian
+                                </Label>
+                                <Select value={formData.status_takeout || '_none_'} onValueChange={(v) => handleSelectChange('status_takeout', v === '_none_' ? '' : v)}>
+                                    <SelectTrigger className={
+                                        formData.status_takeout === 'Sudah Dikembalikan' ? 'border-green-500' :
+                                            formData.status_takeout === 'Proses Pengembalian' ? 'border-yellow-500' :
+                                                formData.status_takeout === 'Belum Dikembalikan' ? 'border-red-500' : ''
+                                    }>
+                                        <SelectValue placeholder="Pilih Status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="_none_">-- Belum Diset --</SelectItem>
+                                        <SelectItem value="Belum Dikembalikan">🔴 Belum Dikembalikan</SelectItem>
+                                        <SelectItem value="Proses Pengembalian">🟡 Proses Pengembalian</SelectItem>
+                                        <SelectItem value="Sudah Dikembalikan">🟢 Sudah Dikembalikan</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="flex items-center gap-2">
+                                    <MapPin className="w-4 h-4" />
+                                    Lokasi Kendaraan
+                                </Label>
+                                <Input name="lokasi_kendaraan" value={formData.lokasi_kendaraan} onChange={handleChange} placeholder="e.g. Gudang BMG, Rumah PIC..." />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="flex items-center gap-2">
+                                    <Calendar className="w-4 h-4" />
+                                    Target Return
+                                </Label>
+                                <Input type="date" name="tanggal_target_kembali" value={formData.tanggal_target_kembali} onChange={handleChange} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="flex items-center gap-2">
+                                    <Calendar className="w-4 h-4" />
+                                    Aktual Return
+                                </Label>
+                                <Input type="date" name="tanggal_aktual_kembali" value={formData.tanggal_aktual_kembali} onChange={handleChange} disabled={formData.status_takeout !== 'Sudah Dikembalikan'} />
+                            </div>
+                        </div>
+
+                        <div className="mt-4 pt-4 border-t border-red-200 dark:border-red-700">
+                            <Label className="text-sm font-medium mb-3 block">Checklist Kelengkapan</Label>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                {[
+                                    { id: 'kelengkapan_surat', label: 'Surat-surat' },
+                                    { id: 'kelengkapan_kunci', label: 'Kunci' },
+                                    { id: 'kelengkapan_spion', label: 'Spion' },
+                                    { id: 'kelengkapan_toolkit', label: 'Toolkit' },
+                                ].map(item => (
+                                    <label key={item.id} className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${formData[item.id] ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-gray-300 hover:border-gray-400'}`}>
+                                        <input type="checkbox" checked={formData[item.id] || false} onChange={(e) => setFormData(prev => ({ ...prev, [item.id]: e.target.checked }))} className="w-4 h-4 accent-green-600" />
+                                        <span className="font-medium">{item.label}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="mt-4 space-y-2">
+                            <Label>Catatan Pengembalian / Kondisi</Label>
+                            <Textarea name="catatan_pengembalian" value={formData.catatan_pengembalian} onChange={handleChange} placeholder="Catatan kondisi kendaraan saat dikembalikan..." rows={2} />
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="flex gap-4 pt-4 justify-end">
                 {onCancel && <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>}
