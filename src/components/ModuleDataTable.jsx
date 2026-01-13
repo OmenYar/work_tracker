@@ -1,23 +1,14 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Search, Edit, Trash2, MoreHorizontal,
-    ChevronLeft, ChevronRight, Plus
+    Plus
 } from 'lucide-react';
 import ExportDropdown from '@/components/ExportDropdown';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table";
 import {
     Dialog,
     DialogContent,
@@ -33,29 +24,26 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Pagination } from '@/components/ui/pagination';
 import { supabase } from '@/lib/customSupabaseClient';
+import { deleteModuleFromGoogleSheets } from '@/lib/googleSheetsSync';
 
-const RFS_STATUS_OPTIONS = ['Open', 'Closed', 'Hold', 'Waiting Permit', 'Cancel'];
-const REGIONAL_OPTIONS = [
-    { value: 'Jabo Outer 1', label: 'Jabo Outer 1' },
-    { value: 'Jabo Outer 2', label: 'Jabo Outer 2' },
-    { value: 'Jabo Outer 3', label: 'Jabo Outer 3' },
-];
+// Filter options
+const RFS_STATUS_OPTIONS = ['Open', 'Done', 'Hold'];
+const DOC_ATP_OPTIONS = ['Open', 'Done'];
 
 const ModuleDataTable = ({
     moduleData = [],
-    picData = [],
+    onRefresh,
 }) => {
     const navigate = useNavigate();
     const { toast } = useToast();
     const [searchTerm, setSearchTerm] = useState('');
-    const [statusFilter, setStatusFilter] = useState('all');
-    const [regionalFilter, setRegionalFilter] = useState('all');
+    const [rfsFilter, setRfsFilter] = useState('all');
+    const [atpFilter, setAtpFilter] = useState('all');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(20);
     const [deleteDialog, setDeleteDialog] = useState({ open: false, item: null });
-
-
 
     // Filter data
     const filteredData = useMemo(() => {
@@ -63,12 +51,13 @@ const ModuleDataTable = ({
             const matchesSearch = searchTerm === '' ||
                 item.site_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 item.site_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                item.kab_kota?.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesStatus = statusFilter === 'all' || item.rfs_status === statusFilter;
-            const matchesRegional = regionalFilter === 'all' || item.regional === regionalFilter;
-            return matchesSearch && matchesStatus && matchesRegional;
+                item.area?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                item.project_name?.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesRfs = rfsFilter === 'all' || item.rfs_status === rfsFilter;
+            const matchesAtp = atpFilter === 'all' || item.doc_atp === atpFilter;
+            return matchesSearch && matchesRfs && matchesAtp;
         });
-    }, [moduleData, searchTerm, statusFilter, regionalFilter]);
+    }, [moduleData, searchTerm, rfsFilter, atpFilter]);
 
     // Pagination
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -78,14 +67,24 @@ const ModuleDataTable = ({
     );
     const startIndex = (currentPage - 1) * itemsPerPage;
 
-    const handleDelete = async () => {
+    // Reset page when filters change
+    React.useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, rfsFilter, atpFilter, itemsPerPage]);
+
+    const handleDelete = useCallback(async () => {
         try {
+            const recordId = deleteDialog.item.id;
+
             const { error } = await supabase
                 .from('module_tracker')
                 .delete()
-                .eq('id', deleteDialog.item.id);
+                .eq('id', recordId);
 
             if (error) throw error;
+
+            // Sync delete to Google Sheets
+            await deleteModuleFromGoogleSheets(recordId);
 
             toast({ title: 'Berhasil', description: 'Data berhasil dihapus' });
             setDeleteDialog({ open: false, item: null });
@@ -93,23 +92,35 @@ const ModuleDataTable = ({
         } catch (error) {
             toast({ title: 'Error', description: error.message, variant: 'destructive' });
         }
+    }, [deleteDialog.item, toast, onRefresh]);
+
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '-';
+        return new Date(dateStr).toLocaleDateString('id-ID');
     };
 
-    // Get PIC name with N/A fallback
-    const getPicDisplay = (picName) => {
-        if (!picName) return 'N/A';
-        return picName;
-    };
-
+    // Status badge helper
     const getStatusBadge = (status) => {
-        const statusColors = {
-            'Closed': 'bg-green-500/20 text-green-700',
-            'Open': 'bg-yellow-500/20 text-yellow-700',
-            'Hold': 'bg-orange-500/20 text-orange-700',
-            'Waiting Permit': 'bg-blue-500/20 text-blue-700',
-            'Cancel': 'bg-red-500/20 text-red-700',
+        const colorMap = {
+            'Done': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+            'Open': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+            'Hold': 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
         };
-        return <Badge className={statusColors[status] || 'bg-gray-500/20 text-gray-700'}>{status || 'Open'}</Badge>;
+        return colorMap[status] || 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
+    };
+
+    // ATP Doc badge
+    const getAtpBadge = (status) => {
+        const colorMap = {
+            'Done': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+            'Open': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+        };
+        return colorMap[status] || 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
+    };
+
+    const handleItemsPerPageChange = (newSize) => {
+        setItemsPerPage(newSize);
+        setCurrentPage(1);
     };
 
     return (
@@ -121,31 +132,31 @@ const ModuleDataTable = ({
                         <div className="relative flex-1 min-w-[200px]">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input
-                                placeholder="Search Site ID / Name..."
+                                placeholder="Search Site ID / Name / Area..."
                                 className="pl-10"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <Select value={rfsFilter} onValueChange={setRfsFilter}>
                             <SelectTrigger className="w-[140px]">
                                 <SelectValue placeholder="RFS Status" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Status</SelectItem>
+                                <SelectItem value="all">All RFS</SelectItem>
                                 {RFS_STATUS_OPTIONS.map(s => (
                                     <SelectItem key={s} value={s}>{s}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
-                        <Select value={regionalFilter} onValueChange={setRegionalFilter}>
+                        <Select value={atpFilter} onValueChange={setAtpFilter}>
                             <SelectTrigger className="w-[140px]">
-                                <SelectValue placeholder="Regional" />
+                                <SelectValue placeholder="ATP Doc" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">All Regional</SelectItem>
-                                {REGIONAL_OPTIONS.map(r => (
-                                    <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                                <SelectItem value="all">All ATP</SelectItem>
+                                {DOC_ATP_OPTIONS.map(s => (
+                                    <SelectItem key={s} value={s}>{s}</SelectItem>
                                 ))}
                             </SelectContent>
                         </Select>
@@ -165,48 +176,52 @@ const ModuleDataTable = ({
             <Card>
                 <CardContent className="p-0">
                     <div className="overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-[50px]">No</TableHead>
-                                    <TableHead className="w-[120px]">Site ID</TableHead>
-                                    <TableHead>Site Name</TableHead>
-                                    <TableHead>Kab/Kota</TableHead>
-                                    <TableHead>RFS Status</TableHead>
-                                    <TableHead>PIC</TableHead>
-                                    <TableHead>RFS Date</TableHead>
-                                    <TableHead>Regional</TableHead>
-                                    <TableHead className="text-right w-12">Act</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="border-b bg-muted/50">
+                                    <th className="text-left py-3 px-4 font-medium text-muted-foreground w-12">No</th>
+                                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Site ID</th>
+                                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Site Name</th>
+                                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Area</th>
+                                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Project</th>
+                                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">RFS Status</th>
+                                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Install Date</th>
+                                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">SN Module</th>
+                                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">ATP Doc</th>
+                                    <th className="text-right py-3 px-4 font-medium text-muted-foreground">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
                                 {paginatedData.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                                    <tr>
+                                        <td colSpan={10} className="text-center py-8 text-muted-foreground">
                                             No data found
-                                        </TableCell>
-                                    </TableRow>
+                                        </td>
+                                    </tr>
                                 ) : (
                                     paginatedData.map((item, index) => (
-                                        <TableRow key={item.id}>
-                                            <TableCell className="text-muted-foreground">{startIndex + index + 1}</TableCell>
-                                            <TableCell className="font-mono text-sm">{item.site_id}</TableCell>
-                                            <TableCell className="max-w-[200px] truncate">{item.site_name}</TableCell>
-                                            <TableCell>{item.kab_kota || '-'}</TableCell>
-                                            <TableCell>
-                                                {getStatusBadge(item.rfs_status)}
-                                            </TableCell>
-                                            <TableCell>
-                                                {getPicDisplay(item.pic_name)}
-                                            </TableCell>
-                                            <TableCell>
-                                                {item.rfs_date ? new Date(item.rfs_date).toLocaleDateString('id-ID') : '-'}
-                                            </TableCell>
-                                            <TableCell>{item.regional || '-'}</TableCell>
-                                            <TableCell className="text-right">
+                                        <tr key={item.id} className="border-b hover:bg-muted/50 transition-colors">
+                                            <td className="py-3 px-4 text-muted-foreground">{startIndex + index + 1}</td>
+                                            <td className="py-3 px-4 font-medium font-mono">{item.site_id}</td>
+                                            <td className="py-3 px-4 max-w-[150px] truncate">{item.site_name}</td>
+                                            <td className="py-3 px-4">{item.area || '-'}</td>
+                                            <td className="py-3 px-4 max-w-[120px] truncate">{item.project_name || '-'}</td>
+                                            <td className="py-3 px-4">
+                                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadge(item.rfs_status)}`}>
+                                                    {item.rfs_status || 'Open'}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 px-4">{formatDate(item.install_date)}</td>
+                                            <td className="py-3 px-4 font-mono text-xs">{item.sn_module || '-'}</td>
+                                            <td className="py-3 px-4">
+                                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getAtpBadge(item.doc_atp)}`}>
+                                                    {item.doc_atp || 'Open'}
+                                                </span>
+                                            </td>
+                                            <td className="py-3 px-4 text-right">
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                                                             <MoreHorizontal className="h-4 w-4" />
                                                         </Button>
                                                     </DropdownMenuTrigger>
@@ -224,50 +239,24 @@ const ModuleDataTable = ({
                                                         </DropdownMenuItem>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
-                                            </TableCell>
-                                        </TableRow>
+                                            </td>
+                                        </tr>
                                     ))
                                 )}
-                            </TableBody>
-                        </Table>
+                            </tbody>
+                        </table>
                     </div>
 
                     {/* Pagination */}
-                    <div className="flex items-center justify-between px-4 py-3 border-t">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <span>Showing {paginatedData.length} of {filteredData.length}</span>
-                            <Select value={String(itemsPerPage)} onValueChange={(v) => setItemsPerPage(Number(v))}>
-                                <SelectTrigger className="w-[70px] h-8">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="10">10</SelectItem>
-                                    <SelectItem value="20">20</SelectItem>
-                                    <SelectItem value="50">50</SelectItem>
-                                    <SelectItem value="100">100</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={currentPage === 1}
-                                onClick={() => setCurrentPage(p => p - 1)}
-                            >
-                                <ChevronLeft className="w-4 h-4" />
-                            </Button>
-                            <span className="text-sm">Page {currentPage} of {totalPages || 1}</span>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={currentPage >= totalPages}
-                                onClick={() => setCurrentPage(p => p + 1)}
-                            >
-                                <ChevronRight className="w-4 h-4" />
-                            </Button>
-                        </div>
-                    </div>
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                        totalItems={filteredData.length}
+                        itemsPerPage={itemsPerPage}
+                        onItemsPerPageChange={handleItemsPerPageChange}
+                        className="m-4"
+                    />
                 </CardContent>
             </Card>
 

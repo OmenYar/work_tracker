@@ -150,3 +150,25 @@ export async function deleteCarFromGoogleSheets(recordId) {
         recordId,
     });
 }
+
+// ============================================
+// Module Tracker Helpers
+// ============================================
+
+export async function syncModuleToGoogleSheets(data, recordId, isUpdate = false) {
+    return syncToGoogleSheets({
+        action: isUpdate ? 'update' : 'insert',
+        table: 'module_tracker',
+        data,
+        recordId,
+    });
+}
+
+export async function deleteModuleFromGoogleSheets(recordId) {
+    return syncToGoogleSheets({
+        action: 'delete',
+        table: 'module_tracker',
+        data: null,
+        recordId,
+    });
+}

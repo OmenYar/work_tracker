@@ -41,6 +41,10 @@ const Sidebar = memo(({ activeTab, setActiveTab, onLogout, isOpen, setIsOpen }) 
                     { id: 'generate-bast', label: 'Generate BAST', icon: FileText, color: 'text-teal-500' },
                     { id: 'users', label: 'Pengaturan User', icon: Users, color: 'text-violet-500' },
                 ] : []),
+                // Generate ATP accessible for Admin, AM, and SPV (Jabo)
+                ...((isAdmin || profile?.role === 'AM' || profile?.role?.includes('Jabo')) ? [
+                    { id: 'generate-atp', label: 'Generate ATP', icon: FileSpreadsheet, color: 'text-cyan-500' },
+                ] : []),
             ]
         },
     ];

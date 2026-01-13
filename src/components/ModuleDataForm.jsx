@@ -5,31 +5,30 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Package } from 'lucide-react';
+import { Package, MapPin, Calendar, FileText } from 'lucide-react';
 
-// Status options
-const RFS_STATUS_OPTIONS = ['Open', 'Closed', 'Hold', 'Waiting Permit', 'Cancel'];
-const REGIONAL_OPTIONS = ['Jabo Outer 1', 'Jabo Outer 2', 'Jabo Outer 3'];
+// RFS Status options
+const RFS_STATUS_OPTIONS = ['Open', 'Done', 'Hold'];
 
-const ModuleDataForm = ({ onSubmit, initialData, onCancel, picData = [] }) => {
+// ATP Doc options
+const DOC_ATP_OPTIONS = ['Open', 'Done'];
+
+const ModuleDataForm = ({ onSubmit, initialData, onCancel }) => {
     const [formData, setFormData] = useState({
         site_id: '',
         site_name: '',
-        provinsi: '',
-        kab_kota: '',
-        module_qty: 1,
+        area: '',
+        region: '',
+        longitude: '',
+        latitude: '',
+        project_name: '',
         rfs_status: 'Open',
-        rfs_date: '',
-        install_qty: 0,
-        tower_provider: '',
-        pic_name: '',
-        notes: '',
-        regional: '',
-        plan_install: '',
+        install_date: '',
+        task_id_netgear: '',
+        sn_module: '',
+        doc_atp: '',
+        remark: '',
     });
-
-    // Get active PICs for dropdown
-    const activePics = picData.filter(p => p.validasi === 'Active').sort((a, b) => a.nama_pic?.localeCompare(b.nama_pic));
 
     // Update formData when initialData changes (for edit mode)
     useEffect(() => {
@@ -37,17 +36,17 @@ const ModuleDataForm = ({ onSubmit, initialData, onCancel, picData = [] }) => {
             setFormData({
                 site_id: initialData.site_id || '',
                 site_name: initialData.site_name || '',
-                provinsi: initialData.provinsi || '',
-                kab_kota: initialData.kab_kota || '',
-                module_qty: initialData.module_qty || 1,
+                area: initialData.area || '',
+                region: initialData.region || '',
+                longitude: initialData.longitude || '',
+                latitude: initialData.latitude || '',
+                project_name: initialData.project_name || '',
                 rfs_status: initialData.rfs_status || 'Open',
-                rfs_date: initialData.rfs_date || '',
-                install_qty: initialData.install_qty || 0,
-                tower_provider: initialData.tower_provider || '',
-                pic_name: initialData.pic_name || '',
-                notes: initialData.notes || '',
-                regional: initialData.regional || '',
-                plan_install: initialData.plan_install || '',
+                install_date: initialData.install_date || '',
+                task_id_netgear: initialData.task_id_netgear || '',
+                sn_module: initialData.sn_module || '',
+                doc_atp: initialData.doc_atp || '',
+                remark: initialData.remark || '',
             });
         }
     }, [initialData]);
@@ -57,13 +56,8 @@ const ModuleDataForm = ({ onSubmit, initialData, onCancel, picData = [] }) => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleNumberChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: parseInt(value) || 0 }));
-    };
-
     const handleSelectChange = (name, value) => {
-        setFormData(prev => ({ ...prev, [name]: value === 'none' ? '' : value }));
+        setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     const handleSubmit = (e) => {
@@ -74,14 +68,8 @@ const ModuleDataForm = ({ onSubmit, initialData, onCancel, picData = [] }) => {
             return;
         }
 
-        // Calculate gap
-        const gap = (formData.module_qty || 0) - (formData.install_qty || 0);
-
-        onSubmit({ ...formData, gap });
+        onSubmit(formData);
     };
-
-    // Calculate gap for display
-    const calculatedGap = (formData.module_qty || 0) - (formData.install_qty || 0);
 
     return (
         <form onSubmit={handleSubmit}>
@@ -94,189 +82,197 @@ const ModuleDataForm = ({ onSubmit, initialData, onCancel, picData = [] }) => {
                 </CardHeader>
                 <CardContent className="space-y-6">
                     {/* Site Info */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="site_id">Site ID *</Label>
-                            <Input
-                                id="site_id"
-                                name="site_id"
-                                value={formData.site_id}
-                                onChange={handleChange}
-                                placeholder="e.g. 11TGR0126"
-                                required
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="site_name">Site Name *</Label>
-                            <Input
-                                id="site_name"
-                                name="site_name"
-                                value={formData.site_name}
-                                onChange={handleChange}
-                                placeholder="e.g. STTANGERANG_EP"
-                                required
-                            />
+                    <div className="space-y-4">
+                        <h3 className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
+                            <Package className="w-4 h-4" />
+                            Site Information
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="site_id">Site ID *</Label>
+                                <Input
+                                    id="site_id"
+                                    name="site_id"
+                                    value={formData.site_id}
+                                    onChange={handleChange}
+                                    placeholder="e.g. 11TGR0126"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="site_name">Site Name *</Label>
+                                <Input
+                                    id="site_name"
+                                    name="site_name"
+                                    value={formData.site_name}
+                                    onChange={handleChange}
+                                    placeholder="e.g. STTANGERANG_EP"
+                                    required
+                                />
+                            </div>
                         </div>
                     </div>
 
                     {/* Location */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="provinsi">Provinsi</Label>
-                            <Input
-                                id="provinsi"
-                                name="provinsi"
-                                value={formData.provinsi}
-                                onChange={handleChange}
-                                placeholder="e.g. BANTEN"
-                            />
+                    <div className="space-y-4">
+                        <h3 className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
+                            <MapPin className="w-4 h-4" />
+                            Location
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="area">Area (Kab/Kota)</Label>
+                                <Input
+                                    id="area"
+                                    name="area"
+                                    value={formData.area}
+                                    onChange={handleChange}
+                                    placeholder="e.g. TANGERANG"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="region">Region (Provinsi)</Label>
+                                <Input
+                                    id="region"
+                                    name="region"
+                                    value={formData.region}
+                                    onChange={handleChange}
+                                    placeholder="e.g. BANTEN"
+                                />
+                            </div>
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="kab_kota">Kab/Kota</Label>
-                            <Input
-                                id="kab_kota"
-                                name="kab_kota"
-                                value={formData.kab_kota}
-                                onChange={handleChange}
-                                placeholder="e.g. TANGERANG"
-                            />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="longitude">Longitude</Label>
+                                <Input
+                                    id="longitude"
+                                    name="longitude"
+                                    value={formData.longitude}
+                                    onChange={handleChange}
+                                    placeholder="e.g. 106.68852"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="latitude">Latitude</Label>
+                                <Input
+                                    id="latitude"
+                                    name="latitude"
+                                    value={formData.latitude}
+                                    onChange={handleChange}
+                                    placeholder="e.g. -6.92072"
+                                />
+                            </div>
                         </div>
                     </div>
 
-                    {/* Quantity */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Project Info */}
+                    <div className="space-y-4">
+                        <h3 className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
+                            <FileText className="w-4 h-4" />
+                            Project Details
+                        </h3>
                         <div className="space-y-2">
-                            <Label htmlFor="module_qty">Module Qty</Label>
+                            <Label htmlFor="project_name">Project Name</Label>
                             <Input
-                                id="module_qty"
-                                name="module_qty"
-                                type="number"
-                                min="0"
-                                value={formData.module_qty}
-                                onChange={handleNumberChange}
+                                id="project_name"
+                                name="project_name"
+                                value={formData.project_name}
+                                onChange={handleChange}
+                                placeholder="e.g. CME_Hermes H2 Batch 2-RAN"
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="install_qty">Install Qty</Label>
+                            <Label htmlFor="task_id_netgear">Task ID Netgear</Label>
                             <Input
-                                id="install_qty"
-                                name="install_qty"
-                                type="number"
-                                min="0"
-                                value={formData.install_qty}
-                                onChange={handleNumberChange}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Gap (auto)</Label>
-                            <Input
-                                value={calculatedGap}
-                                disabled
-                                className="bg-muted"
+                                id="task_id_netgear"
+                                name="task_id_netgear"
+                                value={formData.task_id_netgear}
+                                onChange={handleChange}
+                                placeholder="e.g. TSK-MOS-20251031000807"
                             />
                         </div>
                     </div>
 
                     {/* Status & Date */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-4">
+                        <h3 className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
+                            <Calendar className="w-4 h-4" />
+                            Status & Date
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="rfs_status">RFS Status</Label>
+                                <Select
+                                    value={formData.rfs_status || 'Open'}
+                                    onValueChange={(v) => handleSelectChange('rfs_status', v)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select Status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {RFS_STATUS_OPTIONS.map(status => (
+                                            <SelectItem key={status} value={status}>{status}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="install_date">Install Date</Label>
+                                <Input
+                                    id="install_date"
+                                    name="install_date"
+                                    type="date"
+                                    value={formData.install_date}
+                                    onChange={handleChange}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Module Info */}
+                    <div className="space-y-4">
+                        <h3 className="text-sm font-semibold flex items-center gap-2 text-muted-foreground">
+                            <Package className="w-4 h-4" />
+                            Module Details
+                        </h3>
                         <div className="space-y-2">
-                            <Label htmlFor="rfs_status">RFS Status</Label>
+                            <Label htmlFor="sn_module">Serial Number Module</Label>
+                            <Input
+                                id="sn_module"
+                                name="sn_module"
+                                value={formData.sn_module}
+                                onChange={handleChange}
+                                placeholder="SN Module"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="doc_atp">ATP Document Status</Label>
                             <Select
-                                value={formData.rfs_status || 'Open'}
-                                onValueChange={(v) => handleSelectChange('rfs_status', v)}
+                                value={formData.doc_atp || 'Open'}
+                                onValueChange={(v) => handleSelectChange('doc_atp', v)}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Select Status" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {RFS_STATUS_OPTIONS.map(status => (
+                                    {DOC_ATP_OPTIONS.map(status => (
                                         <SelectItem key={status} value={status}>{status}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="rfs_date">RFS Date</Label>
-                            <Input
-                                id="rfs_date"
-                                name="rfs_date"
-                                type="date"
-                                value={formData.rfs_date}
-                                onChange={handleChange}
-                            />
-                        </div>
                     </div>
 
-                    {/* PIC & Regional */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="pic_name">PIC</Label>
-                            <Select
-                                value={formData.pic_name || 'none'}
-                                onValueChange={(v) => handleSelectChange('pic_name', v)}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select PIC" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none">N/A</SelectItem>
-                                    {activePics.map(p => (
-                                        <SelectItem key={p.id} value={p.nama_pic}>{p.nama_pic}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="regional">Regional</Label>
-                            <Select
-                                value={formData.regional || 'none'}
-                                onValueChange={(v) => handleSelectChange('regional', v)}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select Regional" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none">-</SelectItem>
-                                    {REGIONAL_OPTIONS.map(r => (
-                                        <SelectItem key={r} value={r}>{r}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-
-                    {/* Tower & Plan */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="tower_provider">Tower Provider</Label>
-                            <Input
-                                id="tower_provider"
-                                name="tower_provider"
-                                value={formData.tower_provider}
-                                onChange={handleChange}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="plan_install">Plan Install</Label>
-                            <Input
-                                id="plan_install"
-                                name="plan_install"
-                                type="date"
-                                value={formData.plan_install}
-                                onChange={handleChange}
-                            />
-                        </div>
-                    </div>
-
-                    {/* Notes */}
+                    {/* Remark */}
                     <div className="space-y-2">
-                        <Label htmlFor="notes">Notes</Label>
+                        <Label htmlFor="remark">Remark</Label>
                         <Textarea
-                            id="notes"
-                            name="notes"
-                            value={formData.notes}
+                            id="remark"
+                            name="remark"
+                            value={formData.remark}
                             onChange={handleChange}
                             rows={3}
+                            placeholder="Additional notes..."
                         />
                     </div>
 

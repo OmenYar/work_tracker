@@ -26,6 +26,7 @@ const ActivityLogs = React.lazy(() => import('@/components/ActivityLogs'));
 const ExportDropdown = React.lazy(() => import('@/components/ExportDropdown'));
 const DashboardExport = React.lazy(() => import('@/components/DashboardExport'));
 const GenerateBAST = React.lazy(() => import('@/components/GenerateBAST'));
+const GenerateATP = React.lazy(() => import('@/components/GenerateATP'));
 const AnalyticsDashboard = React.lazy(() => import('@/components/AnalyticsDashboard'));
 const CalendarView = React.lazy(() => import('@/components/CalendarView'));
 const PerformanceMonitoring = React.lazy(() => import('@/components/PerformanceMonitoring'));
@@ -1589,7 +1590,7 @@ const AdminDashboard = () => {
                                                     const jo1 = picData.filter(p => p.validasi === 'Active' && p.jabatan === jabatan && p.regional === 'Jabo Outer 1').length;
                                                     const jo2 = picData.filter(p => p.validasi === 'Active' && p.jabatan === jabatan && p.regional === 'Jabo Outer 2').length;
                                                     const jo3 = picData.filter(p => p.validasi === 'Active' && p.jabatan === jabatan && p.regional === 'Jabo Outer 3').length;
-                                                    
+
                                                     const colorClasses = [
                                                         'bg-indigo-500/10 text-indigo-600',
                                                         'bg-blue-500/10 text-blue-600',
@@ -1600,7 +1601,7 @@ const AdminDashboard = () => {
                                                         'bg-rose-500/10 text-rose-600',
                                                     ];
                                                     const colorClass = colorClasses[idx % colorClasses.length];
-                                                    
+
                                                     return (
                                                         <motion.div
                                                             key={jabatan}
@@ -2507,6 +2508,12 @@ const AdminDashboard = () => {
                         <GenerateBAST />
                     </div>
                 ) : <div className="p-4">Access Denied - Admin Only</div>;
+            case 'generate-atp':
+                return (isAdmin || profile?.role === 'AM' || profile?.role?.includes('Jabo')) ? (
+                    <div className="bg-card border rounded-xl p-6 shadow-sm">
+                        <GenerateATP />
+                    </div>
+                ) : <div className="p-4">Access Denied - Admin/AM/SPV Only</div>;
             case 'module':
                 return (
                     <Suspense fallback={<ComponentLoader />}>

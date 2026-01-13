@@ -5,37 +5,33 @@ import { Button } from '@/components/ui/button';
 import ModuleDataForm from '@/components/ModuleDataForm';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/customSupabaseClient';
+import { syncModuleToGoogleSheets } from '@/lib/googleSheetsSync';
+import { useAuth } from '@/contexts/AuthContext';
 
 const InputModulePage = () => {
     const navigate = useNavigate();
     const { id } = useParams();
     const { toast } = useToast();
+    const { profile } = useAuth(); // Get user profile
     const [moduleData, setModuleData] = useState(null);
-    const [picData, setPicData] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
     const isEditMode = Boolean(id);
 
+    // Check Access
     useEffect(() => {
-        fetchPicData();
+        const hasAccess = profile?.role === 'Administrator' || profile?.role === 'AM' || profile?.role?.includes('Jabo');
+        if (!hasAccess) {
+            toast({ title: 'Access Denied', description: 'Anda tidak memiliki hak akses halaman ini.', variant: 'destructive' });
+            navigate('/admin');
+        }
+    }, [profile, navigate]);
+
+    useEffect(() => {
         if (isEditMode) {
             fetchModuleData();
         }
     }, [id]);
-
-    const fetchPicData = async () => {
-        try {
-            const { data, error } = await supabase
-                .from('pic_data')
-                .select('id, nama_pic, validasi')
-                .order('nama_pic');
-
-            if (error) throw error;
-            setPicData(data || []);
-        } catch (error) {
-            console.error('Error fetching PIC data:', error);
-        }
-    };
 
     const fetchModuleData = async () => {
         setIsLoading(true);
@@ -61,12 +57,14 @@ const InputModulePage = () => {
         try {
             // Sanitize date fields - convert empty strings to null
             const sanitizedData = { ...formData };
-            const dateFields = ['rfs_date', 'plan_install'];
+            const dateFields = ['install_date'];
             dateFields.forEach(field => {
                 if (!sanitizedData[field] || (typeof sanitizedData[field] === 'string' && sanitizedData[field].trim() === '')) {
                     sanitizedData[field] = null;
                 }
             });
+
+            let recordId = id;
 
             if (isEditMode) {
                 const { error } = await supabase
@@ -75,13 +73,25 @@ const InputModulePage = () => {
                     .eq('id', id);
 
                 if (error) throw error;
+
+                // Sync to Google Sheets
+                await syncModuleToGoogleSheets(sanitizedData, id, true);
+
                 toast({ title: 'Berhasil', description: 'Data module berhasil diupdate' });
             } else {
-                const { error } = await supabase
+                const { data: insertedData, error } = await supabase
                     .from('module_tracker')
-                    .insert(sanitizedData);
+                    .insert(sanitizedData)
+                    .select()
+                    .single();
 
                 if (error) throw error;
+
+                recordId = insertedData.id;
+
+                // Sync to Google Sheets
+                await syncModuleToGoogleSheets(sanitizedData, recordId, false);
+
                 toast({ title: 'Berhasil', description: 'Data module berhasil ditambahkan' });
             }
             navigate('/admin?tab=module');
@@ -120,7 +130,6 @@ const InputModulePage = () => {
                     onSubmit={handleSubmit}
                     initialData={moduleData}
                     onCancel={handleCancel}
-                    picData={picData}
                 />
             </div>
         </div>
