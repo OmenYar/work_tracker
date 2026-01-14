@@ -105,7 +105,7 @@ const GenerateATP = () => {
     const [isLoadingModules, setIsLoadingModules] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedModule, setSelectedModule] = useState(null);
-    const [selectedRegional, setSelectedRegional] = useState('');
+    const [selectedArea, setSelectedArea] = useState('');
 
     // Step 2: Project Information
     const [projectInfo, setProjectInfo] = useState({
@@ -171,17 +171,22 @@ const GenerateATP = () => {
         } finally {
             setIsLoadingModules(false);
         }
-    }, [selectedRegional]);
+    }, []);
 
     useEffect(() => {
         fetchModules();
     }, [fetchModules]);
 
-    // Filter modules based on search
-    const filteredModules = moduleData.filter(m =>
-        m.site_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        m.site_name?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Unique Areas for Filter
+    const availableAreas = [...new Set(moduleData.map(m => m.area).filter(Boolean))].sort();
+
+    // Filter modules based on search and area
+    const filteredModules = moduleData.filter(m => {
+        const matchesSearch = m.site_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            m.site_name?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesArea = selectedArea ? m.area === selectedArea : true;
+        return matchesSearch && matchesArea;
+    });
 
     // Select a module - auto-fill data
     const handleSelectModule = (mod) => {
@@ -507,15 +512,15 @@ const GenerateATP = () => {
                         {/* Filters */}
                         <div className="flex gap-4 mb-4">
                             <div className="flex-1">
-                                <Label>Filter Regional</Label>
-                                <Select value={selectedRegional || 'all'} onValueChange={(v) => setSelectedRegional(v === 'all' ? '' : v)}>
+                                <Label>Filter Area (Kab/Kota)</Label>
+                                <Select value={selectedArea || 'all'} onValueChange={(v) => setSelectedArea(v === 'all' ? '' : v)}>
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Semua Regional" />
+                                        <SelectValue placeholder="Semua Area" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">Semua Regional</SelectItem>
-                                        {REGIONALS.map(r => (
-                                            <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                                        <SelectItem value="all">Semua Area</SelectItem>
+                                        {availableAreas.map(area => (
+                                            <SelectItem key={area} value={area}>{area}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
