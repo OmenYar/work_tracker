@@ -179,7 +179,7 @@ const PicDataTable = ({
             <span
                 onClick={() => !isReadOnly && startEdit(pic.id, field, value)}
                 className={cn(
-                    "text-sm",
+                    "text-xs",
                     !isReadOnly && "cursor-pointer hover:bg-muted/50 px-1 py-0.5 rounded -mx-1"
                 )}
                 title={!isReadOnly ? "Click to edit" : undefined}
@@ -238,7 +238,7 @@ const PicDataTable = ({
             <span
                 onClick={() => !isReadOnly && startEdit(pic.id, field, value)}
                 className={cn(
-                    "text-sm",
+                    "text-xs",
                     !isReadOnly && "cursor-pointer hover:bg-muted/50 px-1 py-0.5 rounded -mx-1"
                 )}
                 title={!isReadOnly ? "Click to edit" : undefined}
@@ -286,7 +286,7 @@ const PicDataTable = ({
                     <thead>
                         <tr className="border-b bg-muted/50">
                             {enableSelection && (
-                                <th className="py-3 px-4 w-12">
+                                <th className="py-3 px-3 w-10">
                                     <Checkbox
                                         checked={isAllSelected}
                                         onCheckedChange={handleSelectAll}
@@ -295,15 +295,15 @@ const PicDataTable = ({
                                     />
                                 </th>
                             )}
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground w-12">No</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Nama PIC</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Jabatan</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Regional</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Area</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">No HP</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Email</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
-                            {!isReadOnly && <th className="text-right py-3 px-4 font-medium text-muted-foreground w-12">Act</th>}
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground w-10">No</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Nama PIC</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Jabatan</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Regional</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Area</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">No HP</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Email</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status</th>
+                            {!isReadOnly && <th className="text-right py-3 px-3 font-medium text-muted-foreground w-12">Act</th>}
                         </tr>
                     </thead>
                     <tbody>
@@ -313,7 +313,7 @@ const PicDataTable = ({
                                 selectedIds.includes(pic.id) && "bg-primary/5"
                             )}>
                                 {enableSelection && (
-                                    <td className="py-3 px-4">
+                                    <td className="py-2 px-3">
                                         <Checkbox
                                             checked={selectedIds.includes(pic.id)}
                                             onCheckedChange={(checked) => handleSelectRow(pic.id, checked)}
@@ -321,26 +321,26 @@ const PicDataTable = ({
                                         />
                                     </td>
                                 )}
-                                <td className="py-3 px-4 text-muted-foreground">{startIndex + index + 1}</td>
-                                <td className="py-3 px-4 font-medium">
+                                <td className="py-2 px-3 text-muted-foreground text-xs">{startIndex + index + 1}</td>
+                                <td className="py-2 px-3 font-medium text-xs">
                                     {renderTextCell(pic, 'nama_pic', pic.nama_pic)}
                                 </td>
-                                <td className="py-3 px-4">
+                                <td className="py-2 px-3">
                                     {renderSelectCell(pic, 'jabatan', pic.jabatan, JABATAN_OPTIONS)}
                                 </td>
-                                <td className="py-3 px-4">
+                                <td className="py-2 px-3">
                                     {renderSelectCell(pic, 'regional', pic.regional, REGIONAL_OPTIONS)}
                                 </td>
-                                <td className="py-3 px-4">
+                                <td className="py-2 px-3">
                                     {renderTextCell(pic, 'area', pic.area)}
                                 </td>
-                                <td className="py-3 px-4">
+                                <td className="py-2 px-3">
                                     {renderTextCell(pic, 'no_hp', pic.no_hp)}
                                 </td>
-                                <td className="py-3 px-4">
+                                <td className="py-2 px-3">
                                     {renderTextCell(pic, 'email', pic.email)}
                                 </td>
-                                <td className="py-3 px-4">
+                                <td className="py-2 px-3">
                                     {renderSelectCell(
                                         pic,
                                         'validasi',
@@ -352,10 +352,10 @@ const PicDataTable = ({
                                     )}
                                 </td>
                                 {!isReadOnly && (
-                                    <td className="py-3 px-4 text-right">
+                                    <td className="py-2 px-3 text-right">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
                                                     <MoreHorizontal className="h-4 w-4" />
                                                 </Button>
                                             </DropdownMenuTrigger>

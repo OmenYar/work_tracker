@@ -76,53 +76,53 @@ const CCTVDataTable = ({ data, onEdit, onDelete, isReadOnly = false }) => {
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b bg-muted/50">
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground w-12">No</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Site ID</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Site Name</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Regional</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Branch</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Merk CCTV</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Install Date</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Tenant Available</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">CCTV Category</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Remarks</th>
-                            {!isReadOnly && <th className="text-right py-3 px-4 font-medium text-muted-foreground">Actions</th>}
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground w-10">No</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Site ID</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Site Name</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Regional</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Branch</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Merk CCTV</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Install Date</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Tenant Available</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">CCTV Category</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Remarks</th>
+                            {!isReadOnly && <th className="text-right py-3 px-3 font-medium text-muted-foreground w-12">Act</th>}
                         </tr>
                     </thead>
                     <tbody>
                         {paginatedData.map((cctv, index) => (
                             <tr key={cctv.id} className="border-b hover:bg-muted/50 transition-colors">
-                                <td className="py-3 px-4 text-muted-foreground">{startIndex + index + 1}</td>
-                                <td className="py-3 px-4 font-medium font-mono">{cctv.site_id_display || '-'}</td>
-                                <td className="py-3 px-4">{cctv.site_name || '-'}</td>
-                                <td className="py-3 px-4">
-                                    <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                <td className="py-2 px-3 text-muted-foreground text-xs">{startIndex + index + 1}</td>
+                                <td className="py-2 px-3 font-medium font-mono text-xs">{cctv.site_id_display || '-'}</td>
+                                <td className="py-2 px-3 text-xs">{cctv.site_name || '-'}</td>
+                                <td className="py-2 px-3">
+                                    <span className="inline-flex items-center rounded-md px-2 py-1 text-[11px] font-semibold leading-none whitespace-nowrap bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                                         {cctv.regional || '-'}
                                     </span>
                                 </td>
-                                <td className="py-3 px-4">{cctv.branch || '-'}</td>
-                                <td className="py-3 px-4">{cctv.merk_cctv || '-'}</td>
-                                <td className="py-3 px-4">{formatDate(cctv.install_date)}</td>
-                                <td className="py-3 px-4">
-                                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadge(cctv.status)}`}>
+                                <td className="py-2 px-3 text-xs">{cctv.branch || '-'}</td>
+                                <td className="py-2 px-3 text-xs">{cctv.merk_cctv || '-'}</td>
+                                <td className="py-2 px-3 text-xs">{formatDate(cctv.install_date)}</td>
+                                <td className="py-2 px-3">
+                                    <span className={`inline-flex items-center rounded-md px-2 py-1 text-[11px] font-semibold leading-none whitespace-nowrap ${getStatusBadge(cctv.status)}`}>
                                         {cctv.status ? cctv.status.toUpperCase() : '-'}
                                     </span>
                                 </td>
-                                <td className="py-3 px-4">{cctv.tenant_available || '-'}</td>
-                                <td className="py-3 px-4">
-                                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getCategoryBadge(cctv.cctv_category)}`}>
+                                <td className="py-2 px-3 text-xs">{cctv.tenant_available || '-'}</td>
+                                <td className="py-2 px-3">
+                                    <span className={`inline-flex items-center rounded-md px-2 py-1 text-[11px] font-semibold leading-none whitespace-nowrap ${getCategoryBadge(cctv.cctv_category)}`}>
                                         {cctv.cctv_category || '-'}
                                     </span>
                                 </td>
-                                <td className="py-3 px-4 max-w-[200px] truncate" title={cctv.remarks}>
+                                <td className="py-2 px-3 max-w-[200px] truncate text-xs" title={cctv.remarks}>
                                     {cctv.remarks || '-'}
                                 </td>
                                 {!isReadOnly && (
-                                    <td className="py-3 px-4 text-right">
+                                    <td className="py-2 px-3 text-right">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
                                                     <MoreHorizontal className="h-4 w-4" />
                                                 </Button>
                                             </DropdownMenuTrigger>

@@ -39,13 +39,10 @@ export function ThemeProvider({
     };
 
     return (
-        <ThemeProviderContext.Provider value={value} {...props}>
+        <ThemeProviderContext.Provider value={value}>
             {children}
         </ThemeProviderContext.Provider>
     );
-
-    // Helper for props since I destructured specific ones
-    var props = {};
 }
 
 export const useTheme = () => {

@@ -107,19 +107,19 @@ const CarDataTable = ({ data, onEdit, onDelete, isReadOnly = false, picData = []
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b bg-muted/50">
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground w-12">No</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">No Polisi</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">PIC</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Area</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status STNK</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status Pajak</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status KIR</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Condition</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Priority</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status Mobil</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Takeout</th>
-                            <th className="text-left py-3 px-4 font-medium text-muted-foreground">Remark</th>
-                            {!isReadOnly && <th className="text-right py-3 px-4 font-medium text-muted-foreground">Actions</th>}
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground w-10">No</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">No Polisi</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">PIC</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Area</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status STNK</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status Pajak</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status KIR</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Condition</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Priority</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Status Mobil</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Takeout</th>
+                            <th className="text-left py-3 px-3 font-medium text-muted-foreground">Remark</th>
+                            {!isReadOnly && <th className="text-right py-3 px-3 font-medium text-muted-foreground w-12">Act</th>}
                         </tr>
                     </thead>
                     <tbody>
@@ -131,48 +131,48 @@ const CarDataTable = ({ data, onEdit, onDelete, isReadOnly = false, picData = []
 
                             return (
                                 <tr key={car.id} className="border-b hover:bg-muted/50 transition-colors">
-                                    <td className="py-3 px-4 text-muted-foreground">{startIndex + index + 1}</td>
-                                    <td className="py-3 px-4 font-medium font-mono">{car.nomor_polisi}</td>
-                                    <td className="py-3 px-4">{picName}</td>
-                                    <td className="py-3 px-4">{car.area || '-'}</td>
-                                    <td className="py-3 px-4">
-                                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadge(stnkStatus)}`}>
+                                    <td className="py-2 px-3 text-muted-foreground text-xs">{startIndex + index + 1}</td>
+                                    <td className="py-2 px-3 font-medium font-mono text-xs">{car.nomor_polisi}</td>
+                                    <td className="py-2 px-3 text-xs">{picName}</td>
+                                    <td className="py-2 px-3 text-xs">{car.area || '-'}</td>
+                                    <td className="py-2 px-3">
+                                        <span className={`inline-flex items-center rounded-md px-2 py-1 text-[11px] font-semibold leading-none whitespace-nowrap ${getStatusBadge(stnkStatus)}`}>
                                             {stnkStatus.text}
                                         </span>
                                     </td>
-                                    <td className="py-3 px-4">
-                                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadge(pajakStatus)}`}>
+                                    <td className="py-2 px-3">
+                                        <span className={`inline-flex items-center rounded-md px-2 py-1 text-[11px] font-semibold leading-none whitespace-nowrap ${getStatusBadge(pajakStatus)}`}>
                                             {pajakStatus.text}
                                         </span>
                                     </td>
-                                    <td className="py-3 px-4">
-                                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadge(kirStatus)}`}>
+                                    <td className="py-2 px-3">
+                                        <span className={`inline-flex items-center rounded-md px-2 py-1 text-[11px] font-semibold leading-none whitespace-nowrap ${getStatusBadge(kirStatus)}`}>
                                             {kirStatus.text}
                                         </span>
                                     </td>
-                                    <td className="py-3 px-4">
-                                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${car.condition === 'NEED SERVICE'
+                                    <td className="py-2 px-3">
+                                        <span className={`inline-flex items-center rounded-md px-2 py-1 text-[11px] font-semibold leading-none whitespace-nowrap ${car.condition === 'NEED SERVICE'
                                             ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
                                             : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
                                             }`}>
                                             {car.condition || 'GOOD'}
                                         </span>
                                     </td>
-                                    <td className="py-3 px-4">
-                                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getPriorityBadge(car.priority)}`}>
+                                    <td className="py-2 px-3">
+                                        <span className={`inline-flex items-center rounded-md px-2 py-1 text-[11px] font-semibold leading-none whitespace-nowrap ${getPriorityBadge(car.priority)}`}>
                                             {car.priority || '-'}
                                         </span>
                                     </td>
                                     {/* Status Mobil */}
-                                    <td className="py-3 px-4">
-                                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusMobilBadge(car.status_mobil)}`}>
+                                    <td className="py-2 px-3">
+                                        <span className={`inline-flex items-center rounded-md px-2 py-1 text-[11px] font-semibold leading-none whitespace-nowrap ${getStatusMobilBadge(car.status_mobil)}`}>
                                             {car.status_mobil || 'AKTIF'}
                                         </span>
                                     </td>
                                     {/* Status Takeout */}
-                                    <td className="py-3 px-4">
+                                    <td className="py-2 px-3">
                                         {(car.status_transisi_q1 === 'Take Out' || car.status_transisi_q2_q4 === 'Take Out') ? (
-                                            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusTakeoutBadge(car.status_takeout)}`}>
+                                            <span className={`inline-flex items-center rounded-md px-2 py-1 text-[11px] font-semibold leading-none whitespace-nowrap ${getStatusTakeoutBadge(car.status_takeout)}`}>
                                                 {car.status_takeout || 'Belum Diset'}
                                             </span>
                                         ) : (
@@ -180,16 +180,16 @@ const CarDataTable = ({ data, onEdit, onDelete, isReadOnly = false, picData = []
                                         )}
                                     </td>
                                     {/* Remark */}
-                                    <td className="py-3 px-4">
+                                    <td className="py-2 px-3">
                                         <span className="text-xs text-muted-foreground truncate max-w-[150px]" title={car.remark}>
                                             {car.remark || '-'}
                                         </span>
                                     </td>
                                     {!isReadOnly && (
-                                        <td className="py-3 px-4 text-right">
+                                        <td className="py-2 px-3 text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
                                                         <MoreHorizontal className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>

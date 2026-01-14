@@ -179,16 +179,16 @@ const ModuleDataTable = ({
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b bg-muted/50">
-                                    <th className="text-left py-3 px-4 font-medium text-muted-foreground w-12">No</th>
-                                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Site ID</th>
-                                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Site Name</th>
-                                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Area</th>
-                                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Project</th>
-                                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">RFS Status</th>
-                                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Install Date</th>
-                                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">SN Module</th>
-                                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">ATP Doc</th>
-                                    <th className="text-right py-3 px-4 font-medium text-muted-foreground">Actions</th>
+                                    <th className="text-left py-3 px-3 font-medium text-muted-foreground w-10">No</th>
+                                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Site ID</th>
+                                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Site Name</th>
+                                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Area</th>
+                                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Project</th>
+                                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">RFS Status</th>
+                                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">Install Date</th>
+                                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">SN Module</th>
+                                    <th className="text-left py-3 px-3 font-medium text-muted-foreground">ATP Doc</th>
+                                    <th className="text-right py-3 px-3 font-medium text-muted-foreground w-12">Act</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -201,27 +201,27 @@ const ModuleDataTable = ({
                                 ) : (
                                     paginatedData.map((item, index) => (
                                         <tr key={item.id} className="border-b hover:bg-muted/50 transition-colors">
-                                            <td className="py-3 px-4 text-muted-foreground">{startIndex + index + 1}</td>
-                                            <td className="py-3 px-4 font-medium font-mono">{item.site_id}</td>
-                                            <td className="py-3 px-4 max-w-[150px] truncate">{item.site_name}</td>
-                                            <td className="py-3 px-4">{item.area || '-'}</td>
-                                            <td className="py-3 px-4 max-w-[120px] truncate">{item.project_name || '-'}</td>
-                                            <td className="py-3 px-4">
-                                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getStatusBadge(item.rfs_status)}`}>
+                                            <td className="py-2 px-3 text-muted-foreground text-xs">{startIndex + index + 1}</td>
+                                            <td className="py-2 px-3 font-medium font-mono text-xs">{item.site_id}</td>
+                                            <td className="py-2 px-3 max-w-[150px] truncate text-xs">{item.site_name}</td>
+                                            <td className="py-2 px-3 text-xs">{item.area || '-'}</td>
+                                            <td className="py-2 px-3 max-w-[120px] truncate text-xs">{item.project_name || '-'}</td>
+                                            <td className="py-2 px-3">
+                                                <span className={`inline-flex items-center rounded-md px-2 py-1 text-[11px] font-semibold leading-none whitespace-nowrap ${getStatusBadge(item.rfs_status)}`}>
                                                     {item.rfs_status || 'Open'}
                                                 </span>
                                             </td>
-                                            <td className="py-3 px-4">{formatDate(item.install_date)}</td>
-                                            <td className="py-3 px-4 font-mono text-xs">{item.sn_module || '-'}</td>
-                                            <td className="py-3 px-4">
-                                                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${getAtpBadge(item.doc_atp)}`}>
+                                            <td className="py-2 px-3 text-xs">{formatDate(item.install_date)}</td>
+                                            <td className="py-2 px-3 font-mono text-xs">{item.sn_module || '-'}</td>
+                                            <td className="py-2 px-3">
+                                                <span className={`inline-flex items-center rounded-md px-2 py-1 text-[11px] font-semibold leading-none whitespace-nowrap ${getAtpBadge(item.doc_atp)}`}>
                                                     {item.doc_atp || 'Open'}
                                                 </span>
                                             </td>
-                                            <td className="py-3 px-4 text-right">
+                                            <td className="py-2 px-3 text-right">
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
-                                                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
                                                             <MoreHorizontal className="h-4 w-4" />
                                                         </Button>
                                                     </DropdownMenuTrigger>

@@ -179,27 +179,27 @@ const SmartLockDataTable = ({ data, onRefresh }) => {
                                 ) : (
                                     paginatedData.map((item, idx) => (
                                         <TableRow key={item.id} className="hover:bg-muted/30">
-                                            <TableCell className="font-medium">
+                                            <TableCell className="text-muted-foreground text-xs">
                                                 {(currentPage - 1) * pageSize + idx + 1}
                                             </TableCell>
                                             <TableCell className="font-mono text-xs">{item.site_id_2}</TableCell>
                                             <TableCell className="font-mono text-xs">{item.site_id_pti}</TableCell>
-                                            <TableCell className="max-w-[200px] truncate">{item.site_name}</TableCell>
+                                            <TableCell className="max-w-[200px] truncate text-xs">{item.site_name}</TableCell>
                                             <TableCell className="font-mono text-xs">{item.sn_id_wm_lock}</TableCell>
-                                            <TableCell>{item.pti_reg}</TableCell>
+                                            <TableCell className="text-xs">{item.pti_reg}</TableCell>
                                             <TableCell>
-                                                <Badge className={statusColors[item.status_new] || 'bg-gray-500/20'}>
+                                                <Badge className={`text-[11px] ${statusColors[item.status_new] || 'bg-gray-500/20'}`}>
                                                     {item.status_new}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
                                                 {item.priority === 'Issue Long Aging' && (
-                                                    <Badge className="bg-orange-500/20 text-orange-700">
+                                                    <Badge className="text-[11px] bg-orange-500/20 text-orange-700">
                                                         {item.priority}
                                                     </Badge>
                                                 )}
                                             </TableCell>
-                                            <TableCell>{item.aging_last_access}</TableCell>
+                                            <TableCell className="text-xs">{item.aging_last_access}</TableCell>
                                             <TableCell className="text-right">
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
