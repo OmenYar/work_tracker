@@ -106,6 +106,7 @@ const GenerateATP = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedModule, setSelectedModule] = useState(null);
     const [selectedArea, setSelectedArea] = useState('');
+    const [showCompleted, setShowCompleted] = useState(false); // To toggle showing 'Done' ATPs
 
     // Step 2: Project Information
     const [projectInfo, setProjectInfo] = useState({
@@ -152,8 +153,12 @@ const GenerateATP = () => {
                 .from('module_tracker')
                 .select('*')
                 .eq('rfs_status', 'Done')
-                .eq('doc_atp', 'Open')
                 .order('created_at', { ascending: false });
+
+            // If not showing completed, only show 'Open' doc_atp
+            if (!showCompleted) {
+                query = query.eq('doc_atp', 'Open');
+            }
 
             if (selectedRegional) {
                 const regional = REGIONALS.find(r => r.id === selectedRegional);
@@ -171,7 +176,7 @@ const GenerateATP = () => {
         } finally {
             setIsLoadingModules(false);
         }
-    }, []);
+    }, [showCompleted]);
 
     useEffect(() => {
         fetchModules();
@@ -536,6 +541,17 @@ const GenerateATP = () => {
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
                                 </div>
+                            </div>
+                            <div className="flex-1 items-end flex pb-2">
+                                <label className="flex items-center gap-2 cursor-pointer text-sm">
+                                    <input
+                                        type="checkbox"
+                                        checked={showCompleted}
+                                        onChange={(e) => setShowCompleted(e.target.checked)}
+                                        className="rounded border-gray-300 text-primary focus:ring-primary"
+                                    />
+                                    <span>Tampilkan yang sudah Done</span>
+                                </label>
                             </div>
                         </div>
 
