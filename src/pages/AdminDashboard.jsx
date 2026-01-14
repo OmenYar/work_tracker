@@ -2268,6 +2268,7 @@ const AdminDashboard = () => {
                                                     <div>
                                                         <p className="text-[10px] text-muted-foreground">Total</p>
                                                         <p className="text-xl font-bold text-blue-600">{cctvTotal}</p>
+                                                        <p className="text-[9px] text-muted-foreground">100%</p>
                                                     </div>
                                                     <Camera className="w-4 h-4 text-blue-600 opacity-50" />
                                                 </div>
@@ -2282,6 +2283,7 @@ const AdminDashboard = () => {
                                                     <div>
                                                         <p className="text-[10px] text-muted-foreground">Online</p>
                                                         <p className="text-xl font-bold text-green-600">{cctvOnline}</p>
+                                                        <p className="text-[9px] text-green-600">{cctvTotal > 0 ? ((cctvOnline / cctvTotal) * 100).toFixed(1) : 0}%</p>
                                                     </div>
                                                     <Wifi className="w-4 h-4 text-green-600 opacity-50" />
                                                 </div>
@@ -2296,6 +2298,7 @@ const AdminDashboard = () => {
                                                     <div>
                                                         <p className="text-[10px] text-muted-foreground">Offline</p>
                                                         <p className="text-xl font-bold text-yellow-600">{cctvOffline}</p>
+                                                        <p className="text-[9px] text-yellow-600">{cctvTotal > 0 ? ((cctvOffline / cctvTotal) * 100).toFixed(1) : 0}%</p>
                                                     </div>
                                                     <WifiOff className="w-4 h-4 text-yellow-600 opacity-50" />
                                                 </div>
@@ -2313,6 +2316,7 @@ const AdminDashboard = () => {
                                                     <div>
                                                         <p className="text-[10px] text-muted-foreground">Broken</p>
                                                         <p className="text-xl font-bold text-red-600">{cctvBroken}</p>
+                                                        <p className="text-[9px] text-red-600">{cctvTotal > 0 ? ((cctvBroken / cctvTotal) * 100).toFixed(1) : 0}%</p>
                                                     </div>
                                                     <AlertCircle className="w-4 h-4 text-red-600 opacity-50" />
                                                 </div>
@@ -2330,6 +2334,7 @@ const AdminDashboard = () => {
                                                     <div>
                                                         <p className="text-[10px] text-muted-foreground">Stolen</p>
                                                         <p className="text-xl font-bold text-purple-600">{cctvStolen}</p>
+                                                        <p className="text-[9px] text-purple-600">{cctvTotal > 0 ? ((cctvStolen / cctvTotal) * 100).toFixed(1) : 0}%</p>
                                                     </div>
                                                     <XCircle className="w-4 h-4 text-purple-600 opacity-50" />
                                                 </div>
@@ -2350,9 +2355,11 @@ const AdminDashboard = () => {
                                                     {['Jabo Outer 1', 'Jabo Outer 2', 'Jabo Outer 3'].map((reg, idx) => {
                                                         const count = cctvData.filter(c => c.regional === reg).length;
                                                         const onlineCount = cctvData.filter(c => c.regional === reg && c.status === 'online').length;
+                                                        const offlineCount = cctvData.filter(c => c.regional === reg && c.status === 'offline').length;
                                                         const brokenCount = cctvData.filter(c => c.regional === reg && c.status === 'broken').length;
                                                         const stolenCount = cctvData.filter(c => c.regional === reg && c.status === 'stolen').length;
-                                                        const percent = count > 0 ? Math.round((onlineCount / count) * 100) : 0;
+                                                        const onlinePercent = count > 0 ? ((onlineCount / count) * 100).toFixed(1) : 0;
+                                                        const offlinePercent = count > 0 ? ((offlineCount / count) * 100).toFixed(1) : 0;
                                                         return (
                                                             <div key={reg} className="p-3 rounded-lg bg-blue-500/10">
                                                                 <div className="flex justify-between items-start mb-2">
@@ -2362,17 +2369,21 @@ const AdminDashboard = () => {
                                                                 <div className="space-y-1">
                                                                     <div className="flex justify-between text-xs">
                                                                         <span className="text-green-600">{onlineCount} online</span>
-                                                                        <span className="text-muted-foreground">({percent}%)</span>
+                                                                        <span className="text-green-600/70">({onlinePercent}%)</span>
                                                                     </div>
                                                                     <div className="flex justify-between text-xs">
+                                                                        <span className="text-yellow-600">{offlineCount} offline</span>
+                                                                        <span className="text-yellow-600/70">({offlinePercent}%)</span>
+                                                                    </div>
+                                                                    <div className="flex gap-2 text-xs">
                                                                         {brokenCount > 0 && (
                                                                             <span className="text-red-600 font-medium">{brokenCount} broken</span>
                                                                         )}
                                                                         {stolenCount > 0 && (
                                                                             <span className="text-purple-600 font-medium">{stolenCount} stolen</span>
                                                                         )}
-                                                                        {brokenCount === 0 && stolenCount === 0 && (
-                                                                            <span className="text-green-600">✓ OK</span>
+                                                                        {brokenCount === 0 && stolenCount === 0 && offlineCount === 0 && (
+                                                                            <span className="text-green-600">✓ All OK</span>
                                                                         )}
                                                                     </div>
                                                                 </div>
