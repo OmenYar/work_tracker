@@ -28,13 +28,15 @@ const SmartLockSummary = ({ smartLockData = [] }) => {
         return { total, installed, needInstall, needRelocated, lost, longAging, progress, byRegion };
     }, [smartLockData]);
 
+    const pct = (val) => stats.total > 0 ? ((val / stats.total) * 100).toFixed(1) : '0.0';
+
     const cards = [
-        { title: 'Total Site', value: stats.total, color: 'text-blue-600', bg: 'bg-blue-500/10', icon: Lock },
-        { title: 'Installed', value: stats.installed, color: 'text-green-600', bg: 'bg-green-500/10', icon: CheckCircle },
-        { title: 'Need Install', value: stats.needInstall, color: 'text-amber-600', bg: 'bg-amber-500/10', icon: Package, alert: stats.needInstall > 0 },
-        { title: 'Need Relocated', value: stats.needRelocated, color: 'text-purple-600', bg: 'bg-purple-500/10', icon: RefreshCw },
-        { title: 'Lost/Broken', value: stats.lost, color: 'text-red-600', bg: 'bg-red-500/10', icon: XCircle, alert: stats.lost > 0 },
-        { title: 'Long Aging', value: stats.longAging, color: 'text-orange-600', bg: 'bg-orange-500/10', icon: AlertTriangle, alert: stats.longAging > 0 },
+        { title: 'Total Site', value: stats.total, pct: '100%', color: 'text-blue-600', bg: 'bg-blue-500/10', icon: Lock },
+        { title: 'Installed', value: stats.installed, pct: `${pct(stats.installed)}%`, color: 'text-green-600', bg: 'bg-green-500/10', icon: CheckCircle },
+        { title: 'Need Install', value: stats.needInstall, pct: `${pct(stats.needInstall)}%`, color: 'text-amber-600', bg: 'bg-amber-500/10', icon: Package, alert: stats.needInstall > 0 },
+        { title: 'Need Relocated', value: stats.needRelocated, pct: `${pct(stats.needRelocated)}%`, color: 'text-purple-600', bg: 'bg-purple-500/10', icon: RefreshCw },
+        { title: 'Lost/Broken', value: stats.lost, pct: `${pct(stats.lost)}%`, color: 'text-red-600', bg: 'bg-red-500/10', icon: XCircle, alert: stats.lost > 0 },
+        { title: 'Long Aging', value: stats.longAging, pct: `${pct(stats.longAging)}%`, color: 'text-orange-600', bg: 'bg-orange-500/10', icon: AlertTriangle, alert: stats.longAging > 0 },
     ];
 
     return (
@@ -65,6 +67,7 @@ const SmartLockSummary = ({ smartLockData = [] }) => {
                                     <div>
                                         <p className="text-[10px] text-muted-foreground">{card.title}</p>
                                         <p className={`text-xl font-bold ${card.color}`}>{card.value}</p>
+                                        {card.pct && <p className={`text-[9px] ${card.color}`}>{card.pct}</p>}
                                     </div>
                                     <card.icon className={`w-4 h-4 ${card.color} opacity-50`} />
                                 </div>

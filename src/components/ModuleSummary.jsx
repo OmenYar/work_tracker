@@ -31,13 +31,15 @@ const ModuleSummary = ({ moduleData = [] }) => {
         return { total, done, open, hold, withAtp, progress, byArea };
     }, [moduleData]);
 
+    const pct = (val) => stats.total > 0 ? ((val / stats.total) * 100).toFixed(1) : '0.0';
+
     const cards = [
-        { title: 'Total Site', value: stats.total, color: 'text-blue-600', bg: 'bg-blue-500/10', icon: Package },
-        { title: 'Done', value: stats.done, color: 'text-green-600', bg: 'bg-green-500/10', icon: CheckCircle },
-        { title: 'Open', value: stats.open, color: 'text-yellow-600', bg: 'bg-yellow-500/10', icon: Clock },
-        { title: 'Hold', value: stats.hold, color: 'text-orange-600', bg: 'bg-orange-500/10', icon: PauseCircle, alert: stats.hold > 0 },
-        { title: 'ATP Done', value: stats.withAtp, color: 'text-cyan-600', bg: 'bg-cyan-500/10', icon: FileSpreadsheet },
-        { title: 'Progress', value: `${stats.progress}%`, color: 'text-emerald-600', bg: 'bg-emerald-500/10', icon: TrendingUp },
+        { title: 'Total Site', value: stats.total, pct: '100%', color: 'text-blue-600', bg: 'bg-blue-500/10', icon: Package },
+        { title: 'Done', value: stats.done, pct: `${pct(stats.done)}%`, color: 'text-green-600', bg: 'bg-green-500/10', icon: CheckCircle },
+        { title: 'Open', value: stats.open, pct: `${pct(stats.open)}%`, color: 'text-yellow-600', bg: 'bg-yellow-500/10', icon: Clock },
+        { title: 'Hold', value: stats.hold, pct: `${pct(stats.hold)}%`, color: 'text-orange-600', bg: 'bg-orange-500/10', icon: PauseCircle, alert: stats.hold > 0 },
+        { title: 'ATP Done', value: stats.withAtp, pct: `${pct(stats.withAtp)}%`, color: 'text-cyan-600', bg: 'bg-cyan-500/10', icon: FileSpreadsheet },
+        { title: 'Progress', value: `${stats.progress}%`, pct: null, color: 'text-emerald-600', bg: 'bg-emerald-500/10', icon: TrendingUp },
     ];
 
     return (
@@ -68,6 +70,7 @@ const ModuleSummary = ({ moduleData = [] }) => {
                                     <div>
                                         <p className="text-[10px] text-muted-foreground">{card.title}</p>
                                         <p className={`text-xl font-bold ${card.color}`}>{card.value}</p>
+                                        {card.pct && <p className={`text-[9px] ${card.color}`}>{card.pct}</p>}
                                     </div>
                                     <card.icon className={`w-4 h-4 ${card.color} opacity-50`} />
                                 </div>

@@ -118,6 +118,10 @@ const AdminDashboard = () => {
     // Selection state for bulk operations
     const [selectedTrackerIds, setSelectedTrackerIds] = useState([]);
     const [selectedPicIds, setSelectedPicIds] = useState([]);
+    const [selectedCctvIds, setSelectedCctvIds] = useState([]);
+    const [selectedModuleIds, setSelectedModuleIds] = useState([]);
+    const [selectedSmartLockIds, setSelectedSmartLockIds] = useState([]);
+    const [selectedCarIds, setSelectedCarIds] = useState([]);
 
     // Tracker Filters - Initialize from URL params
     const [searchTerm, setSearchTerm] = useState(searchParams.get('trackerSearch') || '');
@@ -1191,6 +1195,21 @@ const AdminDashboard = () => {
                 const waitingJabo2 = workTrackers.filter(t => t.status_bast === 'Waiting Approve' && t.regional === 'Jabo Outer 2').length;
                 const waitingJabo3 = workTrackers.filter(t => t.status_bast === 'Waiting Approve' && t.regional === 'Jabo Outer 3').length;
 
+                // Summary for Reguler and Survey
+                const regulerData = workTrackers.filter(t => t.suspected === 'Reguler');
+                const surveyData = workTrackers.filter(t => t.suspected === 'Survey');
+
+                const regulerOpen = regulerData.filter(t => t.status_pekerjaan === 'Open').length;
+                const regulerBastApprove = regulerData.filter(t => t.status_bast === 'Approve' || t.status_bast === 'BAST Approve Date').length;
+                const regulerWaitingApprove = regulerData.filter(t => t.status_bast === 'Waiting Approve' || t.status_bast === 'Waiting Approve BAST').length;
+
+                const surveyOpen = surveyData.filter(t => t.status_pekerjaan === 'Open').length;
+                const surveyBastApprove = surveyData.filter(t => t.status_bast === 'Approve' || t.status_bast === 'BAST Approve Date').length;
+                const surveyWaitingApprove = surveyData.filter(t => t.status_bast === 'Waiting Approve' || t.status_bast === 'Waiting Approve BAST').length;
+
+                // Percentage helper
+                const pct = (val, t) => t > 0 ? ((val / t) * 100).toFixed(1) : '0.0';
+
                 return (
                     <div className="space-y-6">
                         {/* Summary Card - Consistent Style */}
@@ -1218,6 +1237,7 @@ const AdminDashboard = () => {
                                             <div>
                                                 <p className="text-[10px] text-muted-foreground">Total</p>
                                                 <p className="text-xl font-bold text-blue-600">{total}</p>
+                                                <p className="text-[9px] text-muted-foreground">100%</p>
                                             </div>
                                             <Briefcase className="w-4 h-4 text-blue-600 opacity-50" />
                                         </div>
@@ -1232,6 +1252,7 @@ const AdminDashboard = () => {
                                             <div>
                                                 <p className="text-[10px] text-muted-foreground">Open</p>
                                                 <p className="text-xl font-bold text-green-600">{onProgress}</p>
+                                                <p className="text-[9px] text-green-600">{pct(onProgress, total)}%</p>
                                             </div>
                                             <PlayCircle className="w-4 h-4 text-green-600 opacity-50" />
                                         </div>
@@ -1246,6 +1267,7 @@ const AdminDashboard = () => {
                                             <div>
                                                 <p className="text-[10px] text-muted-foreground">On Hold</p>
                                                 <p className="text-xl font-bold text-yellow-600">{onHold}</p>
+                                                <p className="text-[9px] text-yellow-600">{pct(onHold, total)}%</p>
                                             </div>
                                             <PauseCircle className="w-4 h-4 text-yellow-600 opacity-50" />
                                         </div>
@@ -1261,8 +1283,9 @@ const AdminDashboard = () => {
                                     >
                                         <div className="flex items-start justify-between">
                                             <div>
-                                                <p className="text-[10px] text-muted-foreground">Close</p>
-                                                <p className="text-xl font-bold text-emerald-600">{closedWork}</p>
+                                                <p className="text-[10px] text-muted-foreground">BAST Approve</p>
+                                                <p className="text-xl font-bold text-emerald-600">{approvedBast}</p>
+                                                <p className="text-[9px] text-emerald-600">{pct(approvedBast, total)}%</p>
                                             </div>
                                             <CheckCircle className="w-4 h-4 text-emerald-600 opacity-50" />
                                         </div>
@@ -1277,6 +1300,7 @@ const AdminDashboard = () => {
                                             <div>
                                                 <p className="text-[10px] text-muted-foreground">Need BAST</p>
                                                 <p className="text-xl font-bold text-purple-600">{needCreatedBast}</p>
+                                                <p className="text-[9px] text-purple-600">{pct(needCreatedBast, total)}%</p>
                                             </div>
                                             <FileText className="w-4 h-4 text-purple-600 opacity-50" />
                                         </div>
@@ -1294,6 +1318,7 @@ const AdminDashboard = () => {
                                             <div>
                                                 <p className="text-[10px] text-muted-foreground">Waiting BAST</p>
                                                 <p className="text-xl font-bold text-amber-600">{waitingBast}</p>
+                                                <p className="text-[9px] text-amber-600">{pct(waitingBast, total)}%</p>
                                             </div>
                                             <Clock className="w-4 h-4 text-amber-600 opacity-50" />
                                         </div>
@@ -1303,29 +1328,62 @@ const AdminDashboard = () => {
                                     </motion.div>
                                 </div>
 
-                                {/* Waiting BAST per Regional */}
+                                {/* Reguler & Survey Summary */}
                                 {!isSPV && (
                                     <div className="mt-4 pt-4 border-t">
                                         <p className="text-sm font-medium mb-3 flex items-center gap-2">
-                                            <Clock className="w-4 h-4 text-amber-600" />
-                                            Waiting Approval BAST per Regional
+                                            <Briefcase className="w-4 h-4 text-blue-600" />
+                                            Summary per Jenis Pekerjaan
                                         </p>
-                                        <div className="grid grid-cols-3 gap-3">
-                                            <div className="p-3 rounded-lg bg-amber-500/10 flex justify-between items-center">
-                                                <span className="text-xs text-muted-foreground">JO 1</span>
-                                                <span className="text-lg font-bold text-amber-600">{waitingJabo1}</span>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {/* Reguler Summary */}
+                                            <div className="p-4 rounded-lg bg-blue-500/5 border border-blue-500/20">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <span className="font-medium text-blue-700 dark:text-blue-400">Reguler</span>
+                                                    <span className="text-sm text-muted-foreground">{regulerData.length} total</span>
+                                                </div>
+                                                <div className="grid grid-cols-3 gap-2">
+                                                    <div className="text-center p-2 rounded bg-green-500/10">
+                                                        <p className="text-[10px] text-muted-foreground">Open</p>
+                                                        <p className="text-lg font-bold text-green-600">{regulerOpen}</p>
+                                                        <p className="text-[9px] text-green-600">{pct(regulerOpen, regulerData.length)}%</p>
+                                                    </div>
+                                                    <div className="text-center p-2 rounded bg-emerald-500/10">
+                                                        <p className="text-[10px] text-muted-foreground">BAST Approve</p>
+                                                        <p className="text-lg font-bold text-emerald-600">{regulerBastApprove}</p>
+                                                        <p className="text-[9px] text-emerald-600">{pct(regulerBastApprove, regulerData.length)}%</p>
+                                                    </div>
+                                                    <div className="text-center p-2 rounded bg-amber-500/10">
+                                                        <p className="text-[10px] text-muted-foreground">Waiting Approve</p>
+                                                        <p className="text-lg font-bold text-amber-600">{regulerWaitingApprove}</p>
+                                                        <p className="text-[9px] text-amber-600">{pct(regulerWaitingApprove, regulerData.length)}%</p>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div className="p-3 rounded-lg bg-amber-500/10 flex justify-between items-center">
-                                                <span className="text-xs text-muted-foreground">JO 2</span>
-                                                <span className="text-lg font-bold text-amber-600">{waitingJabo2}</span>
-                                            </div>
-                                            <div className="p-3 rounded-lg bg-amber-500/10 flex justify-between items-center">
-                                                <span className="text-xs text-muted-foreground">JO 3</span>
-                                                <span className="text-lg font-bold text-amber-600">{waitingJabo3}</span>
+                                            {/* Survey Summary */}
+                                            <div className="p-4 rounded-lg bg-cyan-500/5 border border-cyan-500/20">
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <span className="font-medium text-cyan-700 dark:text-cyan-400">Survey</span>
+                                                    <span className="text-sm text-muted-foreground">{surveyData.length} total</span>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    <div className="text-center p-2 rounded bg-emerald-500/10">
+                                                        <p className="text-[10px] text-muted-foreground">BAST Approve</p>
+                                                        <p className="text-lg font-bold text-emerald-600">{surveyBastApprove}</p>
+                                                        <p className="text-[9px] text-emerald-600">{pct(surveyBastApprove, surveyData.length)}%</p>
+                                                    </div>
+                                                    <div className="text-center p-2 rounded bg-amber-500/10">
+                                                        <p className="text-[10px] text-muted-foreground">Waiting Approve</p>
+                                                        <p className="text-lg font-bold text-amber-600">{surveyWaitingApprove}</p>
+                                                        <p className="text-[9px] text-amber-600">{pct(surveyWaitingApprove, surveyData.length)}%</p>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 )}
+
+
                             </CardContent>
                         </Card>
 
@@ -1485,6 +1543,9 @@ const AdminDashboard = () => {
                 const activePic = picData.filter(p => p.validasi === 'Active').length;
                 const inactivePic = picData.filter(p => p.validasi === 'Inactive').length;
 
+                // Percentage helper for PIC
+                const picPct = (val, t) => t > 0 ? ((val / t) * 100).toFixed(1) : '0.0';
+
                 // Count per jabatan - only count Active PICs
                 const jabatanCounts = picData.filter(p => p.validasi === 'Active').reduce((acc, p) => {
                     const jabatan = p.jabatan || 'Unknown';
@@ -1517,18 +1578,35 @@ const AdminDashboard = () => {
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent>
-                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                            {/* Active Card */}
+                                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                                            {/* Total Card */}
                                             <motion.div
                                                 initial={{ opacity: 0, scale: 0.9 }}
                                                 animate={{ opacity: 1, scale: 1 }}
                                                 transition={{ delay: 0 }}
+                                                className="p-3 rounded-lg bg-blue-500/10"
+                                            >
+                                                <div className="flex items-start justify-between">
+                                                    <div>
+                                                        <p className="text-[10px] text-muted-foreground">Total</p>
+                                                        <p className="text-xl font-bold text-blue-600">{totalPic}</p>
+                                                        <p className="text-[9px] text-muted-foreground">100%</p>
+                                                    </div>
+                                                    <UsersIcon className="w-4 h-4 text-blue-600 opacity-50" />
+                                                </div>
+                                            </motion.div>
+                                            {/* Active Card */}
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.9 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: 0.05 }}
                                                 className="p-3 rounded-lg bg-green-500/10"
                                             >
                                                 <div className="flex items-start justify-between">
                                                     <div>
                                                         <p className="text-[10px] text-muted-foreground">Active</p>
                                                         <p className="text-xl font-bold text-green-600">{activePic}</p>
+                                                        <p className="text-[9px] text-green-600">{picPct(activePic, totalPic)}%</p>
                                                     </div>
                                                     <CheckCircle className="w-4 h-4 text-green-600 opacity-50" />
                                                 </div>
@@ -1537,13 +1615,14 @@ const AdminDashboard = () => {
                                             <motion.div
                                                 initial={{ opacity: 0, scale: 0.9 }}
                                                 animate={{ opacity: 1, scale: 1 }}
-                                                transition={{ delay: 0.05 }}
+                                                transition={{ delay: 0.1 }}
                                                 className="p-3 rounded-lg bg-purple-500/10"
                                             >
                                                 <div className="flex items-start justify-between">
                                                     <div>
                                                         <p className="text-[10px] text-muted-foreground">JO 1 Aktif</p>
                                                         <p className="text-xl font-bold text-purple-600">{regionalCounts['Jabo Outer 1']}</p>
+                                                        <p className="text-[9px] text-purple-600">{picPct(regionalCounts['Jabo Outer 1'], activePic)}%</p>
                                                     </div>
                                                     <MapPin className="w-4 h-4 text-purple-600 opacity-50" />
                                                 </div>
@@ -1551,13 +1630,14 @@ const AdminDashboard = () => {
                                             <motion.div
                                                 initial={{ opacity: 0, scale: 0.9 }}
                                                 animate={{ opacity: 1, scale: 1 }}
-                                                transition={{ delay: 0.1 }}
+                                                transition={{ delay: 0.15 }}
                                                 className="p-3 rounded-lg bg-amber-500/10"
                                             >
                                                 <div className="flex items-start justify-between">
                                                     <div>
                                                         <p className="text-[10px] text-muted-foreground">JO 2 Aktif</p>
                                                         <p className="text-xl font-bold text-amber-600">{regionalCounts['Jabo Outer 2']}</p>
+                                                        <p className="text-[9px] text-amber-600">{picPct(regionalCounts['Jabo Outer 2'], activePic)}%</p>
                                                     </div>
                                                     <MapPin className="w-4 h-4 text-amber-600 opacity-50" />
                                                 </div>
@@ -1565,26 +1645,27 @@ const AdminDashboard = () => {
                                             <motion.div
                                                 initial={{ opacity: 0, scale: 0.9 }}
                                                 animate={{ opacity: 1, scale: 1 }}
-                                                transition={{ delay: 0.15 }}
+                                                transition={{ delay: 0.2 }}
                                                 className="p-3 rounded-lg bg-teal-500/10"
                                             >
                                                 <div className="flex items-start justify-between">
                                                     <div>
                                                         <p className="text-[10px] text-muted-foreground">JO 3 Aktif</p>
                                                         <p className="text-xl font-bold text-teal-600">{regionalCounts['Jabo Outer 3']}</p>
+                                                        <p className="text-[9px] text-teal-600">{picPct(regionalCounts['Jabo Outer 3'], activePic)}%</p>
                                                     </div>
                                                     <MapPin className="w-4 h-4 text-teal-600 opacity-50" />
                                                 </div>
                                             </motion.div>
                                         </div>
 
-                                        {/* Jabatan Distribution - Count Cards Grid */}
+                                        {/* Jabatan Distribution - Full Width with Percentages */}
                                         <div className="mt-4 pt-4 border-t">
                                             <p className="text-sm font-medium mb-3 flex items-center gap-2">
                                                 <Briefcase className="w-4 h-4 text-indigo-600" />
                                                 Distribusi Jabatan (Active PIC)
                                             </p>
-                                            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
                                                 {Object.entries(jabatanCounts).sort((a, b) => b[1] - a[1]).map(([jabatan, count], idx) => {
                                                     // Calculate per regional for this jabatan
                                                     const jo1 = picData.filter(p => p.validasi === 'Active' && p.jabatan === jabatan && p.regional === 'Jabo Outer 1').length;
@@ -1611,7 +1692,10 @@ const AdminDashboard = () => {
                                                             className={`p-3 rounded-lg ${colorClass.split(' ')[0]}`}
                                                         >
                                                             <div className="flex flex-col">
-                                                                <p className={`text-2xl font-bold ${colorClass.split(' ')[1]}`}>{count}</p>
+                                                                <div className="flex items-baseline justify-between">
+                                                                    <p className={`text-2xl font-bold ${colorClass.split(' ')[1]}`}>{count}</p>
+                                                                    <p className={`text-[9px] ${colorClass.split(' ')[1]}`}>{picPct(count, activePic)}%</p>
+                                                                </div>
                                                                 <p className="text-xs font-medium text-muted-foreground truncate" title={jabatan}>{jabatan}</p>
                                                                 <div className="mt-2 pt-2 border-t border-current/10 grid grid-cols-3 gap-1 text-[10px]">
                                                                     <div className="text-center">
@@ -2014,16 +2098,19 @@ const AdminDashboard = () => {
             case 'car':
                 // Car Stats
                 const cTotal = carData.length;
-                const cNeedService = carData.filter(c => c.condition === 'NEED SERVICE').length;
+                const cActive = carData.filter(c => c.status_mobil === 'AKTIF').length;
+                const cNeedService = carData.filter(c => c.status_mobil === 'AKTIF' && c.condition === 'NEED SERVICE').length;
                 const cExpired = carData.filter(c => {
+                    if (c.status_mobil !== 'AKTIF') return false;
                     const today = new Date();
-                    // Check if ANY doc is expired
                     const stnk = c.masa_berlaku_stnk ? new Date(c.masa_berlaku_stnk) < today : false;
                     const pajak = c.masa_berlaku_pajak ? new Date(c.masa_berlaku_pajak) < today : false;
                     const kir = c.masa_berlaku_kir ? new Date(c.masa_berlaku_kir) < today : false;
                     return stnk || pajak || kir;
                 }).length;
-                const cActive = carData.filter(c => c.status_mobil === 'AKTIF').length;
+
+                // Percentage helper
+                const carPct = (val, base) => base > 0 ? ((val / base) * 100).toFixed(1) : '0.0';
 
                 return (
                     <div className="space-y-6">
@@ -2043,31 +2130,18 @@ const AdminDashboard = () => {
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent>
-                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                        <div className="grid grid-cols-3 gap-3">
                                             <motion.div
                                                 initial={{ opacity: 0, scale: 0.9 }}
                                                 animate={{ opacity: 1, scale: 1 }}
                                                 transition={{ delay: 0 }}
-                                                className="p-3 rounded-lg bg-blue-500/10"
-                                            >
-                                                <div className="flex items-start justify-between">
-                                                    <div>
-                                                        <p className="text-[10px] text-muted-foreground">Total</p>
-                                                        <p className="text-xl font-bold text-blue-600">{cTotal}</p>
-                                                    </div>
-                                                    <Truck className="w-4 h-4 text-blue-600 opacity-50" />
-                                                </div>
-                                            </motion.div>
-                                            <motion.div
-                                                initial={{ opacity: 0, scale: 0.9 }}
-                                                animate={{ opacity: 1, scale: 1 }}
-                                                transition={{ delay: 0.05 }}
                                                 className="p-3 rounded-lg bg-green-500/10"
                                             >
                                                 <div className="flex items-start justify-between">
                                                     <div>
                                                         <p className="text-[10px] text-muted-foreground">Aktif</p>
                                                         <p className="text-xl font-bold text-green-600">{cActive}</p>
+                                                        <p className="text-[10px] text-muted-foreground">{carPct(cActive, cTotal)}% dari total</p>
                                                     </div>
                                                     <CheckCircle className="w-4 h-4 text-green-600 opacity-50" />
                                                 </div>
@@ -2075,13 +2149,14 @@ const AdminDashboard = () => {
                                             <motion.div
                                                 initial={{ opacity: 0, scale: 0.9 }}
                                                 animate={{ opacity: 1, scale: 1 }}
-                                                transition={{ delay: 0.1 }}
+                                                transition={{ delay: 0.05 }}
                                                 className={`relative p-3 rounded-lg bg-red-500/10 ${cNeedService > 0 ? 'ring-2 ring-red-500/50' : ''}`}
                                             >
                                                 <div className="flex items-start justify-between">
                                                     <div>
                                                         <p className="text-[10px] text-muted-foreground">Need Service</p>
                                                         <p className="text-xl font-bold text-red-600">{cNeedService}</p>
+                                                        <p className="text-[10px] text-muted-foreground">{carPct(cNeedService, cActive)}% dari aktif</p>
                                                     </div>
                                                     <AlertCircle className="w-4 h-4 text-red-600 opacity-50" />
                                                 </div>
@@ -2092,13 +2167,14 @@ const AdminDashboard = () => {
                                             <motion.div
                                                 initial={{ opacity: 0, scale: 0.9 }}
                                                 animate={{ opacity: 1, scale: 1 }}
-                                                transition={{ delay: 0.15 }}
+                                                transition={{ delay: 0.1 }}
                                                 className={`relative p-3 rounded-lg bg-orange-500/10 ${cExpired > 0 ? 'ring-2 ring-orange-500/50' : ''}`}
                                             >
                                                 <div className="flex items-start justify-between">
                                                     <div>
                                                         <p className="text-[10px] text-muted-foreground">Dok. Expired</p>
                                                         <p className="text-xl font-bold text-orange-600">{cExpired}</p>
+                                                        <p className="text-[10px] text-muted-foreground">{carPct(cExpired, cActive)}% dari aktif</p>
                                                     </div>
                                                     <Clock className="w-4 h-4 text-orange-600 opacity-50" />
                                                 </div>
@@ -2117,17 +2193,16 @@ const AdminDashboard = () => {
                                                 </p>
                                                 <div className="grid grid-cols-3 gap-3">
                                                     {['Jabo Outer 1', 'Jabo Outer 2', 'Jabo Outer 3'].map((reg, idx) => {
-                                                        const count = carData.filter(c => c.area === reg).length;
                                                         const activeCount = carData.filter(c => c.area === reg && c.status_mobil === 'AKTIF').length;
-                                                        const needServiceCount = carData.filter(c => c.area === reg && c.condition === 'NEED SERVICE').length;
+                                                        const needServiceCount = carData.filter(c => c.area === reg && c.status_mobil === 'AKTIF' && c.condition === 'NEED SERVICE').length;
                                                         return (
                                                             <div key={reg} className="p-3 rounded-lg bg-blue-500/10">
                                                                 <div className="flex justify-between items-start mb-2">
                                                                     <span className="text-xs text-muted-foreground">JO {idx + 1}</span>
-                                                                    <span className="text-lg font-bold text-blue-600">{count}</span>
+                                                                    <span className="text-lg font-bold text-green-600">{activeCount}</span>
                                                                 </div>
                                                                 <div className="flex justify-between text-xs">
-                                                                    <span className="text-green-600">{activeCount} aktif</span>
+                                                                    <span className="text-green-600">aktif</span>
                                                                     {needServiceCount > 0 && (
                                                                         <span className="text-red-600 font-medium">{needServiceCount} service</span>
                                                                     )}
@@ -2211,13 +2286,46 @@ const AdminDashboard = () => {
                                             Data Mobil <span className="text-sm font-normal text-muted-foreground ml-2">({filteredCarData.length} records)</span>
                                         </h2>
                                     </div>
+
+                                    {/* Bulk Operations for Car */}
+                                    {selectedCarIds.length > 0 && (
+                                        <div className="p-4 bg-primary/5 border-b border-primary/20">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm font-medium">
+                                                    {selectedCarIds.length} item(s) selected
+                                                </span>
+                                                <div className="flex gap-2">
+                                                    <BulkOperations
+                                                        selectedIds={selectedCarIds}
+                                                        tableName="car_data"
+                                                        type="car"
+                                                        onRefresh={fetchCarData}
+                                                        onSelectionChange={setSelectedCarIds}
+                                                        data={filteredCarData}
+                                                    />
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => setSelectedCarIds([])}
+                                                    >
+                                                        Clear Selection
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <div className="p-6">
                                         <CarDataTable
                                             data={filteredCarData}
                                             onEdit={(c) => navigate(`/admin/edit-car/${c.id}`, { state: { returnUrl: getCurrentUrl() } })}
                                             onDelete={handleCarDelete}
+                                            onRefresh={fetchCarData}
                                             isReadOnly={false}
                                             picData={picData}
+                                            enableSelection={true}
+                                            selectedIds={selectedCarIds}
+                                            onSelectionChange={setSelectedCarIds}
                                         />
                                     </div>
                                 </motion.div>
@@ -2461,6 +2569,42 @@ const AdminDashboard = () => {
                                     </div>
                                 </div>
 
+                                {/* Bulk Operations for CCTV */}
+                                {selectedCctvIds.length > 0 && (
+                                    <div className="mb-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm font-medium">
+                                                {selectedCctvIds.length} item(s) selected
+                                            </span>
+                                            <div className="flex gap-2">
+                                                <Suspense fallback={<ComponentLoader />}>
+                                                    <BulkOperations
+                                                        selectedIds={selectedCctvIds}
+                                                        tableName="cctv_data"
+                                                        type="cctv"
+                                                        onRefresh={fetchCctvData}
+                                                        onSelectionChange={setSelectedCctvIds}
+                                                        data={filteredCctvData}
+                                                        statusOptions={[
+                                                            { value: 'online', label: 'Online' },
+                                                            { value: 'offline', label: 'Offline' },
+                                                            { value: 'broken', label: 'Broken' },
+                                                            { value: 'stolen', label: 'Stolen' }
+                                                        ]}
+                                                    />
+                                                </Suspense>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => setSelectedCctvIds([])}
+                                                >
+                                                    Clear Selection
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-xl border bg-card shadow">
                                     <div className="p-6 border-b">
                                         <h2 className="text-lg font-semibold">
@@ -2472,7 +2616,11 @@ const AdminDashboard = () => {
                                             data={filteredCctvData}
                                             onEdit={(c) => navigate(`/admin/edit-cctv/${c.id}`, { state: { returnUrl: getCurrentUrl() } })}
                                             onDelete={handleCctvDelete}
+                                            onRefresh={fetchCctvData}
                                             isReadOnly={false}
+                                            enableSelection={canEditCctv}
+                                            selectedIds={selectedCctvIds}
+                                            onSelectionChange={setSelectedCctvIds}
                                         />
                                     </div>
                                 </motion.div>
@@ -2530,9 +2678,41 @@ const AdminDashboard = () => {
                     <Suspense fallback={<ComponentLoader />}>
                         <div className="space-y-6">
                             <ModuleSummary moduleData={moduleData} />
+
+                            {/* Bulk Operations for Module */}
+                            {selectedModuleIds.length > 0 && (
+                                <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm font-medium">
+                                            {selectedModuleIds.length} item(s) selected
+                                        </span>
+                                        <div className="flex gap-2">
+                                            <BulkOperations
+                                                selectedIds={selectedModuleIds}
+                                                tableName="module_tracker"
+                                                type="module"
+                                                onRefresh={fetchModuleData}
+                                                onSelectionChange={setSelectedModuleIds}
+                                                data={moduleData}
+                                            />
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setSelectedModuleIds([])}
+                                            >
+                                                Clear Selection
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             <ModuleDataTable
                                 moduleData={moduleData}
-                                picData={picData}
+                                onRefresh={fetchModuleData}
+                                enableSelection={true}
+                                selectedIds={selectedModuleIds}
+                                onSelectionChange={setSelectedModuleIds}
                             />
                         </div>
                     </Suspense>
@@ -2544,10 +2724,41 @@ const AdminDashboard = () => {
                             {/* SmartLock Summary - Consistent with ModuleSummary design */}
                             <SmartLockSummary smartLockData={smartLockData} />
 
+                            {/* Bulk Operations for SmartLock */}
+                            {selectedSmartLockIds.length > 0 && (
+                                <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-sm font-medium">
+                                            {selectedSmartLockIds.length} item(s) selected
+                                        </span>
+                                        <div className="flex gap-2">
+                                            <BulkOperations
+                                                selectedIds={selectedSmartLockIds}
+                                                tableName="smartlock_data"
+                                                type="smartlock"
+                                                onRefresh={fetchSmartLockData}
+                                                onSelectionChange={setSelectedSmartLockIds}
+                                                data={smartLockData}
+                                            />
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => setSelectedSmartLockIds([])}
+                                            >
+                                                Clear Selection
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             {/* SmartLock Table */}
                             <SmartLockDataTable
                                 data={smartLockData}
                                 onRefresh={fetchSmartLockData}
+                                enableSelection={true}
+                                selectedIds={selectedSmartLockIds}
+                                onSelectionChange={setSelectedSmartLockIds}
                             />
                         </div>
                     </Suspense>
@@ -2563,46 +2774,7 @@ const AdminDashboard = () => {
                 <title>Admin Dashboard | WorkTracker</title>
             </Helmet>
 
-            {/* Desktop Header */}
-            <div className="hidden md:flex justify-between items-center mb-8">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight capitalize">{activeTab.replace('-', ' ')}</h1>
-                    <p className="text-muted-foreground mt-1">
-                        Selamat Datang, {profile?.name || 'User'} ({profile?.role}).
-                    </p>
-                </div>
-                <div className="flex items-center gap-2">
-                    <GlobalSearch
-                        workTrackers={workTrackers}
-                        picData={picData}
-                        carData={carData}
-                        cctvData={cctvData}
-                        onNavigate={(type, id, data) => {
-                            // Navigate to the appropriate tab
-                            switch (type) {
-                                case 'tracker':
-                                    setActiveTab('tracker');
-                                    break;
-                                case 'pic':
-                                    setActiveTab('pic');
-                                    break;
-                                case 'car':
-                                    setActiveTab('car');
-                                    break;
-                                case 'cctv':
-                                    setActiveTab('cctv');
-                                    break;
-                            }
-                        }}
-                    />
-                    <NotificationCenter
-                        workTrackers={workTrackers}
-                        carData={carData}
-                        cctvData={cctvData}
-                    />
-                    <ThemeToggle />
-                </div>
-            </div>
+
 
             <Suspense fallback={<ComponentLoader />}>
                 {renderContent()}

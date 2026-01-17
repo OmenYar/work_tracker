@@ -4,6 +4,7 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Edit, Trash2, ChevronLeft, ChevronRight, Search, Plus, MoreHorizontal } from 'lucide-react';
@@ -26,7 +27,13 @@ import {
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-const SmartLockDataTable = ({ data, onRefresh }) => {
+const SmartLockDataTable = ({
+    data,
+    onRefresh,
+    enableSelection = false,
+    selectedIds = [],
+    onSelectionChange
+}) => {
     const navigate = useNavigate();
     const [search, setSearch] = useState('');
     const [filterRegion, setFilterRegion] = useState('all');
@@ -68,6 +75,26 @@ const SmartLockDataTable = ({ data, onRefresh }) => {
 
     const totalPages = Math.ceil(filteredData.length / pageSize);
     const paginatedData = filteredData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+    // Selection handlers
+    const handleSelectAll = (checked) => {
+        if (checked) {
+            onSelectionChange?.(data.map(item => item.id));
+        } else {
+            onSelectionChange?.([]);
+        }
+    };
+
+    const handleSelectRow = (id, checked) => {
+        if (checked) {
+            onSelectionChange?.([...selectedIds, id]);
+        } else {
+            onSelectionChange?.(selectedIds.filter(selectedId => selectedId !== id));
+        }
+    };
+
+    const isAllSelected = data.length > 0 && selectedIds.length === data.length;
+    const isIndeterminate = selectedIds.length > 0 && selectedIds.length < data.length;
 
     const handleDelete = async () => {
         if (!deleteId) return;
@@ -157,6 +184,16 @@ const SmartLockDataTable = ({ data, onRefresh }) => {
                         <Table>
                             <TableHeader>
                                 <TableRow className="bg-muted/50">
+                                    {enableSelection && (
+                                        <TableHead className="w-10">
+                                            <Checkbox
+                                                checked={isAllSelected}
+                                                onCheckedChange={handleSelectAll}
+                                                aria-label="Select all"
+                                                className={isIndeterminate ? 'data-[state=checked]:bg-primary/50' : ''}
+                                            />
+                                        </TableHead>
+                                    )}
                                     <TableHead className="w-[50px]">#</TableHead>
                                     <TableHead>Site ID 2</TableHead>
                                     <TableHead>Site ID PTI</TableHead>
@@ -172,13 +209,22 @@ const SmartLockDataTable = ({ data, onRefresh }) => {
                             <TableBody>
                                 {paginatedData.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                                        <TableCell colSpan={enableSelection ? 11 : 10} className="text-center py-8 text-muted-foreground">
                                             No data found
                                         </TableCell>
                                     </TableRow>
                                 ) : (
                                     paginatedData.map((item, idx) => (
-                                        <TableRow key={item.id} className="hover:bg-muted/30">
+                                        <TableRow key={item.id} className={`hover:bg-muted/30 ${selectedIds.includes(item.id) ? 'bg-primary/5' : ''}`}>
+                                            {enableSelection && (
+                                                <TableCell>
+                                                    <Checkbox
+                                                        checked={selectedIds.includes(item.id)}
+                                                        onCheckedChange={(checked) => handleSelectRow(item.id, checked)}
+                                                        aria-label={`Select ${item.site_id_2}`}
+                                                    />
+                                                </TableCell>
+                                            )}
                                             <TableCell className="text-muted-foreground text-xs">
                                                 {(currentPage - 1) * pageSize + idx + 1}
                                             </TableCell>

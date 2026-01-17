@@ -101,7 +101,7 @@ const CarDataForm = ({ onSubmit, initialData, onCancel }) => {
             try {
                 const { data, error } = await supabase
                     .from('pic_data')
-                    .select('id, nama_pic, validasi')
+                    .select('id, nama_pic, validasi, regional')
                     .order('nama_pic', { ascending: true });
 
                 if (error) throw error;
@@ -190,7 +190,17 @@ const CarDataForm = ({ onSubmit, initialData, onCancel }) => {
     };
 
     const handleSelectChange = (name, value) => {
-        setFormData(prev => ({ ...prev, [name]: value }));
+        if (name === 'pic_id') {
+            // Auto-update area based on selected PIC's regional
+            const selectedPic = picList.find(p => String(p.id) === value);
+            setFormData(prev => ({
+                ...prev,
+                [name]: value,
+                area: selectedPic?.regional || prev.area
+            }));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     const handleServiceToggle = (serviceId) => {

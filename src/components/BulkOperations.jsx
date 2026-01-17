@@ -140,6 +140,166 @@ const BulkOperations = ({
         }
     };
 
+    // Bulk update category (for CCTV)
+    const handleBulkUpdateCategory = async (newCategory) => {
+        if (!hasSelection || !newCategory || type !== 'cctv') return;
+
+        setIsProcessing(true);
+        try {
+            const { error } = await supabase
+                .from(tableName)
+                .update({ cctv_category: newCategory, updated_at: new Date().toISOString() })
+                .in('id', selectedIds);
+
+            if (error) throw error;
+
+            toast({
+                title: 'Bulk Update Successful',
+                description: `${selectedIds.length} CCTV category updated to "${newCategory}"`,
+            });
+
+            onSelectionChange([]);
+            if (onRefresh) onRefresh();
+        } catch (error) {
+            console.error('Bulk update category error:', error);
+            toast({
+                title: 'Error',
+                description: 'Failed to update category. Please try again.',
+                variant: 'destructive',
+            });
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    // Bulk update RFS status (for Module)
+    const handleBulkUpdateRfsStatus = async (newStatus) => {
+        if (!hasSelection || !newStatus || type !== 'module') return;
+
+        setIsProcessing(true);
+        try {
+            const { error } = await supabase
+                .from(tableName)
+                .update({ rfs_status: newStatus, updated_at: new Date().toISOString() })
+                .in('id', selectedIds);
+
+            if (error) throw error;
+
+            toast({
+                title: 'Bulk Update Successful',
+                description: `${selectedIds.length} module RFS status updated to "${newStatus}"`,
+            });
+
+            onSelectionChange([]);
+            if (onRefresh) onRefresh();
+        } catch (error) {
+            console.error('Bulk update RFS status error:', error);
+            toast({
+                title: 'Error',
+                description: 'Failed to update RFS status. Please try again.',
+                variant: 'destructive',
+            });
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    // Bulk update ATP Doc (for Module)
+    const handleBulkUpdateAtpDoc = async (newStatus) => {
+        if (!hasSelection || !newStatus || type !== 'module') return;
+
+        setIsProcessing(true);
+        try {
+            const { error } = await supabase
+                .from(tableName)
+                .update({ doc_atp: newStatus, updated_at: new Date().toISOString() })
+                .in('id', selectedIds);
+
+            if (error) throw error;
+
+            toast({
+                title: 'Bulk Update Successful',
+                description: `${selectedIds.length} module ATP Doc updated to "${newStatus}"`,
+            });
+
+            onSelectionChange([]);
+            if (onRefresh) onRefresh();
+        } catch (error) {
+            console.error('Bulk update ATP Doc error:', error);
+            toast({
+                title: 'Error',
+                description: 'Failed to update ATP Doc. Please try again.',
+                variant: 'destructive',
+            });
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    // Bulk update SmartLock status
+    const handleBulkUpdateSmartLockStatus = async (newStatus) => {
+        if (!hasSelection || !newStatus || type !== 'smartlock') return;
+
+        setIsProcessing(true);
+        try {
+            const { error } = await supabase
+                .from(tableName)
+                .update({ status_new: newStatus, updated_at: new Date().toISOString() })
+                .in('id', selectedIds);
+
+            if (error) throw error;
+
+            toast({
+                title: 'Bulk Update Successful',
+                description: `${selectedIds.length} SmartLock status updated to "${newStatus}"`,
+            });
+
+            onSelectionChange([]);
+            if (onRefresh) onRefresh();
+        } catch (error) {
+            console.error('Bulk update SmartLock status error:', error);
+            toast({
+                title: 'Error',
+                description: 'Failed to update SmartLock status. Please try again.',
+                variant: 'destructive',
+            });
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    // Bulk update Car status_mobil
+    const handleBulkUpdateCarStatus = async (newStatus) => {
+        if (!hasSelection || !newStatus || type !== 'car') return;
+
+        setIsProcessing(true);
+        try {
+            const { error } = await supabase
+                .from(tableName)
+                .update({ status_mobil: newStatus, updated_at: new Date().toISOString() })
+                .in('id', selectedIds);
+
+            if (error) throw error;
+
+            toast({
+                title: 'Bulk Update Successful',
+                description: `${selectedIds.length} car status updated to "${newStatus}"`,
+            });
+
+            onSelectionChange([]);
+            if (onRefresh) onRefresh();
+        } catch (error) {
+            console.error('Bulk update car status error:', error);
+            toast({
+                title: 'Error',
+                description: 'Failed to update car status. Please try again.',
+                variant: 'destructive',
+            });
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     // Bulk approve BAST
     const handleBulkApproveBAST = async () => {
         if (!hasSelection || type !== 'tracker') return;
@@ -412,6 +572,91 @@ const BulkOperations = ({
                                         <SelectItem value="VERTI & TII">VERTI & TII</SelectItem>
                                         <SelectItem value="Expert Genset">Expert Genset</SelectItem>
                                         <SelectItem value="MBP">MBP</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </>
+                        )}
+
+                        {type === 'cctv' && (
+                            <>
+                                <Select onValueChange={handleBulkUpdateStatus} disabled={isProcessing}>
+                                    <SelectTrigger className="w-[130px] h-8">
+                                        <SelectValue placeholder="Update Status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="online">Online</SelectItem>
+                                        <SelectItem value="offline">Offline</SelectItem>
+                                        <SelectItem value="broken">Broken</SelectItem>
+                                        <SelectItem value="stolen">Stolen</SelectItem>
+                                    </SelectContent>
+                                </Select>
+
+                                <Select onValueChange={handleBulkUpdateCategory} disabled={isProcessing}>
+                                    <SelectTrigger className="w-[150px] h-8">
+                                        <SelectValue placeholder="Update Category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="reguler">Reguler</SelectItem>
+                                        <SelectItem value="IOT">IOT</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </>
+                        )}
+
+                        {type === 'module' && (
+                            <>
+                                <Select onValueChange={handleBulkUpdateRfsStatus} disabled={isProcessing}>
+                                    <SelectTrigger className="w-[140px] h-8">
+                                        <SelectValue placeholder="RFS Status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Open">Open</SelectItem>
+                                        <SelectItem value="Done">Done</SelectItem>
+                                        <SelectItem value="Hold">Hold</SelectItem>
+                                    </SelectContent>
+                                </Select>
+
+                                <Select onValueChange={handleBulkUpdateAtpDoc} disabled={isProcessing}>
+                                    <SelectTrigger className="w-[130px] h-8">
+                                        <SelectValue placeholder="ATP Doc" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Open">Open</SelectItem>
+                                        <SelectItem value="Done">Done</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </>
+                        )}
+
+                        {type === 'smartlock' && (
+                            <>
+                                <Select onValueChange={handleBulkUpdateSmartLockStatus} disabled={isProcessing}>
+                                    <SelectTrigger className="w-[180px] h-8">
+                                        <SelectValue placeholder="Update Status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="INSTALLED">INSTALLED</SelectItem>
+                                        <SelectItem value="NEED INSTALL">NEED INSTALL</SelectItem>
+                                        <SelectItem value="NEED INSTALL NORMAL">NEED INSTALL NORMAL</SelectItem>
+                                        <SelectItem value="NEED RELOCATED">NEED RELOCATED</SelectItem>
+                                        <SelectItem value="NEED SEND TO PTI">NEED SEND TO PTI</SelectItem>
+                                        <SelectItem value="LOST BMG">LOST BMG</SelectItem>
+                                        <SelectItem value="LOST PTI">LOST PTI</SelectItem>
+                                        <SelectItem value="RETURNED TO PTI">RETURNED TO PTI</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </>
+                        )}
+
+                        {type === 'car' && (
+                            <>
+                                <Select onValueChange={handleBulkUpdateCarStatus} disabled={isProcessing}>
+                                    <SelectTrigger className="w-[140px] h-8">
+                                        <SelectValue placeholder="Update Status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="AKTIF">AKTIF</SelectItem>
+                                        <SelectItem value="NON AKTIF">NON AKTIF</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </>

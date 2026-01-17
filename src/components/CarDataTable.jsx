@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
-import { Edit, Trash2, MoreHorizontal } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+import { Edit, Trash2, MoreHorizontal, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -19,6 +22,9 @@ import {
     AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Pagination } from '@/components/ui/pagination';
+import { supabase } from '@/lib/customSupabaseClient';
+import { useToast } from '@/components/ui/use-toast';
+import { cn } from '@/lib/utils';
 
 // Helper to calculate document status from date
 const getDocumentStatus = (expiryDate) => {
@@ -74,9 +80,29 @@ const getStatusTakeoutBadge = (status) => {
     }
 };
 
-const CarDataTable = ({ data, onEdit, onDelete, isReadOnly = false, picData = [] }) => {
+// Status options
+const STATUS_MOBIL_OPTIONS = [
+    { value: 'AKTIF', label: 'AKTIF' },
+    { value: 'NON AKTIF', label: 'NON AKTIF' },
+];
+
+const CarDataTable = ({
+    data,
+    onEdit,
+    onDelete,
+    onRefresh,
+    isReadOnly = false,
+    picData = [],
+    enableSelection = false,
+    selectedIds = [],
+    onSelectionChange
+}) => {
+    const { toast } = useToast();
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(20);
+    const [editingCell, setEditingCell] = useState(null); // { id, field }
+    const [editValue, setEditValue] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
 
     const totalPages = Math.ceil(data.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -93,6 +119,255 @@ const CarDataTable = ({ data, onEdit, onDelete, isReadOnly = false, picData = []
         setCurrentPage(1);
     };
 
+    // Selection handlers
+    const handleSelectAll = (checked) => {
+        if (checked) {
+            onSelectionChange?.(data.map(item => item.id));
+        } else {
+            onSelectionChange?.([]);
+        }
+    };
+
+    const handleSelectRow = (id, checked) => {
+        if (checked) {
+            onSelectionChange?.([...selectedIds, id]);
+        } else {
+            onSelectionChange?.(selectedIds.filter(selectedId => selectedId !== id));
+        }
+    };
+
+    const isAllSelected = data.length > 0 && selectedIds.length === data.length;
+    const isIndeterminate = selectedIds.length > 0 && selectedIds.length < data.length;
+
+    // Inline edit handlers
+    const startEdit = useCallback((id, field, value) => {
+        if (isReadOnly) return;
+        setEditingCell({ id, field });
+        setEditValue(value || '');
+    }, [isReadOnly]);
+
+    const cancelEdit = useCallback(() => {
+        setEditingCell(null);
+        setEditValue('');
+    }, []);
+
+    const saveEdit = useCallback(async () => {
+        if (!editingCell) return;
+
+        setIsSaving(true);
+        try {
+            let updateData = { updated_at: new Date().toISOString() };
+
+            // If editing PIC, also update the area based on PIC's regional
+            if (editingCell.field === 'pic_id') {
+                const selectedPic = picData.find(p => p.id === editValue);
+                updateData.pic_id = editValue;
+                if (selectedPic?.regional) {
+                    updateData.area = selectedPic.regional;
+                }
+            } else {
+                updateData[editingCell.field] = editValue;
+            }
+
+            const { error } = await supabase
+                .from('car_data')
+                .update(updateData)
+                .eq('id', editingCell.id);
+
+            if (error) throw error;
+
+            toast({ title: 'Updated', description: 'Field updated successfully' });
+            cancelEdit();
+            onRefresh?.();
+        } catch (error) {
+            toast({ title: 'Error', description: error.message, variant: 'destructive' });
+        } finally {
+            setIsSaving(false);
+        }
+    }, [editingCell, editValue, picData, onRefresh, toast, cancelEdit]);
+
+    const handleKeyDown = useCallback((e) => {
+        if (e.key === 'Enter') {
+            saveEdit();
+        } else if (e.key === 'Escape') {
+            cancelEdit();
+        }
+    }, [saveEdit, cancelEdit]);
+
+    // Render editable status cell (dropdown with confirm/cancel)
+    const renderStatusCell = (car, field, value, options, badgeColors) => {
+        const isEditing = editingCell?.id === car.id && editingCell?.field === field;
+
+        if (isEditing) {
+            return (
+                <div className="flex items-center gap-1">
+                    <Select
+                        value={editValue}
+                        onValueChange={setEditValue}
+                        disabled={isSaving}
+                    >
+                        <SelectTrigger className="h-6 w-[100px] text-xs">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {options.map(opt => (
+                                <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                                    {opt.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={saveEdit}
+                        disabled={isSaving}
+                        className="h-5 w-5 text-green-600"
+                    >
+                        <Check className="h-3 w-3" />
+                    </Button>
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={cancelEdit}
+                        disabled={isSaving}
+                        className="h-5 w-5 text-red-600"
+                    >
+                        <X className="h-3 w-3" />
+                    </Button>
+                </div>
+            );
+        }
+
+        return (
+            <span
+                onClick={() => !isReadOnly && startEdit(car.id, field, value)}
+                className={cn(
+                    "inline-flex items-center justify-center rounded-md px-2 py-1 text-[11px] font-semibold leading-none whitespace-nowrap",
+                    badgeColors,
+                    !isReadOnly && "cursor-pointer hover:opacity-80 transition-opacity"
+                )}
+                title={!isReadOnly ? "Click to edit" : undefined}
+            >
+                {value || 'AKTIF'}
+            </span>
+        );
+    };
+
+    // Render editable text cell (input with confirm/cancel)
+    const renderTextCell = (car, field, value, placeholder = 'Click to add...') => {
+        const isEditing = editingCell?.id === car.id && editingCell?.field === field;
+
+        if (isEditing) {
+            return (
+                <div className="flex items-center gap-1">
+                    <Input
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        disabled={isSaving}
+                        className="h-6 w-[120px] text-xs"
+                        placeholder={placeholder}
+                        autoFocus
+                    />
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={saveEdit}
+                        disabled={isSaving}
+                        className="h-5 w-5 text-green-600"
+                    >
+                        <Check className="h-3 w-3" />
+                    </Button>
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={cancelEdit}
+                        disabled={isSaving}
+                        className="h-5 w-5 text-red-600"
+                    >
+                        <X className="h-3 w-3" />
+                    </Button>
+                </div>
+            );
+        }
+
+        return (
+            <span
+                onClick={() => !isReadOnly && startEdit(car.id, field, value)}
+                className={cn(
+                    "text-xs max-w-[120px] truncate block",
+                    value ? "text-foreground" : "text-muted-foreground italic",
+                    !isReadOnly && "cursor-pointer hover:bg-muted/50 px-1 py-0.5 rounded -mx-1"
+                )}
+                title={!isReadOnly ? (value || "Click to add") : value}
+            >
+                {value || placeholder}
+            </span>
+        );
+    };
+
+    // Render editable PIC cell (dropdown with confirm/cancel)
+    const renderPicCell = (car, currentPicId) => {
+        const isEditing = editingCell?.id === car.id && editingCell?.field === 'pic_id';
+        const currentPicName = picData.find(p => p.id === currentPicId)?.nama_pic || '-';
+
+        if (isEditing) {
+            return (
+                <div className="flex items-center gap-1">
+                    <Select
+                        value={editValue}
+                        onValueChange={setEditValue}
+                        disabled={isSaving}
+                    >
+                        <SelectTrigger className="h-6 w-[140px] text-xs">
+                            <SelectValue placeholder="Select PIC" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-[200px]">
+                            {picData.filter(p => p.status === 'Active').map(pic => (
+                                <SelectItem key={pic.id} value={pic.id} className="text-xs">
+                                    {pic.nama_pic}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={saveEdit}
+                        disabled={isSaving}
+                        className="h-5 w-5 text-green-600"
+                    >
+                        <Check className="h-3 w-3" />
+                    </Button>
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={cancelEdit}
+                        disabled={isSaving}
+                        className="h-5 w-5 text-red-600"
+                    >
+                        <X className="h-3 w-3" />
+                    </Button>
+                </div>
+            );
+        }
+
+        return (
+            <span
+                onClick={() => !isReadOnly && startEdit(car.id, 'pic_id', currentPicId)}
+                className={cn(
+                    "text-xs",
+                    currentPicName !== '-' ? "text-foreground" : "text-muted-foreground italic",
+                    !isReadOnly && "cursor-pointer hover:bg-muted/50 px-1 py-0.5 rounded -mx-1"
+                )}
+                title={!isReadOnly ? "Click to edit" : undefined}
+            >
+                {currentPicName}
+            </span>
+        );
+    };
+
     if (data.length === 0) {
         return (
             <div className="text-center py-12 text-muted-foreground">
@@ -107,6 +382,16 @@ const CarDataTable = ({ data, onEdit, onDelete, isReadOnly = false, picData = []
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b bg-muted/50">
+                            {enableSelection && (
+                                <th className="py-3 px-3 w-10">
+                                    <Checkbox
+                                        checked={isAllSelected}
+                                        onCheckedChange={handleSelectAll}
+                                        aria-label="Select all"
+                                        className={isIndeterminate ? 'data-[state=checked]:bg-primary/50' : ''}
+                                    />
+                                </th>
+                            )}
                             <th className="text-left py-3 px-3 font-medium text-muted-foreground w-10">No</th>
                             <th className="text-left py-3 px-3 font-medium text-muted-foreground">No Polisi</th>
                             <th className="text-left py-3 px-3 font-medium text-muted-foreground">PIC</th>
@@ -127,13 +412,30 @@ const CarDataTable = ({ data, onEdit, onDelete, isReadOnly = false, picData = []
                             const stnkStatus = getDocumentStatus(car.masa_berlaku_stnk);
                             const pajakStatus = getDocumentStatus(car.masa_berlaku_pajak);
                             const kirStatus = getDocumentStatus(car.masa_berlaku_kir);
-                            const picName = picData.find(p => p.id === car.pic_id)?.nama_pic || '-';
 
                             return (
-                                <tr key={car.id} className="border-b hover:bg-muted/50 transition-colors">
+                                <tr key={car.id} className={cn(
+                                    "border-b transition-colors",
+                                    selectedIds.includes(car.id) ? "bg-primary/5" : "hover:bg-muted/50"
+                                )}>
+                                    {enableSelection && (
+                                        <td className="py-2 px-3">
+                                            <Checkbox
+                                                checked={selectedIds.includes(car.id)}
+                                                onCheckedChange={(checked) => handleSelectRow(car.id, checked)}
+                                                aria-label={`Select ${car.nomor_polisi}`}
+                                            />
+                                        </td>
+                                    )}
                                     <td className="py-2 px-3 text-muted-foreground text-xs">{startIndex + index + 1}</td>
-                                    <td className="py-2 px-3 font-medium font-mono text-xs">{car.nomor_polisi}</td>
-                                    <td className="py-2 px-3 text-xs">{picName}</td>
+                                    {/* Inline editable No Polisi */}
+                                    <td className="py-2 px-3">
+                                        {renderTextCell(car, 'nomor_polisi', car.nomor_polisi, 'No Polisi...')}
+                                    </td>
+                                    {/* Inline editable PIC */}
+                                    <td className="py-2 px-3">
+                                        {renderPicCell(car, car.pic_id)}
+                                    </td>
                                     <td className="py-2 px-3 text-xs">{car.area || '-'}</td>
                                     <td className="py-2 px-3">
                                         <span className={`inline-flex items-center rounded-md px-2 py-1 text-[11px] font-semibold leading-none whitespace-nowrap ${getStatusBadge(stnkStatus)}`}>
@@ -163,11 +465,9 @@ const CarDataTable = ({ data, onEdit, onDelete, isReadOnly = false, picData = []
                                             {car.priority || '-'}
                                         </span>
                                     </td>
-                                    {/* Status Mobil */}
+                                    {/* Inline editable Status Mobil */}
                                     <td className="py-2 px-3">
-                                        <span className={`inline-flex items-center rounded-md px-2 py-1 text-[11px] font-semibold leading-none whitespace-nowrap ${getStatusMobilBadge(car.status_mobil)}`}>
-                                            {car.status_mobil || 'AKTIF'}
-                                        </span>
+                                        {renderStatusCell(car, 'status_mobil', car.status_mobil, STATUS_MOBIL_OPTIONS, getStatusMobilBadge(car.status_mobil))}
                                     </td>
                                     {/* Status Takeout */}
                                     <td className="py-2 px-3">
@@ -179,11 +479,9 @@ const CarDataTable = ({ data, onEdit, onDelete, isReadOnly = false, picData = []
                                             <span className="text-xs text-muted-foreground">-</span>
                                         )}
                                     </td>
-                                    {/* Remark */}
-                                    <td className="py-2 px-3">
-                                        <span className="text-xs text-muted-foreground truncate max-w-[150px]" title={car.remark}>
-                                            {car.remark || '-'}
-                                        </span>
+                                    {/* Inline editable Remark */}
+                                    <td className="py-2 px-3 max-w-[150px]">
+                                        {renderTextCell(car, 'remark', car.remark, 'Add remark...')}
                                     </td>
                                     {!isReadOnly && (
                                         <td className="py-2 px-3 text-right">
@@ -196,7 +494,7 @@ const CarDataTable = ({ data, onEdit, onDelete, isReadOnly = false, picData = []
                                                 <DropdownMenuContent align="end">
                                                     <DropdownMenuItem onClick={() => onEdit(car)}>
                                                         <Edit className="mr-2 h-4 w-4" />
-                                                        Edit
+                                                        Edit Full
                                                     </DropdownMenuItem>
                                                     <AlertDialog>
                                                         <AlertDialogTrigger asChild>
@@ -243,4 +541,3 @@ const CarDataTable = ({ data, onEdit, onDelete, isReadOnly = false, picData = []
 };
 
 export default CarDataTable;
-

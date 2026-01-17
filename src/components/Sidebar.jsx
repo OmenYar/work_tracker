@@ -1,10 +1,10 @@
 import React, { useState, useCallback, memo } from 'react';
-import { LayoutDashboard, TableProperties, Users, LogOut, Contact, Car, StickyNote, Camera, History, FileText, X, PanelLeftClose, PanelLeft, BarChart3, CalendarDays, Trophy, Package, Lock, FileSpreadsheet } from 'lucide-react';
+import { LayoutDashboard, TableProperties, Users, Contact, Car, StickyNote, Camera, History, FileText, X, PanelLeftClose, PanelLeft, BarChart3, CalendarDays, Trophy, Package, Lock, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
-const Sidebar = memo(({ activeTab, setActiveTab, onLogout, isOpen, setIsOpen }) => {
+const Sidebar = memo(({ activeTab, setActiveTab, isOpen, setIsOpen }) => {
     const { profile } = useAuth();
     const isAdmin = profile?.role === 'Administrator';
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -27,23 +27,23 @@ const Sidebar = memo(({ activeTab, setActiveTab, onLogout, isOpen, setIsOpen }) 
                 { id: 'pic', label: 'Data PIC', icon: Contact, color: 'text-orange-500' },
                 { id: 'car', label: 'Data Mobil', icon: Car, color: 'text-red-500' },
                 { id: 'cctv', label: 'Data CCTV', icon: Camera, color: 'text-pink-500' },
-                { id: 'module', label: 'Module DPR2900', icon: Package, color: 'text-indigo-500' },
-                { id: 'smartlock', label: 'SmartLock WM', icon: Lock, color: 'text-emerald-500' },
+                { id: 'module', label: 'Data Module', icon: Package, color: 'text-indigo-500' },
+                { id: 'smartlock', label: 'Data SmartLock WM', icon: Lock, color: 'text-emerald-500' },
             ]
         },
         {
             label: 'Tools',
             items: [
-                { id: 'notes', label: 'Notes', icon: StickyNote, color: 'text-amber-500' },
-                { id: 'reports', label: 'Report Builder', icon: FileSpreadsheet, color: 'text-emerald-500' },
-                ...(isAdmin ? [
-                    { id: 'logs', label: 'Activity Logs', icon: History, color: 'text-slate-500' },
-                    { id: 'generate-bast', label: 'Generate BAST', icon: FileText, color: 'text-teal-500' },
-                    { id: 'users', label: 'Pengaturan User', icon: Users, color: 'text-violet-500' },
-                ] : []),
                 // Generate ATP accessible for Admin, AM, and SPV (Jabo)
                 ...((isAdmin || profile?.role === 'AM' || profile?.role?.includes('Jabo')) ? [
-                    { id: 'generate-atp', label: 'Generate ATP', icon: FileSpreadsheet, color: 'text-cyan-500' },
+                    { id: 'generate-atp', label: 'Generate Doc ATP', icon: FileSpreadsheet, color: 'text-cyan-500' },
+                    { id: 'generate-bast', label: 'Generate Doc BAST', icon: FileText, color: 'text-teal-500' },
+                ] : []),
+                { id: 'notes', label: 'Notes', icon: StickyNote, color: 'text-amber-500' },
+                ...(isAdmin ? [
+                    { id: 'reports', label: 'Report Builder', icon: FileSpreadsheet, color: 'text-emerald-500' },
+                    { id: 'logs', label: 'Activity Logs', icon: History, color: 'text-slate-500' },
+                    { id: 'users', label: 'Pengaturan User', icon: Users, color: 'text-violet-500' },
                 ] : []),
             ]
         },
@@ -89,7 +89,7 @@ const Sidebar = memo(({ activeTab, setActiveTab, onLogout, isOpen, setIsOpen }) 
                             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
                                 <LayoutDashboard className="w-4 h-4 text-primary-foreground" />
                             </div>
-                            <h2 className="text-lg font-bold tracking-tight">Admin Panel</h2>
+                            <h2 className="text-lg font-bold tracking-tight">Dashboard</h2>
                         </div>
                     )}
 
@@ -116,44 +116,7 @@ const Sidebar = memo(({ activeTab, setActiveTab, onLogout, isOpen, setIsOpen }) 
                     </Button>
                 </div>
 
-                {/* User Profile - Enhanced with Logout */}
-                <div className="px-3 py-4 border-b border-border shrink-0">
-                    {!isCollapsed ? (
-                        <div className="px-3 py-3 bg-gradient-to-r from-muted/80 to-muted/30 rounded-xl border border-border/50 hover:border-border transition-colors">
-                            <div className="flex items-start justify-between">
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Signed in as</p>
-                                    <p className="font-semibold text-sm truncate mt-0.5">{profile?.name || 'User'}</p>
-                                    <p className="text-xs text-muted-foreground truncate">{profile?.role || 'Guest'}</p>
-                                </div>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 shrink-0"
-                                    onClick={onLogout}
-                                    title="Logout"
-                                >
-                                    <LogOut className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="flex flex-col items-center gap-2" title={profile?.name}>
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center text-sm font-bold text-primary border border-primary/20 hover:border-primary/40 transition-colors cursor-default">
-                                {profile?.name?.[0]?.toUpperCase() || 'U'}
-                            </div>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                onClick={onLogout}
-                                title="Logout"
-                            >
-                                <LogOut className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    )}
-                </div>
+
 
                 {/* Menu Items - Grouped with Dividers */}
                 <nav className="flex-1 py-4 px-3 overflow-y-auto">
